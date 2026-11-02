@@ -1,0 +1,6 @@
+{
+  "name": "InkStudio Pro - Gestão de Estúdio de Tatuagem",
+  "description": "Sistema minimalista para gestão de estúdio de tatuagem com sincronização do Google Agenda, notificações automáticas, ficha clínica de clientes, gestão de artistas e controlo de stock perecível.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
