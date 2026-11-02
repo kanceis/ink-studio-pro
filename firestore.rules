@@ -1,0 +1,27 @@
+rules_version = '2';
+
+// Only members of a studio can read or write its data.
+// Members are the Google account emails (lowercase) listed in studios/{studioId}.members.
+// That list is edited by hand in the Firebase console, never from the app.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isMember(studioId) {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email.lower()
+             in get(/databases/$(database)/documents/studios/$(studioId)).data.members;
+    }
+
+    match /studios/{studioId} {
+      allow read: if isMember(studioId);
+      allow write: if false;
+
+      // {sub}/{rest=**} needs at least one segment, so it never matches the studio doc itself
+      // (a bare {document=**} would, and would let members edit the member list).
+      match /{sub}/{rest=**} {
+        allow read, write: if isMember(studioId);
+      }
+    }
+  }
+}

@@ -39,6 +39,46 @@ Os ficheiros finais serão gerados na pasta `dist/`.
 
 ---
 
+## 🔐 Base de dados e acesso (Firebase)
+
+Os dados do estúdio (stock, clientes, marcações, artistas, definições) ficam no **Cloud Firestore**, partilhados entre todos os dispositivos e disponíveis offline. Só entram contas Google que estejam na lista de membros do estúdio.
+
+### Configuração inicial (uma vez)
+
+1. Na [consola do Firebase](https://console.firebase.google.com/), abre o projeto (por omissão `gen-lang-client-0172609399`, o que o AI Studio criou).
+2. **Authentication → Sign-in method:** ativa o fornecedor **Google**.
+3. **Authentication → Settings → Authorized domains:** adiciona o domínio onde a app vai estar (ex.: `ink-studio.pages.dev`).
+4. **Firestore Database:** cria a base de dados (modo produção, região `europe-west`).
+5. Publica as regras de segurança:
+   ```bash
+   npx firebase-tools login
+   npx firebase-tools deploy --only firestore:rules
+   ```
+6. Em **Firestore → Data**, cria a coleção `studios` com o documento `main` e estes campos:
+   - `name` (string): nome do estúdio
+   - `members` (array de strings): os e-mails Google autorizados, **em minúsculas**
+
+   Para dar ou tirar acesso a alguém, edita esta lista.
+7. Abre a app e entra com uma conta da lista. Na primeira vez podes importar os dados guardados nesse browser pela versão anterior, começar do zero ou carregar dados de exemplo.
+
+### Usar outro projeto Firebase
+
+Copia `.env.example` para `.env.local` e preenche as variáveis `VITE_FIREBASE_*`. Atualiza também o `.firebaserc`.
+
+### Desenvolvimento e testes locais
+
+```bash
+npm run test:rules   # testa as regras de segurança no emulador (precisa de Java)
+npm run emulators    # emuladores de Auth + Firestore para desenvolvimento
+VITE_USE_FIREBASE_EMULATORS=true VITE_FIREBASE_PROJECT_ID=demo-ink-studio npm run dev
+```
+
+### Publicar no Cloudflare Pages
+
+Build command `npm run build`, output directory `dist`. Lembra-te de adicionar o domínio `*.pages.dev` aos *Authorized domains* do Firebase (passo 3).
+
+---
+
 ## 📂 Estrutura do Projeto
 
 ```text
