@@ -1,6 +1,7 @@
 import React from 'react';
 import { useStudio } from '../context/StudioContext';
 import { OfficialGoogleButton } from './OfficialGoogleButton';
+import { logout } from '../services/firebaseAuth';
 import {
   Sun,
   Moon,
@@ -149,6 +150,16 @@ export const Header: React.FC<Props> = ({
               />
             )}
           </div>
+
+          {/* Sign out of the studio */}
+          <button
+            onClick={() => logout()}
+            className="p-2 rounded-lg text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 transition-colors cursor-pointer"
+            aria-label="Terminar sessão"
+            title="Terminar sessão"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
 
           {/* Theme Switcher */}
           <button
