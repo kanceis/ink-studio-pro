@@ -79,8 +79,8 @@ export const toPayload = (place: Place, placeId: string): ReviewsPayload => ({
 /** Local development only (REVIEWS_DEMO=1): clearly marked placeholder content, never real opinions. */
 const demoPayload = (): ReviewsPayload => ({
   demo: true,
-  rating: 4.9,
-  count: 87,
+  rating: 4.8,
+  count: 38,
   reviewsUrl: 'https://www.google.com/maps',
   writeReviewUrl: 'https://www.google.com/maps',
   reviews: [1, 2, 3, 4].map((i) => ({
