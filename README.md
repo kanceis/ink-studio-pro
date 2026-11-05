@@ -125,6 +125,21 @@ Se uma peça ficar "Reservada" sem ninguém a pagar (por exemplo, webhook mal co
 
 Sem `STRIPE_SECRET_KEY` o checkout responde `503 shop_closed` e o resto funciona normalmente.
 
+### Site público (`site/`)
+
+O site da Ink Compatível é HTML, CSS e JavaScript simples, sem build: `site/index.html`, `styles.css`, `app.js`,
+`config.js` e o logótipo em `site/assets/`. Lê do Firestore só o que está publicado (perfil, artistas, portfólio,
+flash e loja), envia os pedidos de marcação para a app e paga o carrinho com `POST /api/checkout`.
+
+- Páginas: início, artistas (perfil, tatuagens, flash, originais), portfólio, loja e produto, estúdio,
+  marcar em 3 passos, obrigado, privacidade, envios e devoluções.
+- `config.js` escolhe o emulador quando o site corre em `localhost` e o projeto real nos outros casos.
+  Em produção, `apiBase` é o endereço da app (por omissão `https://ink-studio-pro.pages.dev`).
+- Publicar: um segundo projeto no Cloudflare Pages com a pasta `site` como *output directory* e sem build command.
+  Junta o domínio do site a `ALLOWED_ORIGINS` da app (o site não faz login, por isso não precisa de estar no Firebase).
+- Testar localmente: `npm run emulators`, `npm run build && npm run pages:dev` e depois
+  `cd site && python3 -m http.server 5500` (abre http://localhost:5500).
+
 ### Publicar no Cloudflare Pages
 
 Build command `npm run build`, output directory `dist`. Lembra-te de adicionar o domínio `*.pages.dev` aos *Authorized domains* do Firebase (passo 3).

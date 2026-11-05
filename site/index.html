@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ink Compatível · Tattoo studio em Vila Nova de Gaia</title>
+  <meta name="description" content="Três artistas, um estúdio em Vila Nova de Gaia. Tatuagens sketch, black &amp; grey e black &amp; red, flash disponível e loja de originais e edições limitadas.">
+  <meta property="og:title" content="Ink Compatível · Tattoo studio · Gaia">
+  <meta property="og:description" content="Do papel à pele. Três artistas, um estúdio em Vila Nova de Gaia.">
+  <meta property="og:type" content="website">
+  <meta name="theme-color" content="#ECE8E1">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&amp;family=Archivo:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip" href="#main">Saltar para o conteúdo</a>
+
+  <header class="site-header">
+    <div class="wrap header-row">
+      <a class="brand" href="#/" aria-label="Ink Compatível, início">
+        <img src="assets/lockup-ink-compativel-horizontal.svg" alt="Ink Compatível" width="263" height="40">
+        <span class="mono tagline">Tattoo studio · Gaia</span>
+      </a>
+      <div class="header-actions">
+        <button type="button" class="icon-btn cart-btn" data-open-cart aria-label="Carrinho, 0 artigos">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" aria-hidden="true"><path d="M3 4h2l2.4 11h11.2L21 7H6.2"/><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/></svg>
+          <span class="mono cart-count" data-cart-count>0</span>
+        </button>
+        <button type="button" class="icon-btn menu-btn" aria-label="Abrir menu" aria-expanded="false" aria-controls="main-nav">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" aria-hidden="true"><path d="M3 7h18M3 12h18M3 17h18"/></svg>
+        </button>
+      </div>
+      <nav class="main-nav" id="main-nav" aria-label="Principal">
+        <a href="#/artistas" data-nav="artistas">Artistas</a>
+        <a href="#/portfolio" data-nav="portfolio">Portfólio</a>
+        <a href="#/loja" data-nav="loja">Loja</a>
+        <a href="#/estudio" data-nav="estudio">Estúdio</a>
+        <a class="btn" href="#/marcar" data-nav="marcar">Marcar sessão</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" tabindex="-1">
+    <div class="wrap loading" role="status">A carregar…</div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-inner">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <img src="assets/lockup-ink-compativel-horizontal-negativo.svg" alt="Ink Compatível" width="263" height="40">
+          <span class="mono tagline">Tattoo studio · Gaia</span>
+          <p class="footer-contact" data-footer-contact></p>
+        </div>
+        <nav class="footer-nav" aria-label="Rodapé">
+          <a href="#/artistas">Artistas</a>
+          <a href="#/loja">Loja</a>
+          <a href="#/marcar">Marcar sessão</a>
+          <a href="#/estudio">Estúdio e cuidados</a>
+          <a href="#/envios">Envios e devoluções</a>
+          <a href="#/estudio#contactos">Contactos</a>
+        </nav>
+      </div>
+      <div class="footer-bottom">
+        <span>© <span data-year></span> Ink Compatível · Vila Nova de Gaia</span>
+        <span class="footer-legal">
+          <a href="#/privacidade">Privacidade</a>
+          <a href="https://www.livroreclamacoes.pt/" target="_blank" rel="noopener noreferrer">Livro de Reclamações</a>
+        </span>
+      </div>
+    </div>
+  </footer>
+
+  <div class="mobile-cta" data-mobile-cta>
+    <a class="btn" href="#/marcar">Marcar sessão</a>
+    <a class="icon-btn outline" data-whatsapp hidden aria-label="Falar no WhatsApp" target="_blank" rel="noopener noreferrer">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l1.4-4A8 8 0 1 1 8 18.6L4 20z"/></svg>
+    </a>
+  </div>
+
+  <!-- Cart -->
+  <dialog class="drawer" id="cart" aria-labelledby="cart-title">
+    <div class="drawer-head">
+      <h2 id="cart-title" class="disp">Carrinho</h2>
+      <button type="button" class="icon-btn" data-close-cart aria-label="Fechar carrinho">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg>
+      </button>
+    </div>
+    <div class="drawer-body" data-cart-body></div>
+  </dialog>
+
+  <!-- Photo viewer -->
+  <dialog class="viewer" id="viewer" aria-label="Fotografia">
+    <button type="button" class="icon-btn viewer-close" data-close-viewer aria-label="Fechar">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg>
+    </button>
+    <figure>
+      <img alt="" data-viewer-img>
+      <figcaption class="mono" data-viewer-cap></figcaption>
+    </figure>
+  </dialog>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
