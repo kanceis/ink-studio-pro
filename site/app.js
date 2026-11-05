@@ -178,6 +178,86 @@
     ]);
   };
 
+  // Hand-drawn marks for the hero (sketch arrows and squiggle), drawn in tinta.
+  const svgMark = (d, cls, viewBox = '0 0 200 160') => {
+    const ns = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', viewBox);
+    svg.setAttribute('class', `mark ${cls}`);
+    svg.setAttribute('aria-hidden', 'true');
+    for (const path of [].concat(d)) {
+      const el2 = document.createElementNS(ns, 'path');
+      el2.setAttribute('d', path);
+      svg.append(el2);
+    }
+    return svg;
+  };
+
+  const badge = () => {
+    const ns = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', '0 0 200 200');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.innerHTML = '<defs><path id="badge-circle" d="M100,100 m-74,0 a74,74 0 1,1 148,0 a74,74 0 1,1 -148,0"/></defs>' +
+      '<text><textPath href="#badge-circle" startOffset="0" textLength="458" lengthAdjust="spacing">MARCAR SESSÃO · RESPOSTA EM 48 H ·</textPath></text>';
+    return el('a', { class: 'badge-spin', href: '#/marcar', 'aria-label': 'Marcar sessão, respondemos em 48 horas' }, [
+      el('span', { class: 'badge-ring' }, svg),
+      svgMark(['M60 120 C 80 70, 120 60, 140 60', 'M118 42 L 142 60 L 120 80'], 'badge-arrow'),
+    ]);
+  };
+
+  const tiltCard = ({ image, staticPhoto, title, sub, href, cls }) => {
+    const src = staticPhoto ? `assets/estudio/${staticPhoto}-800.webp` : safeUrl(image?.url);
+    return el(href ? 'a' : 'div', { class: `tilt ${cls}`, href: href || null }, [
+      el('span', { class: 'tilt-photo' }, src ? el('img', { src, alt: '', decoding: 'async' }) : el('span', { class: 'tilt-initial', text: (title || '?').slice(0, 1) })),
+      el('span', { class: 'tilt-title', text: title }),
+      sub ? el('span', { class: 'tilt-sub mono', text: sub }) : null,
+    ]);
+  };
+
+  const heroBlock = () => {
+    const p = data.profile;
+    const n = data.artists.length;
+    const cards = [
+      { staticPhoto: STUDIO_PHOTOS.hero[0], title: 'No estúdio', sub: 'Vila Nova de Gaia', href: '#/estudio', cls: 'tilt-a' },
+      ...data.artists.slice(0, 2).map((a, i) => ({ image: a.photo, title: a.displayName, sub: a.styles, href: `#/artistas/${encodeURIComponent(a.id)}`, cls: i ? 'tilt-c' : 'tilt-b' })),
+    ];
+    return el('section', { class: 'hero-block', 'aria-labelledby': 'hero-title' }, [
+      el('div', { class: 'hero-stage' }, [
+        mono('Sketch · Black & grey · Black & red', 'hero-eyebrow'),
+        el('h1', { class: 'disp hero-title', id: 'hero-title' }, [
+          el('span', { class: 'ht-1', text: 'Do papel' }),
+          el('span', { class: 'ht-2', text: 'à pele' }),
+        ]),
+        ...cards.map(tiltCard),
+        svgMark(['M20 30 C 60 10, 120 20, 150 70', 'M128 58 L 152 74 L 156 46'], 'mark-a'),
+        svgMark(['M30 130 C 40 80, 90 60, 150 70', 'M126 52 L 152 70 L 128 90'], 'mark-b'),
+        svgMark(['M10 80 C 30 40, 50 120, 70 80 S 110 40, 130 80 S 170 120, 190 80'], 'mark-c', '0 0 200 160'),
+        badge(),
+      ]),
+      el('div', { class: 'hero-foot' }, [
+        el('p', { text: p.tagline || `${n === 3 ? 'Três artistas' : 'Artistas'}, um estúdio em Vila Nova de Gaia. Cada tatuagem começa num desenho feito para ti.` }),
+        el('div', { class: 'hero-actions' }, [
+          el('a', { class: 'pill pill-light', href: '#/marcar' }, ['Marcar sessão', el('span', { class: 'pill-dot', 'aria-hidden': 'true' }, '↗')]),
+          el('a', { class: 'pill pill-ghost', href: '#/portfolio', text: 'Ver portfólio' }),
+        ]),
+      ]),
+      el('ul', { class: 'hero-facts' }, [
+        n ? `${n} artistas, uma agenda` : 'Artistas residentes',
+        'Flash pronto a tatuar',
+        'Material descartável',
+        'Resposta em 48 h',
+      ].map((t, i) => el('li', {}, [mono(`0${i + 1}`, 'fact-n'), mono(t)]))),
+    ]);
+  };
+
+  const ctaBlock = () =>
+    el('section', { class: 'cta-block', 'aria-labelledby': 'cta-title' }, [
+      el('h2', { class: 'disp', id: 'cta-title', text: 'Tens uma ideia?' }),
+      el('p', { text: 'Conta-nos o que imaginas. Respondemos em 48 h com preço e datas.' }),
+      el('a', { class: 'pill pill-light', href: '#/marcar' }, ['Marcar sessão', el('span', { class: 'pill-dot', 'aria-hidden': 'true' }, '↗')]),
+    ]);
+
   const workCaption = (p) => [artistName(p.artistId), p.style, p.title].filter(Boolean).join(' · ');
 
   const workGrid = (items, { min = '260px' } = {}) =>
@@ -293,19 +373,7 @@
     const flashItems = flash().slice(0, 4);
 
     return [
-      el('section', { class: 'wrap hero' }, [
-        el('div', { class: 'stack' }, [
-          mono('Sketch · Black & grey · Black & red', 'muted'),
-          el('h1', { class: 'disp' }, ['Do papel', el('br'), 'à pele']),
-          el('p', { text: p.tagline || `${data.artists.length === 3 ? 'Três artistas' : 'Artistas'}, um estúdio em Vila Nova de Gaia. Cada tatuagem começa num desenho feito para ti.` }),
-          el('div', { class: 'hero-actions' }, [
-            el('a', { class: 'btn', href: '#/marcar', text: 'Marcar sessão' }),
-            el('a', { class: 'btn-out', href: '#/portfolio', text: 'Ver portfólio' }),
-          ]),
-          mono('Respondemos em 48 h', 'muted'),
-        ]),
-        studioImg(STUDIO_PHOTOS.hero, 'r45', '(max-width: 900px) 100vw, 50vw'),
-      ]),
+      heroBlock(),
 
       data.artists.length
         ? el('section', { class: 'section rule', id: 'artistas' }, el('div', { class: 'wrap' }, [
@@ -341,6 +409,7 @@
         : null,
 
       studioSection(),
+      ctaBlock(),
     ];
   };
 
