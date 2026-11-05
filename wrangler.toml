@@ -1,5 +1,10 @@
 # Cloudflare Pages project for the INK Studio Pro app (backoffice).
-# The static app is in dist/, the photo API is in functions/.
+# The static app is in dist/; functions/ has the photo API, the shop checkout and the Stripe webhook.
+#
+# Secrets (set in the dashboard or with `wrangler pages secret put`, never in this file):
+#   GOOGLE_SERVICE_ACCOUNT  service account JSON key, for checkout and the webhook
+#   STRIPE_SECRET_KEY       sk_live_... / sk_test_...
+#   STRIPE_WEBHOOK_SECRET   whsec_... of the /api/stripe-webhook endpoint
 name = "ink-studio-pro"
 compatibility_date = "2026-10-01"
 pages_build_output_dir = "dist"
@@ -8,8 +13,10 @@ pages_build_output_dir = "dist"
 FIREBASE_PROJECT_ID = "gen-lang-client-0172609399"
 FIRESTORE_DATABASE_ID = "(default)"
 STUDIO_ID = "main"
-# Origins (besides the app itself) allowed to call /api/images, comma separated.
+# Origins (besides the app itself) allowed to call the API, comma separated: put the public site here.
 ALLOWED_ORIGINS = ""
+# Countries Stripe accepts a shipping address for.
+# SHIPPING_COUNTRIES = "PT,ES,FR,DE,IT,NL,BE,GB,IE"
 
 [[r2_buckets]]
 binding = "IMAGES"

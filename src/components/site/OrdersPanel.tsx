@@ -58,10 +58,16 @@ export const OrdersPanel: React.FC<{ content: SiteContent }> = ({ content }) => 
         <div key={order.id} className={`${cardClass} p-4 space-y-2`}>
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div>
-              <p className="font-semibold">
-                {order.quantity > 1 ? `${order.quantity}× ` : ''}
-                {order.itemTitle}
-              </p>
+              <p className="font-semibold">{order.itemTitle}</p>
+              {order.lines?.length > 1 && (
+                <ul className="text-xs text-zinc-600 dark:text-zinc-400">
+                  {order.lines.map((l) => (
+                    <li key={l.itemId}>
+                      {l.quantity}× {l.title} · {eur(l.unitPrice)}
+                    </li>
+                  ))}
+                </ul>
+              )}
               <p className="text-xs text-zinc-500">
                 {new Date(order.createdAt).toLocaleString('pt-PT', { dateStyle: 'medium', timeStyle: 'short' })} ·{' '}
                 {eur(order.amountTotal, (order.currency || 'eur').toUpperCase())}
@@ -92,6 +98,11 @@ export const OrdersPanel: React.FC<{ content: SiteContent }> = ({ content }) => 
               </p>
             )}
             {order.trackingNumber && <p>Tracking: {order.trackingNumber}</p>}
+            {order.notes && (
+              <p className="whitespace-pre-line rounded-md bg-amber-50 px-2 py-1 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                {order.notes}
+              </p>
+            )}
           </div>
 
           {order.status === 'paid' && (

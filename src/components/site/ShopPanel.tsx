@@ -45,6 +45,9 @@ type Draft = Omit<ShopItem, 'id' | 'image' | 'order' | 'createdAt' | 'price' | '
   editionSize: string;
   stock: string;
   shippingPrice: string;
+  /** Values when the form was opened: if the user leaves them alone, the live values win (a sale may happen meanwhile). */
+  openedStock?: string;
+  openedStatus?: ShopItemStatus;
 };
 
 const num = (v: string) => Number(String(v).replace(',', '.'));
@@ -69,6 +72,8 @@ export const ShopPanel: React.FC<{ content: SiteContent }> = ({ content }) => {
         editionSize: String(item.editionSize ?? ''),
         stock: String(item.stock ?? ''),
         shippingPrice: String(item.shippingPrice ?? ''),
+        openedStock: String(item.stock ?? ''),
+        openedStatus: item.status,
       });
       return;
     }
@@ -124,8 +129,22 @@ export const ShopPanel: React.FC<{ content: SiteContent }> = ({ content }) => {
     try {
       const image = file ? await uploadImage(file, 'shop') : draft.image!;
       const existing = draft.id ? items.find((i) => i.id === draft.id) : undefined;
+      // Keep the live stock / status unless the user changed them in this form: a checkout may have
+      // reserved or sold copies while the form was open.
+      if (existing && draft.kind === 'edition' && existing.kind === 'edition' && draft.stock === draft.openedStock) {
+        stock = existing.stock ?? stock;
+      }
+      const keepStatus = existing && draft.kind === 'original' && existing.kind === 'original' && draft.status === draft.openedStatus;
       const status: ShopItemStatus =
-        draft.kind === 'edition' ? ((stock ?? 0) > 0 ? 'available' : 'sold') : draft.kind === 'merch' ? 'available' : draft.status;
+        draft.kind === 'edition'
+          ? (stock ?? 0) > 0
+            ? 'available'
+            : 'sold'
+          : draft.kind === 'merch'
+          ? 'available'
+          : keepStatus
+          ? existing!.status
+          : draft.status;
       const item: ShopItem = {
         id: draft.id || newId('shop'),
         kind: draft.kind,
@@ -137,6 +156,7 @@ export const ShopPanel: React.FC<{ content: SiteContent }> = ({ content }) => {
         year: draft.year?.trim() || undefined,
         price,
         status,
+        reservedBy: status === 'reserved' && keepStatus ? existing?.reservedBy : undefined,
         editionSize,
         stock,
         shippingPrice,

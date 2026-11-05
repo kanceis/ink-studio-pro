@@ -14,6 +14,16 @@ export interface Env {
   FIRESTORE_EMULATOR_HOST?: string;
   /** Comma-separated origins allowed to call the API (the app's own origin is always allowed). */
   ALLOWED_ORIGINS?: string;
+  /** Service account JSON key with Firestore access (secret). Needed for checkout and the Stripe webhook. */
+  GOOGLE_SERVICE_ACCOUNT?: string;
+  /** Stripe secret key, sk_live_... or sk_test_... (secret). */
+  STRIPE_SECRET_KEY?: string;
+  /** Signing secret of the Stripe webhook endpoint, whsec_... (secret). */
+  STRIPE_WEBHOOK_SECRET?: string;
+  /** Only for tests: a mock Stripe API base URL. */
+  STRIPE_API_BASE?: string;
+  /** Countries Stripe asks a shipping address for, comma separated (default PT,ES,FR,DE,IT,NL,BE,GB,IE). */
+  SHIPPING_COUNTRIES?: string;
 }
 
 export const json = (body: unknown, status = 200, headers: HeadersInit = {}) =>
@@ -33,7 +43,7 @@ export const corsHeaders = (request: Request, env: Env): HeadersInit => {
   if (origin !== self && !allowed.includes(origin)) return {};
   return {
     'access-control-allow-origin': origin,
-    'access-control-allow-methods': 'POST, DELETE, OPTIONS',
+    'access-control-allow-methods': 'GET, POST, DELETE, OPTIONS',
     'access-control-allow-headers': 'authorization, content-type',
     'access-control-max-age': '86400',
     vary: 'origin',

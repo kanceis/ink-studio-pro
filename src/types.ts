@@ -211,7 +211,8 @@ export interface ShopItem {
   status: ShopItemStatus; // originals; editions become 'sold' when stock hits 0
   editionSize?: number; // editions: total copies (e.g. 25)
   stock?: number; // editions: copies left to sell
-  shippingPrice?: number; // editions: EUR, 0 = free
+  reservedBy?: string; // originals: checkout reservation holding the piece (set by the server)
+  shippingPrice?: number; // originals & editions: EUR, 0 = free
   paymentLink?: string; // originals: optional Stripe Payment Link
   externalUrl?: string; // merch: product page on Redbubble / Printful / ...
   image: UploadedImage;
@@ -222,13 +223,21 @@ export interface ShopItem {
 
 export type OrderStatus = 'paid' | 'shipped' | 'cancelled';
 
-/** Written by the Stripe webhook (functions/api/stripe-webhook.ts). */
-export interface ShopOrder {
-  id: string; // Stripe Checkout Session id
+export interface ShopOrderLine {
   itemId: string;
-  itemTitle: string;
+  title: string;
+  kind: ShopItemKind;
   quantity: number;
-  amountTotal: number; // EUR
+  unitPrice: number; // EUR
+}
+
+/** Written by the Stripe webhook (functions/api/stripe-webhook.ts). Id = Stripe Checkout Session id. */
+export interface ShopOrder {
+  id: string;
+  lines: ShopOrderLine[];
+  itemTitle: string; // summary, e.g. "Ruptura #3 + 2× Print Lobo"
+  amountTotal: number; // EUR, including shipping
+  shippingAmount?: number;
   currency: string;
   customerName?: string;
   customerEmail?: string;
