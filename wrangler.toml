@@ -1,0 +1,16 @@
+# Cloudflare Pages project for the INK Studio Pro app (backoffice).
+# The static app is in dist/, the photo API is in functions/.
+name = "ink-studio-pro"
+compatibility_date = "2026-10-01"
+pages_build_output_dir = "dist"
+
+[vars]
+FIREBASE_PROJECT_ID = "gen-lang-client-0172609399"
+FIRESTORE_DATABASE_ID = "(default)"
+STUDIO_ID = "main"
+# Origins (besides the app itself) allowed to call /api/images, comma separated.
+ALLOWED_ORIGINS = ""
+
+[[r2_buckets]]
+binding = "IMAGES"
+bucket_name = "arant-images"

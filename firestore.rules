@@ -13,6 +13,32 @@ service cloud.firestore {
              in get(/databases/$(database)/documents/studios/$(studioId)).data.members;
     }
 
+    function optionalString(d, field, max) {
+      return !(field in d) || (d[field] is string && d[field].size() <= max);
+    }
+
+    function requiredString(d, field, max) {
+      return field in d && d[field] is string && d[field].size() > 0 && d[field].size() <= max;
+    }
+
+    function validBookingRequest(d) {
+      return d.keys().hasOnly(['name', 'email', 'phone', 'instagram', 'idea', 'placement', 'size',
+                               'style', 'preferredDates', 'referenceUrl', 'status', 'createdAt'])
+        && requiredString(d, 'name', 120)
+        && requiredString(d, 'email', 200)
+        && d.email.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$')
+        && requiredString(d, 'phone', 40)
+        && requiredString(d, 'idea', 4000)
+        && requiredString(d, 'createdAt', 40)
+        && d.status == 'new'
+        && optionalString(d, 'instagram', 100)
+        && optionalString(d, 'placement', 200)
+        && optionalString(d, 'size', 100)
+        && optionalString(d, 'style', 100)
+        && optionalString(d, 'preferredDates', 300)
+        && optionalString(d, 'referenceUrl', 500);
+    }
+
     match /studios/{studioId} {
       allow read: if isMember(studioId);
       allow write: if false;
@@ -21,6 +47,28 @@ service cloud.firestore {
       // (a bare {document=**} would, and would let members edit the member list).
       match /{sub}/{rest=**} {
         allow read, write: if isMember(studioId);
+      }
+
+      // ---- Public website (read by anyone, written only by members above) ----
+
+      // Studio info shown on the site.
+      match /meta/public {
+        allow read: if true;
+      }
+
+      // Portfolio and original art: only published entries are public.
+      // The site must query with where('published', '==', true).
+      match /portfolio/{id} {
+        allow read: if resource.data.published == true;
+      }
+      match /artworks/{id} {
+        allow read: if resource.data.published == true;
+      }
+
+      // Booking form: anyone can create a well-formed request, nobody outside
+      // the studio can read, change or delete requests.
+      match /bookingRequests/{id} {
+        allow create: if validBookingRequest(request.resource.data);
       }
     }
   }

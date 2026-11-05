@@ -155,3 +155,83 @@ export interface ToastNotification {
   message: string;
   type: 'success' | 'error' | 'info';
 }
+
+// ---------------------------------------------------------------------------
+// Website backoffice: content the public site reads (see firestore.rules)
+// ---------------------------------------------------------------------------
+
+export type PortfolioCategory = 'tattoo' | 'drawing' | 'art';
+
+export interface UploadedImage {
+  url: string; // public URL served by /img/<key>
+  key: string; // object key in the R2 bucket
+  width?: number;
+  height?: number;
+}
+
+export interface PortfolioItem {
+  id: string;
+  title: string;
+  category: PortfolioCategory;
+  style?: string; // e.g. "Black & Red", "Sketch / Illustration"
+  description?: string;
+  image: UploadedImage;
+  published: boolean; // only published items are visible on the site
+  featured: boolean; // shown on the home page
+  order: number; // lower first
+  createdAt: string;
+}
+
+export type ArtworkStatus = 'available' | 'reserved' | 'sold';
+
+export interface Artwork {
+  id: string;
+  title: string;
+  description?: string;
+  medium?: string; // e.g. "Tinta-da-china sobre papel"
+  dimensions?: string; // e.g. "30 x 40 cm"
+  year?: string;
+  price: number; // EUR
+  status: ArtworkStatus;
+  paymentLink?: string; // Stripe Payment Link for this piece
+  image: UploadedImage;
+  published: boolean;
+  order: number;
+  createdAt: string;
+}
+
+export type BookingRequestStatus = 'new' | 'accepted' | 'declined';
+
+export interface BookingRequest {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  instagram?: string;
+  idea: string;
+  placement?: string;
+  size?: string;
+  style?: string;
+  preferredDates?: string;
+  referenceUrl?: string;
+  status: BookingRequestStatus;
+  createdAt: string; // ISO timestamp
+  clientId?: string; // set when accepted
+  internalNotes?: string;
+}
+
+/** Studio info shown on the public site (meta/public). Everything here is public. */
+export interface PublicProfile {
+  name: string;
+  tagline: string;
+  bio: string;
+  city: string;
+  address: string;
+  phone: string;
+  whatsapp: string;
+  email: string;
+  instagram: string;
+  openingHours: string;
+  depositInfo: string;
+  bookingOpen: boolean;
+}

@@ -20,6 +20,7 @@ import { SendDirectMessageModal } from './components/SendDirectMessageModal';
 import { NotificationCenterModal } from './components/NotificationCenterModal';
 import { ShareProjectModal } from './components/ShareProjectModal';
 import { AuthGate } from './components/AuthGate';
+import { SiteView } from './components/SiteView';
 import { Appointment } from './types';
 import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
 
@@ -95,6 +96,8 @@ const StudioAppContent: React.FC = () => {
         {activeTab === 'analytics' && <AnalyticsView />}
 
         {activeTab === 'profile' && <StudioProfileView />}
+
+        {activeTab === 'site' && <SiteView />}
       </main>
 
       {/* Modals */}

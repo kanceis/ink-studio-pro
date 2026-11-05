@@ -10,7 +10,7 @@ import {
   initializeTestEnvironment,
   RulesTestEnvironment,
 } from '@firebase/rules-unit-testing';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { collection, deleteDoc, doc, getDoc, getDocs, query, setDoc, updateDoc, where } from 'firebase/firestore';
 
 let env: RulesTestEnvironment;
 
@@ -30,6 +30,12 @@ beforeEach(async () => {
     const db = ctx.firestore();
     await setDoc(doc(db, 'studios/main'), { name: 'ARANT', members: ['miguel@example.com'] });
     await setDoc(doc(db, 'studios/main/inventory/inv-1'), { name: 'Agulhas 3RL', quantity: 10 });
+    await setDoc(doc(db, 'studios/main/meta/public'), { name: 'ARANT' });
+    await setDoc(doc(db, 'studios/main/meta/settings'), { whatsappPhoneNumber: '+351 900 000 000' });
+    await setDoc(doc(db, 'studios/main/portfolio/p-pub'), { title: 'Gorila', published: true });
+    await setDoc(doc(db, 'studios/main/portfolio/p-draft'), { title: 'Rascunho', published: false });
+    await setDoc(doc(db, 'studios/main/artworks/a-pub'), { title: 'Tela', published: true, price: 300 });
+    await setDoc(doc(db, 'studios/main/bookingRequests/b-1'), { name: 'Ana', status: 'new' });
   });
 });
 
@@ -75,4 +81,75 @@ test('anonymous visitors get nothing', async () => {
 test('no access to a studio that has not been set up', async () => {
   const db = env.authenticatedContext('u1', member).firestore();
   await assertFails(getDoc(doc(db, 'studios/other/inventory/inv-1')));
+});
+
+// ---------------------------------------------------------------------------
+// Public website access
+// ---------------------------------------------------------------------------
+
+const validBooking = () => ({
+  name: 'Ana Silva',
+  email: 'ana@example.com',
+  phone: '+351 912 000 000',
+  idea: 'Um lobo em sketch black & red no antebraço',
+  placement: 'Antebraço',
+  status: 'new',
+  createdAt: new Date().toISOString(),
+});
+
+test('anyone can read the public studio profile, but not private settings', async () => {
+  const db = env.unauthenticatedContext().firestore();
+  await assertSucceeds(getDoc(doc(db, 'studios/main/meta/public')));
+  await assertFails(getDoc(doc(db, 'studios/main/meta/settings')));
+});
+
+test('anyone can list published portfolio and artworks, never drafts', async () => {
+  const db = env.unauthenticatedContext().firestore();
+  await assertSucceeds(getDocs(query(collection(db, 'studios/main/portfolio'), where('published', '==', true))));
+  await assertSucceeds(getDocs(query(collection(db, 'studios/main/artworks'), where('published', '==', true))));
+  await assertSucceeds(getDoc(doc(db, 'studios/main/portfolio/p-pub')));
+  await assertFails(getDoc(doc(db, 'studios/main/portfolio/p-draft')));
+  await assertFails(getDocs(collection(db, 'studios/main/portfolio')));
+});
+
+test('visitors cannot change site content', async () => {
+  const db = env.unauthenticatedContext().firestore();
+  await assertFails(updateDoc(doc(db, 'studios/main/portfolio/p-pub'), { title: 'x' }));
+  await assertFails(setDoc(doc(db, 'studios/main/artworks/a-new'), { title: 'x', published: true }));
+  await assertFails(updateDoc(doc(db, 'studios/main/meta/public'), { name: 'x' }));
+});
+
+test('a visitor can send a well-formed booking request', async () => {
+  const db = env.unauthenticatedContext().firestore();
+  await assertSucceeds(setDoc(doc(db, 'studios/main/bookingRequests/b-new'), validBooking()));
+});
+
+test('malformed or tampered booking requests are refused', async () => {
+  const db = env.unauthenticatedContext().firestore();
+  const ref = doc(db, 'studios/main/bookingRequests/b-bad');
+  await assertFails(setDoc(ref, { ...validBooking(), status: 'accepted' }));
+  await assertFails(setDoc(ref, { ...validBooking(), email: 'not-an-email' }));
+  await assertFails(setDoc(ref, { ...validBooking(), idea: '' }));
+  await assertFails(setDoc(ref, { ...validBooking(), idea: 'x'.repeat(4001) }));
+  await assertFails(setDoc(ref, { ...validBooking(), clientId: 'client-1' }));
+  const { phone: _omit, ...noPhone } = validBooking();
+  await assertFails(setDoc(ref, noPhone));
+});
+
+test('visitors cannot read, edit or delete booking requests', async () => {
+  const db = env.unauthenticatedContext().firestore();
+  await assertFails(getDoc(doc(db, 'studios/main/bookingRequests/b-1')));
+  await assertFails(getDocs(collection(db, 'studios/main/bookingRequests')));
+  await assertFails(updateDoc(doc(db, 'studios/main/bookingRequests/b-1'), { status: 'accepted' }));
+  await assertFails(deleteDoc(doc(db, 'studios/main/bookingRequests/b-1')));
+});
+
+test('members manage site content and booking requests', async () => {
+  const db = env.authenticatedContext('u1', member).firestore();
+  await assertSucceeds(getDocs(collection(db, 'studios/main/portfolio')));
+  await assertSucceeds(getDoc(doc(db, 'studios/main/portfolio/p-draft')));
+  await assertSucceeds(updateDoc(doc(db, 'studios/main/portfolio/p-draft'), { published: true }));
+  await assertSucceeds(updateDoc(doc(db, 'studios/main/meta/public'), { name: 'ARANT Tattoo' }));
+  await assertSucceeds(getDocs(collection(db, 'studios/main/bookingRequests')));
+  await assertSucceeds(updateDoc(doc(db, 'studios/main/bookingRequests/b-1'), { status: 'accepted' }));
 });

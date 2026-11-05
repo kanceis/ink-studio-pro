@@ -11,6 +11,7 @@ import {
   TattooReference,
   ClinicalHistory,
   ToastNotification,
+  BookingRequest,
 } from '../types';
 import { defaultSettings } from './initialData';
 import {
@@ -52,8 +53,8 @@ import {
 interface StudioContextType {
   theme: ThemeMode;
   toggleTheme: () => void;
-  activeTab: 'calendar' | 'clients' | 'artists' | 'stock' | 'messages' | 'analytics' | 'profile';
-  setActiveTab: (tab: 'calendar' | 'clients' | 'artists' | 'stock' | 'messages' | 'analytics' | 'profile') => void;
+  activeTab: 'calendar' | 'clients' | 'artists' | 'stock' | 'messages' | 'analytics' | 'profile' | 'site';
+  setActiveTab: (tab: 'calendar' | 'clients' | 'artists' | 'stock' | 'messages' | 'analytics' | 'profile' | 'site') => void;
   
   // Google Workspace Integration
   googleUser: User | null;
@@ -110,6 +111,10 @@ interface StudioContextType {
   settings: StudioSettings;
   updateSettings: (newSettings: Partial<StudioSettings>) => void;
   
+  // Website booking requests
+  bookingRequests: BookingRequest[];
+  newBookingRequestCount: number;
+
   // Computed alerts
   expiringItems: { item: InventoryItem; daysUntilExpiration: number; isExpired: boolean }[];
   lowStockItems: InventoryItem[];
@@ -136,7 +141,7 @@ export const StudioProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return (saved as ThemeMode) || 'dark';
   });
 
-  const [activeTab, setActiveTab] = useState<'calendar' | 'clients' | 'artists' | 'stock' | 'messages' | 'analytics' | 'profile'>('calendar');
+  const [activeTab, setActiveTab] = useState<'calendar' | 'clients' | 'artists' | 'stock' | 'messages' | 'analytics' | 'profile' | 'site'>('calendar');
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
 
   // In-app toasts state
@@ -166,6 +171,11 @@ export const StudioProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [notificationLogs, setNotificationLogs] = useState<NotificationLog[]>([]);
+  const [bookingRequests, setBookingRequests] = useState<BookingRequest[]>([]);
+  const newBookingRequestCount = useMemo(
+    () => bookingRequests.filter((r) => r.status === 'new').length,
+    [bookingRequests]
+  );
 
   const [isNotificationCenterOpen, setIsNotificationCenterOpen] = useState(false);
 
@@ -209,6 +219,11 @@ export const StudioProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       subscribeCollection(
         'notifications',
         (items) => setNotificationLogs([...items].sort((a, b) => b.timestamp.localeCompare(a.timestamp))),
+        onError
+      ),
+      subscribeCollection(
+        'bookingRequests',
+        (items) => setBookingRequests([...items].sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))),
         onError
       ),
     ];
@@ -872,6 +887,8 @@ export const StudioProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         clearAllNotifications,
         settings,
         updateSettings,
+        bookingRequests,
+        newBookingRequestCount,
         expiringItems,
         lowStockItems,
         upcoming24hAppointments,

@@ -73,6 +73,30 @@ npm run emulators    # emuladores de Auth + Firestore para desenvolvimento
 VITE_USE_FIREBASE_EMULATORS=true VITE_FIREBASE_PROJECT_ID=demo-ink-studio npm run dev
 ```
 
+## 🌐 Backoffice do site (separador "Site & Portfólio")
+
+A app gere o conteúdo do site público:
+
+- **Portfólio** (Tattoo, Drawing, Art): fotos com título, estilo, publicado/rascunho, destaque e ordem.
+- **Arte à venda:** obras originais com preço, estado (disponível, reservada, vendida) e link de pagamento Stripe.
+- **Pedidos de marcação:** o formulário do site cria pedidos; ao aceitar, o cliente é criado na ficha de clientes.
+- **Perfil público:** nome, frase, bio, contactos e horário mostrados no site (`meta/public`).
+
+O site lê tudo diretamente do Firestore (só o que está publicado, ver `firestore.rules`).
+
+### Fotos (Cloudflare R2)
+
+As fotos são guardadas num bucket R2 através das Pages Functions em `functions/`:
+`POST /api/images` (só membros do estúdio), `DELETE /api/images/<chave>` e `GET /img/<chave>` (público).
+A app reduz as fotos para 2000px em WebP antes de as enviar.
+
+1. No Cloudflare: **R2 → Create bucket** com o nome `arant-images`.
+2. No projeto Pages da app: **Settings → Bindings → R2 bucket**, variável `IMAGES` → `arant-images`
+   (ou usa o `wrangler.toml`, que já tem isto configurado).
+3. Se o site estiver noutro domínio e precisar de chamar a API, junta-o a `ALLOWED_ORIGINS` no `wrangler.toml`.
+
+Para testar localmente: `npm run build && npm run pages:dev` (API em `http://127.0.0.1:8788`; o `npm run dev` reencaminha `/api` e `/img` para lá).
+
 ### Publicar no Cloudflare Pages
 
 Build command `npm run build`, output directory `dist`. Lembra-te de adicionar o domínio `*.pages.dev` aos *Authorized domains* do Firebase (passo 3).

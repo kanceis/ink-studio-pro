@@ -24,6 +24,10 @@ import {
   InventoryItem,
   NotificationLog,
   StudioSettings,
+  PortfolioItem,
+  Artwork,
+  BookingRequest,
+  PublicProfile,
 } from '../types';
 
 /**
@@ -38,6 +42,12 @@ import {
  *   studios/{studioId}/inventory/{id}       -> InventoryItem
  *   studios/{studioId}/notifications/{id}   -> NotificationLog
  *
+ * Website backoffice (partly public, see firestore.rules):
+ *   studios/{studioId}/meta/public          -> PublicProfile   (public)
+ *   studios/{studioId}/portfolio/{id}       -> PortfolioItem   (public when published)
+ *   studios/{studioId}/artworks/{id}        -> Artwork         (public when published)
+ *   studios/{studioId}/bookingRequests/{id} -> BookingRequest  (anyone can create)
+ *
  * The persistent local cache keeps the app usable offline; writes are queued
  * and synced when the device is back online.
  */
@@ -51,7 +61,15 @@ export const db: Firestore = initializeFirestore(
 );
 if (USE_EMULATORS) connectFirestoreEmulator(db, '127.0.0.1', 8080);
 
-export type CollectionName = 'artists' | 'clients' | 'appointments' | 'inventory' | 'notifications';
+export type CollectionName =
+  | 'artists'
+  | 'clients'
+  | 'appointments'
+  | 'inventory'
+  | 'notifications'
+  | 'portfolio'
+  | 'artworks'
+  | 'bookingRequests';
 
 type EntityMap = {
   artists: Artist;
@@ -59,12 +77,29 @@ type EntityMap = {
   appointments: Appointment;
   inventory: InventoryItem;
   notifications: NotificationLog;
+  portfolio: PortfolioItem;
+  artworks: Artwork;
+  bookingRequests: BookingRequest;
 };
 
 const studioRef = () => doc(db, 'studios', STUDIO_ID);
 const colRef = (name: CollectionName) => collection(db, 'studios', STUDIO_ID, name);
 const itemRef = (name: CollectionName, id: string) => doc(db, 'studios', STUDIO_ID, name, id);
 const settingsRef = () => doc(db, 'studios', STUDIO_ID, 'meta', 'settings');
+const publicProfileRef = () => doc(db, 'studios', STUDIO_ID, 'meta', 'public');
+
+export const subscribePublicProfile = (
+  onData: (profile: Partial<PublicProfile> | null) => void,
+  onError: (err: Error) => void
+): Unsubscribe =>
+  onSnapshot(
+    publicProfileRef(),
+    (snap) => onData(snap.exists() ? (snap.data() as Partial<PublicProfile>) : null),
+    onError
+  );
+
+export const savePublicProfile = (profile: Partial<PublicProfile>) =>
+  setDoc(publicProfileRef(), profile, { merge: true });
 
 /** Collision-safe id with a readable prefix, e.g. "inv-1730563200000-3f9a1c". */
 export const newId = (prefix: string): string =>
