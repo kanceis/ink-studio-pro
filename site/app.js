@@ -155,6 +155,29 @@
       extra || null,
     ]);
 
+  // Photos of the studio (site/assets/estudio, WebP at 800 and 1600 px, metadata removed).
+  const STUDIO_PHOTOS = {
+    hero: ['hero-artista-a-tatuar', 'Tatuador a trabalhar no estúdio, a preto e branco'],
+    main: ['armario-desenhado', 'Armário preto do estúdio, desenhado à mão com caveira, âncora e flash'],
+    strip: [
+      ['carrinho-autocolantes', 'Carrinho vermelho de trabalho, coberto de autocolantes'],
+      ['painel-black-red', 'Painel de madeira pintado a black & red'],
+      ['aguarelas', 'Aguarelas emolduradas na parede do estúdio'],
+      ['garrafas', 'Garrafas decoradas em caixas de madeira na parede'],
+    ],
+    more: [
+      ['sessao', 'Sessão de tatuagem em curso no estúdio'],
+      ['maquinas', 'Máquinas de tatuar em cima da bancada'],
+      ['paineis-parede', 'Painéis de arte encostados à parede'],
+    ],
+  };
+  const studioImg = ([name, alt], ratio = 'r43', sizes = '(max-width: 640px) 100vw, 50vw') => {
+    const src = (w) => `assets/estudio/${name}-${w}.webp`;
+    return el('button', { type: 'button', class: 'photo-btn', 'aria-label': `Ver maior: ${alt}`, onclick: () => openViewer({ image: { url: new URL(src(1600), location.href).href }, title: alt }, alt) }, [
+      el('div', { class: `ph ${ratio}` }, el('img', { src: src(800), srcset: `${src(800)} 800w, ${src(1600)} 1600w`, sizes, alt, loading: 'lazy', decoding: 'async' })),
+    ]);
+  };
+
   const workCaption = (p) => [artistName(p.artistId), p.style, p.title].filter(Boolean).join(' · ');
 
   const workGrid = (items, { min = '260px' } = {}) =>
@@ -250,7 +273,6 @@
 
   pages.home = () => {
     const p = data.profile;
-    const hero = work().find((w) => w.featured) || work()[0];
     let filter = 'all';
     const workBox = el('div');
     const drawWork = () => {
@@ -282,7 +304,7 @@
           ]),
           mono('Respondemos em 48 h', 'muted'),
         ]),
-        hero ? zoomable(hero, 'r45', workCaption(hero)) : photo(null, 'Tatuagem e esboço lado a lado', 'r45'),
+        studioImg(STUDIO_PHOTOS.hero, 'r45', '(max-width: 900px) 100vw, 50vw'),
       ]),
 
       data.artists.length
@@ -322,7 +344,7 @@
     ];
   };
 
-  const studioSection = () => {
+  const studioSection = ({ full = false } = {}) => {
     const p = data.profile;
     const wa = whatsappUrl();
     const ig = instagramUrl(p.instagram);
@@ -338,8 +360,12 @@
       p.openingHours ? ['Horário', p.openingHours] : null,
     ].filter(Boolean);
     return el('section', { class: 'section rule', id: 'estudio' }, el('div', { class: 'wrap', style: 'display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:48px;align-items:start' }, [
+      el('div', { class: 'stack', style: 'gap:8px' }, [
+        studioImg(STUDIO_PHOTOS.main),
+        el('div', { class: 'studio-strip' }, STUDIO_PHOTOS.strip.map((ph) => studioImg(ph, 'r11', '(max-width: 640px) 50vw, 160px'))),
+      ]),
       el('div', { class: 'stack' }, [
-        el('h2', { class: 'disp h2', text: 'O estúdio' }),
+        el(full ? 'h1' : 'h2', { class: 'disp h2', text: 'O estúdio' }),
         p.bio ? el('p', { class: 'muted', style: 'margin:0;white-space:pre-line', text: p.bio }) : null,
         el('dl', { class: 'facts' }, [
           ...facts.flatMap(([k, v]) => [el('dt', { class: 'mono', text: k }), el('dd', { text: v })]),
@@ -347,9 +373,7 @@
           contacts.length ? el('dd', {}, contacts.flatMap((c, i) => (i ? [' · ', c] : [c]))) : null,
         ]),
         mapUrl ? el('p', { style: 'margin:0' }, el('a', { class: 'lnk', href: mapUrl, target: '_blank', rel: 'noopener noreferrer', text: 'Abrir no mapa ↗' })) : null,
-      ]),
-      el('div', { class: 'stack' }, [
-        el('h3', { class: 'disp', style: 'font-size:32px', text: 'Antes de vir' }),
+        el('h3', { class: 'disp', style: 'font-size:32px;margin-top:16px', text: 'Antes de vir' }),
         el('ul', { style: 'margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px' }, [
           'Só tatuamos maiores de 18 anos, com documento de identificação.',
           'Dorme bem, come antes da sessão e evita álcool nas 24 h anteriores.',
@@ -358,6 +382,12 @@
       ]),
     ]));
   };
+
+  const studioGallery = () =>
+    el('section', { class: 'section rule' }, el('div', { class: 'wrap' }, [
+      sectionHead('O espaço', 'Fotografias do estúdio em Vila Nova de Gaia.'),
+      el('div', { class: 'grid tight two-up', style: '--min:300px' }, STUDIO_PHOTOS.more.map((ph) => studioImg(ph, 'r43', '(max-width: 640px) 50vw, 33vw'))),
+    ]));
 
   pages.artists = () => [
     el('section', { class: 'section' }, el('div', { class: 'wrap' }, [
@@ -589,8 +619,9 @@
   };
 
   pages.studio = () => [
-    el('section', { class: 'section' }, el('div', { class: 'wrap' }, [el('h1', { class: 'disp h2', style: 'margin-bottom:40px', text: 'Como funciona' }), steps()])),
-    studioSection(),
+    studioSection({ full: true }),
+    studioGallery(),
+    el('section', { class: 'section rule' }, el('div', { class: 'wrap' }, [el('h2', { class: 'disp h2', style: 'margin-bottom:40px', text: 'Como funciona' }), steps()])),
   ];
 
   pages.thanks = () => {

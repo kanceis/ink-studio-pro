@@ -270,3 +270,6 @@ fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
   body.has-mobile-cta { padding-bottom: 76px; }
 }
 @media (max-width: 640px) { .progress .mono { font-size: 10px; letter-spacing: .4px; } }
+.studio-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+@media (max-width: 640px) { .studio-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+#estudio:first-child { border-top: 0; }
