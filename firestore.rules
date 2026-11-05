@@ -22,16 +22,26 @@ service cloud.firestore {
     }
 
     function validBookingRequest(d) {
-      return d.keys().hasOnly(['name', 'email', 'phone', 'instagram', 'idea', 'placement', 'size',
-                               'style', 'preferredDates', 'referenceUrl', 'status', 'createdAt'])
+      return d.keys().hasOnly(['name', 'email', 'phone', 'instagram', 'artistId', 'artistName',
+                               'tattooType', 'flashNumber', 'firstTattoo', 'idea',
+                               'placement', 'size', 'style', 'preferredDates', 'referenceUrl',
+                               'status', 'createdAt', 'adultConfirmedAt', 'privacyAcceptedAt'])
         && requiredString(d, 'name', 120)
         && requiredString(d, 'email', 200)
         && d.email.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$')
         && requiredString(d, 'phone', 40)
         && requiredString(d, 'idea', 4000)
         && requiredString(d, 'createdAt', 40)
+        // GDPR: both confirmations are required and stored with their timestamp
+        && requiredString(d, 'adultConfirmedAt', 40)
+        && requiredString(d, 'privacyAcceptedAt', 40)
+        && optionalString(d, 'tattooType', 40)
+        && optionalString(d, 'flashNumber', 20)
+        && (!('firstTattoo' in d) || d.firstTattoo is bool)
         && d.status == 'new'
         && optionalString(d, 'instagram', 100)
+        && optionalString(d, 'artistId', 80)
+        && optionalString(d, 'artistName', 120)
         && optionalString(d, 'placement', 200)
         && optionalString(d, 'size', 100)
         && optionalString(d, 'style', 100)
@@ -56,12 +66,13 @@ service cloud.firestore {
         allow read: if true;
       }
 
-      // Portfolio and original art: only published entries are public.
+      // Portfolio and shop: only published entries are public.
       // The site must query with where('published', '==', true).
+      // Orders (studios/{id}/orders) are only readable by members, via the rule above.
       match /portfolio/{id} {
         allow read: if resource.data.published == true;
       }
-      match /artworks/{id} {
+      match /shop/{id} {
         allow read: if resource.data.published == true;
       }
 

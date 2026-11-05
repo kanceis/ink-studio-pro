@@ -9,7 +9,7 @@ export const onRequestDelete: PagesFunction<Env> = async ({ request, env, params
   if (!(await isStudioMember(request, env))) return json({ error: 'not_allowed' }, 403, cors);
 
   const key = Array.isArray(params.key) ? params.key.join('/') : String(params.key || '');
-  if (!/^(portfolio|artworks|misc)\/[0-9a-f-]{36}\.(webp|jpg|png|avif)$/.test(key)) {
+  if (!/^(portfolio|shop|artists|misc)\/[0-9a-f-]{36}\.(webp|jpg|png|avif)$/.test(key)) {
     return json({ error: 'bad_key' }, 400, cors);
   }
   await env.IMAGES.delete(key);

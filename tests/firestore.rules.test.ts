@@ -34,7 +34,7 @@ beforeEach(async () => {
     await setDoc(doc(db, 'studios/main/meta/settings'), { whatsappPhoneNumber: '+351 900 000 000' });
     await setDoc(doc(db, 'studios/main/portfolio/p-pub'), { title: 'Gorila', published: true });
     await setDoc(doc(db, 'studios/main/portfolio/p-draft'), { title: 'Rascunho', published: false });
-    await setDoc(doc(db, 'studios/main/artworks/a-pub'), { title: 'Tela', published: true, price: 300 });
+    await setDoc(doc(db, 'studios/main/shop/a-pub'), { title: 'Tela', published: true, price: 300 });
     await setDoc(doc(db, 'studios/main/bookingRequests/b-1'), { name: 'Ana', status: 'new' });
   });
 });
@@ -93,8 +93,14 @@ const validBooking = () => ({
   phone: '+351 912 000 000',
   idea: 'Um lobo em sketch black & red no antebraço',
   placement: 'Antebraço',
+  artistId: 'artist-1',
+  artistName: 'Arants',
+  tattooType: 'Desenho novo',
+  firstTattoo: true,
   status: 'new',
   createdAt: new Date().toISOString(),
+  adultConfirmedAt: new Date().toISOString(),
+  privacyAcceptedAt: new Date().toISOString(),
 });
 
 test('anyone can read the public studio profile, but not private settings', async () => {
@@ -106,7 +112,7 @@ test('anyone can read the public studio profile, but not private settings', asyn
 test('anyone can list published portfolio and artworks, never drafts', async () => {
   const db = env.unauthenticatedContext().firestore();
   await assertSucceeds(getDocs(query(collection(db, 'studios/main/portfolio'), where('published', '==', true))));
-  await assertSucceeds(getDocs(query(collection(db, 'studios/main/artworks'), where('published', '==', true))));
+  await assertSucceeds(getDocs(query(collection(db, 'studios/main/shop'), where('published', '==', true))));
   await assertSucceeds(getDoc(doc(db, 'studios/main/portfolio/p-pub')));
   await assertFails(getDoc(doc(db, 'studios/main/portfolio/p-draft')));
   await assertFails(getDocs(collection(db, 'studios/main/portfolio')));
@@ -115,7 +121,7 @@ test('anyone can list published portfolio and artworks, never drafts', async () 
 test('visitors cannot change site content', async () => {
   const db = env.unauthenticatedContext().firestore();
   await assertFails(updateDoc(doc(db, 'studios/main/portfolio/p-pub'), { title: 'x' }));
-  await assertFails(setDoc(doc(db, 'studios/main/artworks/a-new'), { title: 'x', published: true }));
+  await assertFails(setDoc(doc(db, 'studios/main/shop/a-new'), { title: 'x', published: true }));
   await assertFails(updateDoc(doc(db, 'studios/main/meta/public'), { name: 'x' }));
 });
 
@@ -134,6 +140,11 @@ test('malformed or tampered booking requests are refused', async () => {
   await assertFails(setDoc(ref, { ...validBooking(), clientId: 'client-1' }));
   const { phone: _omit, ...noPhone } = validBooking();
   await assertFails(setDoc(ref, noPhone));
+  const { adultConfirmedAt: _a, ...noAdult } = validBooking();
+  await assertFails(setDoc(ref, noAdult));
+  const { privacyAcceptedAt: _p, ...noPrivacy } = validBooking();
+  await assertFails(setDoc(ref, noPrivacy));
+  await assertFails(setDoc(ref, { ...validBooking(), firstTattoo: 'sim' }));
 });
 
 test('visitors cannot read, edit or delete booking requests', async () => {
@@ -144,6 +155,12 @@ test('visitors cannot read, edit or delete booking requests', async () => {
   await assertFails(deleteDoc(doc(db, 'studios/main/bookingRequests/b-1')));
 });
 
+test('visitors cannot read or create shop orders', async () => {
+  const db = env.unauthenticatedContext().firestore();
+  await assertFails(getDocs(collection(db, 'studios/main/orders')));
+  await assertFails(setDoc(doc(db, 'studios/main/orders/cs_test'), { itemId: 'x', status: 'paid' }));
+});
+
 test('members manage site content and booking requests', async () => {
   const db = env.authenticatedContext('u1', member).firestore();
   await assertSucceeds(getDocs(collection(db, 'studios/main/portfolio')));
@@ -152,4 +169,5 @@ test('members manage site content and booking requests', async () => {
   await assertSucceeds(updateDoc(doc(db, 'studios/main/meta/public'), { name: 'ARANT Tattoo' }));
   await assertSucceeds(getDocs(collection(db, 'studios/main/bookingRequests')));
   await assertSucceeds(updateDoc(doc(db, 'studios/main/bookingRequests/b-1'), { status: 'accepted' }));
+  await assertSucceeds(getDocs(collection(db, 'studios/main/orders')));
 });

@@ -3,7 +3,7 @@ import { Env } from '../_lib/auth';
 /** GET /img/<folder>/<file>: serves a public website photo from R2, cached for a year. */
 export const onRequestGet: PagesFunction<Env> = async ({ request, env, params }) => {
   const key = Array.isArray(params.key) ? params.key.join('/') : String(params.key || '');
-  if (!/^(portfolio|artworks|misc)\/[0-9a-f-]{36}\.(webp|jpg|png|avif)$/.test(key)) {
+  if (!/^(portfolio|shop|artists|misc)\/[0-9a-f-]{36}\.(webp|jpg|png|avif)$/.test(key)) {
     return new Response('Not found', { status: 404 });
   }
 

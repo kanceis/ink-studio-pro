@@ -25,7 +25,8 @@ import {
   NotificationLog,
   StudioSettings,
   PortfolioItem,
-  Artwork,
+  ShopItem,
+  ShopOrder,
   BookingRequest,
   PublicProfile,
 } from '../types';
@@ -45,7 +46,8 @@ import {
  * Website backoffice (partly public, see firestore.rules):
  *   studios/{studioId}/meta/public          -> PublicProfile   (public)
  *   studios/{studioId}/portfolio/{id}       -> PortfolioItem   (public when published)
- *   studios/{studioId}/artworks/{id}        -> Artwork         (public when published)
+ *   studios/{studioId}/shop/{id}            -> ShopItem        (public when published)
+ *   studios/{studioId}/orders/{id}          -> ShopOrder       (written by the Stripe webhook)
  *   studios/{studioId}/bookingRequests/{id} -> BookingRequest  (anyone can create)
  *
  * The persistent local cache keeps the app usable offline; writes are queued
@@ -68,7 +70,8 @@ export type CollectionName =
   | 'inventory'
   | 'notifications'
   | 'portfolio'
-  | 'artworks'
+  | 'shop'
+  | 'orders'
   | 'bookingRequests';
 
 type EntityMap = {
@@ -78,7 +81,8 @@ type EntityMap = {
   inventory: InventoryItem;
   notifications: NotificationLog;
   portfolio: PortfolioItem;
-  artworks: Artwork;
+  shop: ShopItem;
+  orders: ShopOrder;
   bookingRequests: BookingRequest;
 };
 
@@ -155,6 +159,10 @@ export const removeItem = (name: CollectionName, id: string) => deleteDoc(itemRe
 /** Atomic stock change, so two devices adjusting at once don't overwrite each other. */
 export const incrementStock = (id: string, delta: number) =>
   updateDoc(itemRef('inventory', id), { quantity: increment(delta) });
+
+/** Atomic numeric change on any document field. */
+export const incrementField = (name: CollectionName, id: string, field: string, delta: number) =>
+  updateDoc(itemRef(name, id), { [field]: increment(delta) });
 
 export const saveSettings = (settings: Partial<StudioSettings>) =>
   setDoc(settingsRef(), settings, { merge: true });

@@ -160,7 +160,7 @@ export interface ToastNotification {
 // Website backoffice: content the public site reads (see firestore.rules)
 // ---------------------------------------------------------------------------
 
-export type PortfolioCategory = 'tattoo' | 'drawing' | 'art';
+export type PortfolioCategory = 'tattoo' | 'drawing' | 'art' | 'flash';
 
 export interface UploadedImage {
   url: string; // public URL served by /img/<key>
@@ -173,6 +173,7 @@ export interface PortfolioItem {
   id: string;
   title: string;
   category: PortfolioCategory;
+  artistId?: string; // which artist made it (matches PublicArtist.id)
   style?: string; // e.g. "Black & Red", "Sketch / Illustration"
   description?: string;
   image: UploadedImage;
@@ -180,24 +181,64 @@ export interface PortfolioItem {
   featured: boolean; // shown on the home page
   order: number; // lower first
   createdAt: string;
+  // Flash only (category 'flash'): ready-to-tattoo designs
+  flashNumber?: string; // e.g. "07"
+  flashSize?: string; // e.g. "8 x 12 cm"
+  flashSessions?: number;
+  priceFrom?: number; // EUR
+  available?: boolean; // false once it has been tattooed
 }
 
-export type ArtworkStatus = 'available' | 'reserved' | 'sold';
+/**
+ * Shop item. Three kinds:
+ *  - original: one-of-a-kind piece, status available/reserved/sold
+ *  - edition: limited edition sold on the site with Stripe; stock is reserved at checkout
+ *  - merch: print-on-demand product sold elsewhere (e.g. Redbubble), the site links out
+ */
+export type ShopItemKind = 'original' | 'edition' | 'merch';
+export type ShopItemStatus = 'available' | 'reserved' | 'sold';
 
-export interface Artwork {
+export interface ShopItem {
   id: string;
+  kind: ShopItemKind;
   title: string;
   description?: string;
-  medium?: string; // e.g. "Tinta-da-china sobre papel"
+  artistId?: string;
+  medium?: string; // e.g. "Giclée em papel de algodão 300g"
   dimensions?: string; // e.g. "30 x 40 cm"
   year?: string;
   price: number; // EUR
-  status: ArtworkStatus;
-  paymentLink?: string; // Stripe Payment Link for this piece
+  status: ShopItemStatus; // originals; editions become 'sold' when stock hits 0
+  editionSize?: number; // editions: total copies (e.g. 25)
+  stock?: number; // editions: copies left to sell
+  shippingPrice?: number; // editions: EUR, 0 = free
+  paymentLink?: string; // originals: optional Stripe Payment Link
+  externalUrl?: string; // merch: product page on Redbubble / Printful / ...
   image: UploadedImage;
   published: boolean;
   order: number;
   createdAt: string;
+}
+
+export type OrderStatus = 'paid' | 'shipped' | 'cancelled';
+
+/** Written by the Stripe webhook (functions/api/stripe-webhook.ts). */
+export interface ShopOrder {
+  id: string; // Stripe Checkout Session id
+  itemId: string;
+  itemTitle: string;
+  quantity: number;
+  amountTotal: number; // EUR
+  currency: string;
+  customerName?: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  shippingAddress?: string;
+  status: OrderStatus;
+  createdAt: string;
+  shippedAt?: string;
+  trackingNumber?: string;
+  notes?: string;
 }
 
 export type BookingRequestStatus = 'new' | 'accepted' | 'declined';
@@ -208,6 +249,11 @@ export interface BookingRequest {
   email: string;
   phone: string;
   instagram?: string;
+  artistId?: string; // artist chosen on the site (PublicArtist.id), empty = any
+  artistName?: string;
+  tattooType?: string; // 'Desenho novo' | 'Flash' | 'Cover-up' | 'Retoque'
+  flashNumber?: string;
+  firstTattoo?: boolean;
   idea: string;
   placement?: string;
   size?: string;
@@ -216,8 +262,24 @@ export interface BookingRequest {
   referenceUrl?: string;
   status: BookingRequestStatus;
   createdAt: string; // ISO timestamp
+  adultConfirmedAt: string; // "I am 18+" ticked at (ISO), GDPR proof
+  privacyAcceptedAt: string; // privacy policy accepted at (ISO), GDPR proof
   clientId?: string; // set when accepted
   internalNotes?: string;
+}
+
+/** An artist as shown on the public site. Internal data (commission, phone) stays private. */
+export interface PublicArtist {
+  id: string; // internal Artist id
+  displayName: string; // e.g. "Arants", "Rock Ink", "Jojo"
+  fullName?: string; // e.g. "Miguel Alves"
+  bio?: string;
+  instagram?: string;
+  styles?: string; // e.g. "Sketch · Black & Red"
+  priceFrom?: number; // EUR, optional "desde X €"
+  photo?: UploadedImage;
+  visible: boolean;
+  acceptsBookings: boolean;
 }
 
 /** Studio info shown on the public site (meta/public). Everything here is public. */
@@ -234,4 +296,6 @@ export interface PublicProfile {
   openingHours: string;
   depositInfo: string;
   bookingOpen: boolean;
+  merchStoreUrl?: string; // e.g. the Redbubble shop
+  artists?: PublicArtist[];
 }
