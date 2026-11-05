@@ -7,7 +7,7 @@ const EXTENSIONS: Record<string, string> = {
   'image/png': 'png',
   'image/avif': 'avif',
 };
-const FOLDERS = new Set(['portfolio', 'shop', 'artists', 'misc']);
+const FOLDERS = new Set(['portfolio', 'shop', 'artists', 'instagram', 'misc']);
 
 export const onRequestOptions: PagesFunction<Env> = async ({ request, env }) =>
   new Response(null, { status: 204, headers: corsHeaders(request, env) });

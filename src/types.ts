@@ -307,4 +307,16 @@ export interface PublicProfile {
   bookingOpen: boolean;
   merchStoreUrl?: string; // e.g. the Redbubble shop
   artists?: PublicArtist[];
+  /** Show the Google reviews section (read live from Google by /api/reviews). Default on. */
+  showGoogleReviews?: boolean;
+  /** Up to 6 posts picked by hand for the Instagram section of the site. */
+  instagramPosts?: InstagramPost[];
+}
+
+/** A post shown in the site's Instagram grid: a copy of the photo (in R2) and the link to the post. */
+export interface InstagramPost {
+  id: string;
+  image: UploadedImage;
+  url: string; // https://www.instagram.com/p/...
+  alt?: string;
 }

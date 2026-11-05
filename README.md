@@ -132,13 +132,32 @@ O site da Ink Compatível é HTML, CSS e JavaScript simples, sem build: `site/in
 flash e loja), envia os pedidos de marcação para a app e paga o carrinho com `POST /api/checkout`.
 
 - Páginas: início, artistas (perfil, tatuagens, flash, originais), portfólio, loja e produto, estúdio,
-  marcar em 3 passos, obrigado, privacidade, envios e devoluções.
+  marcar em 3 passos, teste de compatibilidade (`#/teste`, também no início), obrigado, privacidade, envios e devoluções.
+- Teste de compatibilidade: 4 perguntas (traço, cor, tamanho, zona). Compara as respostas com o campo "Estilos" de
+  cada artista (pesos 50/30/20; "não sei" conta como compatível) e abre a marcação já com o artista, estilo,
+  tamanho, zona e primeira tatuagem preenchidos. Para o resultado ser bom, os estilos de cada artista devem usar
+  palavras como sketch, black & grey, realismo, black & red, fineline, ornamental.
+- Instagram: até 6 posts escolhidos à mão em "Estúdio & artistas" (foto + link do post). Sem posts, a secção não aparece.
 - `config.js` escolhe o emulador quando o site corre em `localhost` e o projeto real nos outros casos.
   Em produção, `apiBase` é o endereço da app (por omissão `https://ink-studio-pro.pages.dev`).
 - Publicar: um segundo projeto no Cloudflare Pages com a pasta `site` como *output directory* e sem build command.
   Junta o domínio do site a `ALLOWED_ORIGINS` da app (o site não faz login, por isso não precisa de estar no Firebase).
 - Testar localmente: `npm run emulators`, `npm run build && npm run pages:dev` e depois
   `cd site && python3 -m http.server 5500` (abre http://localhost:5500).
+
+### Críticas do Google (`/api/reviews`)
+
+O site mostra a média, o número de críticas e até 3 críticas recentes de 4 ou 5 estrelas, lidas na hora da
+Places API (New) com cache de 6 horas. Não se guardam no Firestore: os termos da Google Maps Platform só deixam
+guardar o *place ID*. O nome de cada autor liga ao perfil dele no Google e a secção indica a fonte (atribuição obrigatória).
+
+1. Na Google Cloud (com faturação ativa), ativa a **Places API (New)** e cria uma chave restrita a essa API.
+2. Encontra o *place ID* do estúdio (Place ID Finder da Google) e põe os dois como segredos da app:
+   `GOOGLE_PLACES_API_KEY` e `GOOGLE_PLACE_ID`.
+3. Sem eles, `/api/reviews` responde `503 not_configured` e o site esconde a secção. Em desenvolvimento,
+   `--binding REVIEWS_DEMO=1` mostra críticas de exemplo, claramente marcadas.
+
+A Google escolhe as (até 5) críticas que a API devolve. A secção pode ser desligada em "Estúdio & artistas".
 
 ### Publicar no Cloudflare Pages
 

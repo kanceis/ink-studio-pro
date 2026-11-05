@@ -5,6 +5,8 @@
 #   GOOGLE_SERVICE_ACCOUNT  service account JSON key, for checkout and the webhook
 #   STRIPE_SECRET_KEY       sk_live_... / sk_test_...
 #   STRIPE_WEBHOOK_SECRET   whsec_... of the /api/stripe-webhook endpoint
+#   GOOGLE_PLACES_API_KEY   Places API (New) key for the Google reviews on the site (/api/reviews)
+#   GOOGLE_PLACE_ID         the studio's place ID (ChIJ...)
 name = "ink-studio-pro"
 compatibility_date = "2026-10-01"
 pages_build_output_dir = "dist"

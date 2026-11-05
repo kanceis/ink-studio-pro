@@ -1,11 +1,30 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Plus, Trash2 } from 'lucide-react';
 import { useStudio } from '../../context/StudioContext';
 import { savePublicProfile } from '../../services/studioStore';
 import { uploadImage, deleteImage } from '../../services/imageUpload';
-import { PublicArtist, PublicProfile } from '../../types';
-import { cardClass, inputClass, labelClass, PhotoPicker, primaryBtn } from './ui';
+import { InstagramPost, PublicArtist, PublicProfile, UploadedImage } from '../../types';
+import { cardClass, ghostBtn, iconBtn, inputClass, labelClass, PhotoPicker, primaryBtn } from './ui';
 import { SiteContent } from './useSiteContent';
+
+const API_BASE = (import.meta.env.VITE_IMAGES_API_BASE || '').replace(/\/$/, '');
+const MAX_POSTS = 6;
+const POST_URL = /^https:\/\/(www\.)?instagram\.com\/(p|reel)\/[\w-]+\/?(\?.*)?$/;
+
+/** An Instagram post being edited: either already uploaded (image) or waiting to upload (file). */
+interface PostDraft {
+  id: string;
+  image?: UploadedImage;
+  file?: File | null;
+  url: string;
+  alt: string;
+}
+
+type ReviewsStatus =
+  | { state: 'loading' }
+  | { state: 'off' }
+  | { state: 'error' }
+  | { state: 'on'; rating: number | null; count: number; shown: number; demo?: boolean };
 
 /** Studio info and artist profiles shown on the public site (meta/public). */
 export const PublicProfilePanel: React.FC<{ content: SiteContent }> = ({ content }) => {
@@ -35,13 +54,45 @@ export const PublicProfilePanel: React.FC<{ content: SiteContent }> = ({ content
   const [form, setForm] = useState<PublicProfile>(defaults);
   const [photoFiles, setPhotoFiles] = useState<Record<string, File | null>>({});
   const [saving, setSaving] = useState(false);
+  const [posts, setPosts] = useState<PostDraft[]>([]);
+  const [reviews, setReviews] = useState<ReviewsStatus>({ state: 'loading' });
   const initialised = useRef(false);
 
   useEffect(() => {
     if (!loaded || initialised.current) return;
     setForm({ ...defaults, ...(profile ?? {}) });
+    setPosts((profile?.instagramPosts ?? []).map((p) => ({ id: p.id, image: p.image, url: p.url, alt: p.alt || '' })));
     initialised.current = true;
   }, [loaded, profile, defaults]);
+
+  // What the site would show right now in the Google reviews section.
+  useEffect(() => {
+    let alive = true;
+    fetch(`${API_BASE}/api/reviews`)
+      .then(async (res) => {
+        if (!alive) return;
+        if (res.status === 503) return setReviews({ state: 'off' });
+        if (!res.ok) return setReviews({ state: 'error' });
+        const body = await res.json();
+        setReviews({ state: 'on', rating: body.rating, count: body.count, shown: body.reviews?.length || 0, demo: body.demo });
+      })
+      .catch(() => alive && setReviews({ state: 'error' }));
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const setPost = (id: string, patch: Partial<PostDraft>) =>
+    setPosts((list) => list.map((p) => (p.id === id ? { ...p, ...patch } : p)));
+  const movePost = (id: string, dir: -1 | 1) =>
+    setPosts((list) => {
+      const i = list.findIndex((p) => p.id === id);
+      const j = i + dir;
+      if (i < 0 || j < 0 || j >= list.length) return list;
+      const next = [...list];
+      [next[i], next[j]] = [next[j], next[i]];
+      return next;
+    });
 
   // One public entry per internal artist; new artists start hidden until filled in.
   const publicArtists: PublicArtist[] = useMemo(
@@ -70,6 +121,16 @@ export const PublicProfilePanel: React.FC<{ content: SiteContent }> = ({ content
     }));
 
   const save = async () => {
+    const badPost = posts.find((p) => !POST_URL.test(p.url.trim()) || (!p.image && !p.file));
+    if (badPost) {
+      showToast(
+        !badPost.image && !badPost.file
+          ? 'Falta a imagem de um dos posts do Instagram.'
+          : 'Cola o link completo de cada post do Instagram (https://www.instagram.com/p/...).',
+        'error'
+      );
+      return;
+    }
     setSaving(true);
     try {
       const finalArtists: PublicArtist[] = [];
@@ -83,9 +144,20 @@ export const PublicProfilePanel: React.FC<{ content: SiteContent }> = ({ content
           finalArtists.push(a);
         }
       }
-      const next = { ...form, artists: finalArtists };
+      const instagramPosts: InstagramPost[] = [];
+      for (const p of posts) {
+        const image = p.file ? await uploadImage(p.file, 'instagram') : p.image!;
+        if (p.file && p.image?.key) deleteImage(p.image.key).catch(console.error);
+        instagramPosts.push({ id: p.id, image, url: p.url.trim(), alt: p.alt.trim() });
+      }
+      const kept = new Set(instagramPosts.map((p) => p.image.key));
+      for (const old of form.instagramPosts ?? []) {
+        if (old.image?.key && !kept.has(old.image.key)) deleteImage(old.image.key).catch(console.error);
+      }
+      const next = { ...form, artists: finalArtists, instagramPosts };
       await savePublicProfile(next);
       setForm(next);
+      setPosts(instagramPosts.map((p) => ({ id: p.id, image: p.image, url: p.url, alt: p.alt || '' })));
       setPhotoFiles({});
       showToast('Perfil público atualizado no site.', 'success');
     } catch (err: unknown) {
@@ -236,6 +308,105 @@ export const PublicProfilePanel: React.FC<{ content: SiteContent }> = ({ content
             </div>
           </div>
         ))}
+      </div>
+
+      <div className={`${cardClass} p-4 sm:p-6 space-y-4`}>
+        <div>
+          <h3 className="font-bold">Críticas do Google</h3>
+          <p className="text-xs text-zinc-500">
+            O site mostra a média, o número de críticas e as críticas recentes de 4 e 5 estrelas, lidas do Google na hora.
+            Não se guardam aqui: as regras do Google só deixam mostrá-las a partir do Google.
+          </p>
+        </div>
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={form.showGoogleReviews !== false}
+            onChange={(e) => set('showGoogleReviews', e.target.checked)}
+          />
+          Mostrar as críticas do Google no site
+        </label>
+        <p className="text-sm rounded-lg bg-zinc-50 dark:bg-zinc-950 px-3 py-2">
+          {reviews.state === 'loading' && 'A ver o estado da ligação ao Google…'}
+          {reviews.state === 'off' &&
+            'Ainda não está ligado ao Google. Falta pôr a chave da Places API e o ID do estúdio no Cloudflare (ver README).'}
+          {reviews.state === 'error' && 'O Google não respondeu agora. O site esconde a secção até voltar a responder.'}
+          {reviews.state === 'on' &&
+            `${reviews.demo ? 'Dados de exemplo (desenvolvimento). ' : ''}${
+              reviews.rating != null ? `${reviews.rating.toLocaleString('pt-PT')} ★ · ` : ''
+            }${reviews.count} críticas no Google · ${reviews.shown} recentes de 4–5 estrelas para mostrar.`}
+        </p>
+      </div>
+
+      <div className={`${cardClass} p-4 sm:p-6 space-y-4`}>
+        <div>
+          <h3 className="font-bold">Instagram no site</h3>
+          <p className="text-xs text-zinc-500">
+            Até {MAX_POSTS} posts escolhidos à mão, com o @ do estúdio acima. Põe a foto do post e o link dele: quem
+            carregar na foto abre o post no Instagram.
+          </p>
+        </div>
+        {posts.length === 0 && <p className="text-sm text-zinc-500">Sem posts, a secção não aparece no site.</p>}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {posts.map((p, i) => (
+            <div key={p.id} className="space-y-2 rounded-lg border border-zinc-100 dark:border-zinc-800 p-3">
+              <PhotoPicker
+                label={`Post ${i + 1}`}
+                aspect="aspect-square"
+                current={p.image}
+                file={p.file ?? null}
+                onFile={(f) => setPost(p.id, { file: f })}
+              />
+              <input
+                className={inputClass}
+                value={p.url}
+                placeholder="https://www.instagram.com/p/..."
+                aria-label={`Link do post ${i + 1}`}
+                onChange={(e) => setPost(p.id, { url: e.target.value })}
+              />
+              <input
+                className={inputClass}
+                value={p.alt}
+                placeholder="O que se vê na foto (para leitores de ecrã)"
+                aria-label={`Descrição do post ${i + 1}`}
+                onChange={(e) => setPost(p.id, { alt: e.target.value })}
+              />
+              <div className="flex justify-between">
+                <div className="flex gap-1">
+                  <button type="button" className={iconBtn} disabled={i === 0} onClick={() => movePost(p.id, -1)} aria-label="Mover para trás">
+                    ←
+                  </button>
+                  <button
+                    type="button"
+                    className={iconBtn}
+                    disabled={i === posts.length - 1}
+                    onClick={() => movePost(p.id, 1)}
+                    aria-label="Mover para a frente"
+                  >
+                    →
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  className={iconBtn}
+                  onClick={() => setPosts((list) => list.filter((x) => x.id !== p.id))}
+                  aria-label={`Tirar o post ${i + 1}`}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+        {posts.length < MAX_POSTS && (
+          <button
+            type="button"
+            className={ghostBtn}
+            onClick={() => setPosts((list) => [...list, { id: crypto.randomUUID(), url: '', alt: '', file: null }])}
+          >
+            <Plus className="w-4 h-4" /> Adicionar post
+          </button>
+        )}
       </div>
 
       <div className="flex justify-end">

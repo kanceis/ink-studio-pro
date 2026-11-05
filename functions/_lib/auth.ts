@@ -24,6 +24,14 @@ export interface Env {
   STRIPE_API_BASE?: string;
   /** Countries Stripe asks a shipping address for, comma separated (default PT,ES,FR,DE,IT,NL,BE,GB,IE). */
   SHIPPING_COUNTRIES?: string;
+  /** Places API (New) key, restricted to that API (secret). Shows the Google reviews on the site. */
+  GOOGLE_PLACES_API_KEY?: string;
+  /** The studio's Google place ID, e.g. ChIJ... */
+  GOOGLE_PLACE_ID?: string;
+  /** Only for tests: a mock Places API base URL. */
+  PLACES_API_BASE?: string;
+  /** Only for local development: "1" serves placeholder reviews when the Places key is not set. */
+  REVIEWS_DEMO?: string;
 }
 
 export const json = (body: unknown, status = 200, headers: HeadersInit = {}) =>

@@ -41,7 +41,7 @@ const authHeader = async (): Promise<string> => {
 
 export const uploadImage = async (
   file: File,
-  folder: 'portfolio' | 'shop' | 'artists'
+  folder: 'portfolio' | 'shop' | 'artists' | 'instagram'
 ): Promise<UploadedImage> => {
   const { blob, width, height } = await prepareImage(file);
   const res = await fetch(`${API_BASE}/api/images?folder=${folder}`, {
