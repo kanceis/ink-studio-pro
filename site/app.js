@@ -406,7 +406,7 @@
   const flashV3 = ({ items = flash(), title = 'Flash\nda casa.', text = 'Desenhos prontos a tatuar, feitos no estúdio. Cada um só se tatua uma vez: depois sai da lista.', id = 'flash', moreHref = '#/portfolio?cat=flash' } = {}) => {
     if (!items.length) return null;
     const rot = ['-3deg', '2deg', '-1.5deg', '3deg'];
-    return el('section', { class: 'v-flash', id, 'aria-labelledby': `${id}-title` }, [
+    return el('section', { class: `v-flash${items.length < 3 ? ' compact' : ''}`, id, 'aria-labelledby': `${id}-title` }, [
       v3img('armario', '', { big: true, sizes: '100vw' }),
       el('div', { class: 'wrap' }, [
         vHead(title, text, null, `${id}-title`),
@@ -1095,15 +1095,16 @@
   };
 
   /** Adds one copy to the cart and explains what happens next in `status`. Returns false when no more copies fit. */
-  const addToCart = (item, status) => {
+  const addToCart = (item, status, n = 1) => {
     const max = item.kind === 'original' ? 1 : Math.min(item.stock || 0, 10);
+    n = Math.max(1, Math.min(n, max - cart.qty(item.id)));
     if (cart.qty(item.id) >= max) {
       status.replaceChildren(notice(item.kind === 'original' ? 'Esta peça já está no carrinho.' : 'Já tens no carrinho todas as cópias disponíveis.'));
       return false;
     }
-    cart.add(item.id, 1);
+    cart.add(item.id, n);
     status.replaceChildren(el('div', { class: 'notice stack', style: 'gap:12px' }, [
-      el('p', { text: `No carrinho: ${item.title}. Ao finalizar a compra fica reservado para ti durante 30 minutos.` }),
+      el('p', { text: `No carrinho: ${n > 1 ? `${n} × ` : ''}${item.title}. Ao finalizar a compra fica reservado para ti durante 30 minutos.` }),
       el('div', { class: 'hero-actions' }, [
         el('button', { type: 'button', class: 'btn', onclick: openCart, text: 'Finalizar compra' }),
         el('a', { class: 'btn-out', href: '#/loja', text: 'Continuar a ver' }),
@@ -1164,7 +1165,15 @@
       grid.replaceChildren(...(shown.length ? shown.map(piece) : [el('p', { class: 'empty', text: 'Nada por aqui de momento. Volta em breve.' })]));
       listing.hidden = kind === 'merch' || !pieces.length;
       const merch = data.shop.filter((i) => i.kind === 'merch');
-      merchBox.replaceChildren(el('div', { class: 'v-merchgrid' }, merch.map(merchCard)));
+      // With only one or two products, a card to the whole store keeps the row from looking empty.
+      const storeCard = merchUrl && merch.length < 3
+        ? el('a', { class: 'v-merch more', href: merchUrl, ...ext }, [
+            el('span', { class: 'mono', text: 'Loja online' }),
+            el('span', { class: 'disp big' }, ['Ver tudo na', el('br'), `${merchStoreName(merchUrl)} ↗`]),
+            el('span', { class: 'mono', text: 'T-shirts, autocolantes e mais' }),
+          ])
+        : null;
+      merchBox.replaceChildren(el('div', { class: 'v-merchgrid' }, [...merch.map(merchCard), storeCard].filter(Boolean)));
       merchSec.hidden = !(kind === 'all' || kind === 'merch') || !merch.length;
       sortRow.replaceChildren(...[['casa', 'Destaques'], ['preco', 'Preço'], ['livres', 'Disponíveis']].map(([k, t]) =>
         el('button', { type: 'button', class: 'v-chip', 'aria-pressed': String(k === sort), text: t, onclick: () => { sort = k; draw(); } })));
@@ -1251,60 +1260,115 @@
     if (!item) return pages.notFound();
     document.title = `${item.title} · Loja Ink Compatível`;
     const kindLabel = { original: 'Originais', edition: 'Edições limitadas', merch: 'Merch' }[item.kind];
-    const artist = artistName(item.artistId);
-    const inCart = cart.qty(item.id);
+    const a = artistById(item.artistId);
     const canBuy = sellable(item) && item.kind !== 'merch';
     const status = el('div', { 'aria-live': 'polite' });
+    const ext = safeUrl(item.externalUrl);
+    const ext3 = { target: '_blank', rel: 'noopener noreferrer' };
+    const isEd = item.kind === 'edition';
+    const size = isEd ? item.editionSize || 0 : 0;
+    const left = isEd ? Math.max(0, item.stock || 0) : 0;
+    const badge = shopBadge(item);
 
-    const add = (e) => {
-      const button = e.currentTarget;
-      if (addToCart(item, status)) button.textContent = item.kind === 'edition' ? 'Adicionar outra' : 'Já está no carrinho';
-    };
+    // Gallery: the piece "posed" on paper, with a round stamp.
+    const stamp = isEd && size
+      ? el('span', { class: 'stamp' }, [el('b', { class: 'disp', text: String(left) }), el('span', { class: 'mono', text: left ? `de ${size}` : 'esgotada' }), left ? el('span', { class: 'mono', text: 'restam' }) : null])
+      : item.kind === 'original'
+        ? el('span', { class: 'stamp ink' }, [el('span', { class: 'mono', text: item.status === 'available' ? 'peça' : '' }), el('b', { class: 'disp', text: item.status === 'available' ? 'única' : item.status === 'sold' ? 'vendida' : 'reservada' })])
+        : null;
+    const gallery = el('div', { class: 'v-gal' }, el('button', { type: 'button', class: `main k-${item.kind}`, 'aria-label': `Ver maior: ${item.title}`, onclick: () => openViewer(item, item.title) }, [
+      el('img', { class: 'art', src: item.image?.url, alt: item.title, decoding: 'async' }),
+      stamp,
+      isEd ? el('span', { class: 'note hand', 'aria-hidden': 'true', text: 'numerada à mão' }) : null,
+    ]));
 
-    const facts = [
+    // Quantity (editions only)
+    let qty = 1;
+    const maxQty = () => Math.max(0, Math.min(left, 10) - cart.qty(item.id));
+    const qtyOut = el('b', { 'aria-live': 'polite', text: '1' });
+    const setQty = (n) => { qty = Math.max(1, Math.min(n, Math.max(1, maxQty()))); qtyOut.textContent = String(qty); };
+    const qtyBox = isEd && canBuy
+      ? el('div', { class: 'v-qty', role: 'group', 'aria-label': 'Quantidade' }, [
+          el('button', { type: 'button', 'aria-label': 'Menos uma', onclick: () => setQty(qty - 1), text: '−' }), qtyOut,
+          el('button', { type: 'button', 'aria-label': 'Mais uma', onclick: () => setQty(qty + 1), text: '+' }),
+        ])
+      : null;
+    const label = () => (canBuy ? (cart.qty(item.id) ? (item.kind === 'original' ? 'Já está no carrinho' : 'Adicionar outra') : 'Adicionar ao carrinho') : isEd ? 'Esgotada' : item.status === 'reserved' ? 'Reservada' : 'Vendida');
+    const addBtn = el('button', { type: 'button', class: 'v-btn k add', disabled: !canBuy || null, onclick: () => {
+      if (addToCart(item, status, qty)) { addBtn.firstChild.textContent = label(); setQty(1); }
+    } }, [label(), el('i', { 'aria-hidden': 'true', text: '+' })]);
+
+    const specs = [
       item.dimensions ? ['Formato', item.dimensions] : null,
       item.medium ? ['Técnica', item.medium] : null,
       item.year ? ['Ano', item.year] : null,
-      item.kind === 'edition' && item.editionSize ? ['Tiragem', `${item.editionSize} exemplares, numerados`] : null,
-    ].filter(Boolean);
-    const more = data.shop.filter((i) => i.id !== item.id && i.artistId === item.artistId && (i.kind === 'merch' || sellable(i))).slice(0, 3);
-    const ext = safeUrl(item.externalUrl);
+      isEd && size ? ['Tiragem', `${size} exemplares, numerados`] : null,
+      item.kind !== 'merch' ? ['Envio', item.shippingPrice ? `Portes ${eur(item.shippingPrice)}` : 'Portes grátis'] : null,
+    ].filter(Boolean).slice(0, 4);
+
+    const sold = size - left;
+    const panel = el('div', { class: 'v-ppanel' }, [
+      el('div', { class: 'pills' }, [
+        el('span', { class: `pill${/gone/.test(badge.cls) ? ' gone' : isEd || item.kind === 'original' ? ' red' : ''}`, text: badge.text }),
+        isEd ? el('span', { class: 'pill o', text: 'Só no site' }) : null,
+        item.kind === 'merch' ? el('span', { class: 'pill o', text: 'Feito e enviado pela loja online' }) : null,
+      ]),
+      el('h1', { class: 'disp', text: item.title }),
+      item.description ? el('p', { class: 'desc', text: item.description }) : null,
+      el('div', { class: 'price' }, [
+        el('span', { class: 'disp', text: item.kind === 'merch' ? `desde ${eur(item.price)}` : eur(item.price) }),
+        mono(item.kind === 'merch' ? 'Preço na loja online' : 'Portes mostrados antes de pagar'),
+      ]),
+      isEd && size
+        ? el('div', { class: 'v-count' }, [
+            el('div', { class: 'head' }, [el('b', { text: left ? `Restam ${left} de ${size}` : 'Esgotada' }), left ? mono(`o nº ${sold + 1} é o próximo`) : null]),
+            size <= 60 ? el('div', { class: 'bars', 'aria-hidden': 'true', style: `--n:${size}` }, Array.from({ length: size }, (_, i) => el('i', { class: i < left ? '' : 'off' }))) : el('div', { class: 'stock' }, el('i', { style: `width:${Math.round((left / size) * 100)}%` })),
+          ])
+        : null,
+      specs.length ? el('dl', { class: 'v-specs' }, specs.map(([k, t]) => el('div', {}, [el('dt', { class: 'mono', text: k }), el('dd', { text: t })]))) : null,
+      item.kind === 'merch'
+        ? (ext ? btn3(`Comprar na ${merchStoreName(ext)}`, ext, 'k', '↗', { ...ext3, class: 'v-btn k add' }) : null)
+        : el('div', {}, [
+            el('div', { class: 'buy' }, [qtyBox, addBtn]),
+            canBuy ? mono('Ao finalizar fica reservado 30 min para ti · Pagamento seguro pelo Stripe', 'note') : null,
+            status,
+          ]),
+      a ? el('a', { class: 'v-by', href: artistHref(a) }, [
+            safeUrl(a.photo?.url) ? el('img', { src: a.photo.url, alt: '' }) : el('span', { class: 'av disp', 'aria-hidden': 'true', text: initials(a.displayName) }),
+            el('span', { class: 'who' }, [mono('Desenhado por'), el('b', { text: a.displayName })]),
+            el('span', { class: 'go', text: 'Ver artista ↗' }),
+          ])
+        : null,
+      item.kind !== 'merch'
+        ? el('div', { class: 'v-acc' }, [
+            el('details', { open: true }, [el('summary', { text: 'Envios e devoluções' }), el('p', {}, [
+              `Sai do estúdio, em Gaia, bem embalado. Portes: ${item.shippingPrice ? eur(item.shippingPrice) : 'grátis'}. Tens 14 dias para devolver, como manda a lei. `,
+              el('a', { href: '#/envios', text: 'Ler a política' }),
+            ])]),
+            el('details', {}, [el('summary', { text: 'Cuidados' }), el('p', { text: 'Guarda longe do sol direto e da humidade. Para emoldurar, um vidro com proteção UV ajuda a manter as cores.' })]),
+            el('details', {}, [el('summary', { text: 'Pagamento' }), el('p', { text: 'Pagas aqui no site, num checkout seguro do Stripe. Os meios de pagamento disponíveis aparecem lá.' })]),
+          ])
+        : null,
+    ]);
+
+    const more = [
+      ...data.shop.filter((i) => i.id !== item.id && i.artistId === item.artistId && (i.kind === 'merch' || sellable(i))),
+      ...data.shop.filter((i) => i.id !== item.id && i.artistId !== item.artistId && (i.kind === 'merch' || sellable(i))),
+    ].slice(0, 4);
 
     return [
-      el('nav', { class: 'wrap crumbs mono', 'aria-label': 'Caminho' }, [
-        el('a', { href: '#/loja', text: 'Loja' }), ' / ',
-        el('a', { href: `#/loja?tipo=${item.kind}`, text: kindLabel }), ' / ',
-        el('span', { 'aria-current': 'page', text: item.title }),
-      ]),
-      el('section', { class: 'wrap product' }, [
-        el('button', { type: 'button', class: 'photo-btn', 'aria-label': `Ver maior: ${item.title}`, onclick: () => openViewer(item, item.title) }, photo(item.image, item.title, 'r45')),
-        el('div', { class: 'stack' }, [
-          mono([artist, item.kind === 'edition' ? 'edição limitada · só no site' : item.kind === 'original' ? 'original · peça única' : 'merch'].filter(Boolean).join(' · '), 'muted'),
-          el('h1', { class: 'disp', text: item.title }),
-          el('div', { class: 'stock-line' }, [
-            el('span', { class: 'price', text: eur(item.price) }),
-            item.kind === 'edition' ? mono((item.stock || 0) > 0 ? `Restam ${item.stock}${item.editionSize ? ` de ${item.editionSize}` : ''}` : 'Esgotada', 'muted') : null,
-            item.kind === 'original' && item.status !== 'available' ? mono(item.status === 'sold' ? 'Vendida' : 'Reservada: alguém está a pagar. Se não concluir, volta a ficar disponível.', 'muted') : null,
-          ]),
-          item.description ? el('p', { style: 'margin:0;white-space:pre-line;max-width:560px', text: item.description }) : null,
-          facts.length ? el('dl', { class: 'facts' }, facts.flatMap(([k, v]) => [el('dt', { class: 'mono', text: k }), el('dd', { text: v })])) : null,
-          item.kind === 'merch'
-            ? (ext ? el('a', { class: 'btn', href: ext, target: '_blank', rel: 'noopener noreferrer', text: `Comprar no ${merchStoreName(ext)} ↗` }) : null)
-            : el('button', { type: 'button', class: 'btn', disabled: !canBuy, onclick: add, text: canBuy ? (inCart ? (item.kind === 'original' ? 'Já está no carrinho' : 'Adicionar outra') : 'Adicionar ao carrinho') : item.kind === 'edition' ? 'Esgotada' : item.status === 'reserved' ? 'Reservada' : 'Vendida' }),
-          status,
-          item.kind !== 'merch'
-            ? el('dl', { class: 'facts', style: 'border-top:2px solid var(--tinta);padding-top:20px' }, [
-                el('dt', { class: 'mono', text: 'Pagamento' }), el('dd', { text: 'Seguro, pelo Stripe.' }),
-                el('dt', { class: 'mono', text: 'Envio' }), el('dd', { text: `Sai do estúdio bem embalado. Portes: ${item.shippingPrice ? eur(item.shippingPrice) : 'grátis'}.` }),
-                el('dt', { class: 'mono', text: 'Devoluções' }), el('dd', {}, ['14 dias para devolver, como manda a lei. ', el('a', { href: '#/envios', text: 'Ler a política' })]),
-              ])
-            : null,
+      el('section', { class: 'v-product' }, el('div', { class: 'wrap' }, [
+        el('nav', { class: 'mono v-crumbs', 'aria-label': 'Caminho' }, [
+          el('a', { href: '#/loja', text: 'Loja' }), ' / ',
+          el('a', { href: `#/loja?tipo=${item.kind}`, text: kindLabel }), ' / ',
+          el('span', { 'aria-current': 'page', text: item.title }),
         ]),
-      ]),
-      more.length && artist
-        ? el('section', { class: 'section rule' }, el('div', { class: 'wrap' }, [
-            sectionHead(`Mais ${artist === 'Jojo' ? 'da' : 'do'} ${artist}`),
-            el('div', { class: 'grid two-up' }, more.map(shopCard)),
+        el('div', { class: 'pwrap' }, [gallery, panel]),
+      ])),
+      more.length
+        ? el('section', { class: 'v-sec', 'aria-labelledby': 'more-title' }, el('div', { class: 'wrap' }, [
+            vHead('Também\npodes gostar.', null, btn3('Ver a loja', '#/loja', 'o'), 'more-title'),
+            el('div', { class: 'v-pgrid four' }, more.map(prodCard)),
           ]))
         : null,
     ];
