@@ -341,6 +341,7 @@
         { label: 'Sombras suaves, quase fotografia', tags: ['grey', 'gray', 'cinza', 'realis'], style: 'Black & grey', say: 'sombras em black & grey' },
         { label: 'Contraste forte, preto e vermelho', tags: ['red', 'vermelho'], style: 'Black & red', say: 'contraste preto e vermelho' },
         { label: 'Linha fina e delicada', tags: [...FINE, 'ornament'], style: 'Não sei', say: 'linha fina' },
+        { label: 'Manchas de cor, tipo aguarela', tags: ['watercolor', 'aguarela'], style: 'Aguarela', say: 'aguarela' },
         { label: 'Ainda não sei', any: true, style: 'Não sei', say: 'traço em aberto' },
       ],
     },
@@ -349,6 +350,7 @@
       options: [
         { label: 'Só preto', tags: ['grey', 'gray', 'cinza', 'sketch', 'blackwork', 'realis', 'dotwork', 'ornament', ...FINE], say: 'só a preto' },
         { label: 'Preto com um toque de vermelho', tags: ['red', 'vermelho'], say: 'com vermelho' },
+        { label: 'Com cor', tags: ['watercolor', 'aguarela', 'color', 'colour', 'a cores'], say: 'com cor' },
         { label: 'Tanto faz', any: true, say: 'cor em aberto' },
       ],
     },
@@ -363,7 +365,7 @@
       ],
     },
     {
-      key: 'zona', q: 'Em que zona do corpo?', first: true,
+      key: 'zona', q: 'Em que zona do corpo?', first: true, cols: true,
       options: ['Braço', 'Perna', 'Costas', 'Peito', 'Mão', 'Outra'].map((z) => ({ label: z, zone: z })),
     },
   ];
@@ -412,7 +414,7 @@
               'É a minha primeira tatuagem',
             ])
           : null,
-        el('div', { class: `quiz-options${s.options.length > 5 ? ' cols' : ''}`, role: 'group', 'aria-labelledby': `quiz-q-${step}` }, s.options.map((o, i) =>
+        el('div', { class: `quiz-options${s.cols ? ' cols' : ''}`, role: 'group', 'aria-labelledby': `quiz-q-${step}` }, s.options.map((o, i) =>
           el('button', { type: 'button', class: 'quiz-opt', 'aria-pressed': String(answers[step] === i), onclick: () => { answers[step] = i; step += 1; draw(); } }, [
             el('span', { text: o.label }), el('span', { class: 'quiz-opt-dot', 'aria-hidden': 'true', text: '→' }),
           ]))),
@@ -1002,7 +1004,7 @@
     if (params.get('tipo') === 'flash') v.tattooType = 'Flash';
     if (params.get('flash')) v.flashNumber = params.get('flash').slice(0, 20);
     // From the compatibility test.
-    if (['Sketch', 'Black & grey', 'Black & red', 'Não sei'].includes(params.get('estilo'))) v.style = params.get('estilo');
+    if (['Sketch', 'Black & grey', 'Black & red', 'Aguarela', 'Não sei'].includes(params.get('estilo'))) v.style = params.get('estilo');
     if (params.get('tamanho')) v.size = params.get('tamanho').slice(0, 100);
     if (params.get('primeira') === '1') v.firstTattoo = true;
     if (['Braço', 'Perna', 'Costas', 'Peito', 'Mão', 'Outra'].includes(params.get('zona'))) v.placement = params.get('zona');
@@ -1092,7 +1094,7 @@
           ]),
           el('fieldset', {}, [
             el('legend', { text: 'Estilo' }),
-            el('div', { class: 'options' }, ['Sketch', 'Black & grey', 'Black & red', 'Não sei'].map((s) => option('style', s, s, null, (v.style || 'Não sei') === s))),
+            el('div', { class: 'options' }, ['Sketch', 'Black & grey', 'Black & red', 'Aguarela', 'Não sei'].map((s) => option('style', s, s, null, (v.style || 'Não sei') === s))),
           ]),
           field('referenceUrl', 'Link para referências (opcional)', el('input', { id: 'referenceUrl', name: 'referenceUrl', type: 'url', maxlength: '500', placeholder: 'https://', value: v.referenceUrl || '' }), 'Também podes mandar fotos pelo WhatsApp depois de enviar o pedido.'),
           el('label', { class: 'check' }, [el('input', { type: 'checkbox', name: 'firstTattoo', checked: v.firstTattoo || null }), 'É a minha primeira tatuagem']),
