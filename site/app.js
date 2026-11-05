@@ -210,14 +210,15 @@
   const artistHref = (a) => `#/artistas/${encodeURIComponent(a.id)}`;
   const polaroid = (name, alt, cap, cls, pos) => el('figure', { class: `v-polaroid ${cls}` }, [v3img(name, alt, { pos }), el('figcaption', { class: 'hand', text: cap })]);
 
-  const spinBadge = () => {
+  const spinBadge = (label = 'MARCAR SESSÃO · RESPOSTA EM 48 H ·', href = '#/marcar', aria = 'Marcar sessão, respondemos em 48 horas') => {
     const ring = document.createElementNS(SVGNS, 'svg');
     ring.setAttribute('viewBox', '0 0 200 200');
     ring.setAttribute('class', 'v-spin');
     ring.setAttribute('aria-hidden', 'true');
     ring.innerHTML = '<defs><path id="v-ring" d="M100,100 m-74,0 a74,74 0 1,1 148,0 a74,74 0 1,1 -148,0"/></defs>' +
-      '<text><textPath href="#v-ring" textLength="458" lengthAdjust="spacing">MARCAR SESSÃO · RESPOSTA EM 48 H ·</textPath></text>';
-    return el('a', { class: 'v-float v-badge', href: '#/marcar', 'aria-label': 'Marcar sessão, respondemos em 48 horas' }, [ring, el('span', { 'aria-hidden': 'true', text: '↗' })]);
+      '<text><textPath href="#v-ring" textLength="458" lengthAdjust="spacing"></textPath></text>';
+    ring.querySelector('textPath').textContent = label;
+    return el('a', { class: 'v-float v-badge', href, 'aria-label': aria }, [ring, el('span', { 'aria-hidden': 'true', text: '↗' })]);
   };
 
   const heroV3 = () => {
@@ -402,15 +403,14 @@
     ]));
   };
 
-  const flashV3 = () => {
-    const items = flash();
+  const flashV3 = ({ items = flash(), title = 'Flash\nda casa.', text = 'Desenhos prontos a tatuar, feitos no estúdio. Cada um só se tatua uma vez: depois sai da lista.', id = 'flash', moreHref = '#/portfolio?cat=flash' } = {}) => {
     if (!items.length) return null;
     const rot = ['-3deg', '2deg', '-1.5deg', '3deg'];
-    return el('section', { class: 'v-flash', id: 'flash', 'aria-labelledby': 'flash-title' }, [
+    return el('section', { class: 'v-flash', id, 'aria-labelledby': `${id}-title` }, [
       v3img('armario', '', { big: true, sizes: '100vw' }),
       el('div', { class: 'wrap' }, [
-        vHead('Flash\nda casa.', 'Desenhos prontos a tatuar, feitos no estúdio. Cada um só se tatua uma vez: depois sai da lista.', null, 'flash-title'),
-        el('div', { class: 'v-frows' }, [
+        vHead(title, text, null, `${id}-title`),
+        el('div', { class: `v-frows${items.length < 4 ? ` n${items.length}` : ''}` }, [
           el('span', { class: 'v-sticker hand', 'aria-hidden': 'true', text: 'só 1 de cada!' }),
           ...items.slice(0, 4).map((p, i) => {
             const params = new URLSearchParams({ tipo: 'flash' });
@@ -428,7 +428,7 @@
             ]);
           }),
         ]),
-        items.length > 4 ? el('p', { class: 'v-more' }, btn3('Ver todo o flash', '#/portfolio?cat=flash', 'w')) : null,
+        items.length > 4 ? el('p', { class: 'v-more' }, btn3('Ver todo o flash', moreHref, 'w')) : null,
       ]),
     ]);
   };
@@ -511,26 +511,27 @@
     ]));
   };
 
+  const prodCard = (item) => {
+    const b = shopBadge(item);
+    const link = item.kind === 'merch' ? safeUrl(item.externalUrl) : null;
+    const left = item.kind === 'edition' && item.editionSize ? Math.max(0, Math.min(1, (item.stock || 0) / item.editionSize)) : null;
+    return el('a', { class: 'v-prod', href: link || `#/loja/${encodeURIComponent(item.id)}`, ...(link ? ext : {}) }, [
+      el('div', { class: `img k-${item.kind}` }, [
+        el('img', { src: item.image?.url, alt: item.title, loading: 'lazy', decoding: 'async' }),
+        el('span', { class: `bdg mono${/gone/.test(b.cls) ? ' gone' : ''}`, text: item.kind === 'original' && b.text === 'Peça única' ? (item.medium && /madeira|acr|óleo|tela/i.test(item.medium) ? 'Pintura original' : 'Original') : b.text }),
+      ]),
+      el('div', { class: 'row' }, [el('b', { text: item.title }), mono(shopPriceLine(item))]),
+      left !== null ? el('div', { class: 'stock', role: 'img', 'aria-label': `Restam ${item.stock || 0} de ${item.editionSize}` }, el('i', { style: `width:${Math.round(left * 100)}%` })) : null,
+    ]);
+  };
+
   const shopV3 = () => {
     const firstOf = (kind) => data.shop.find((i) => i.kind === kind && (kind === 'merch' || sellable(i))) || data.shop.find((i) => i.kind === kind);
     const picks = [firstOf('original'), firstOf('edition'), firstOf('merch')].filter(Boolean);
     if (!picks.length) return null;
-    const prod = (item) => {
-      const b = shopBadge(item);
-      const link = item.kind === 'merch' ? safeUrl(item.externalUrl) : null;
-      const left = item.kind === 'edition' && item.editionSize ? Math.max(0, Math.min(1, (item.stock || 0) / item.editionSize)) : null;
-      return el('a', { class: 'v-prod', href: link || `#/loja/${encodeURIComponent(item.id)}`, ...(link ? ext : {}) }, [
-        el('div', { class: `img k-${item.kind}` }, [
-          el('img', { src: item.image?.url, alt: item.title, loading: 'lazy', decoding: 'async' }),
-          el('span', { class: `bdg mono${/gone/.test(b.cls) ? ' gone' : ''}`, text: item.kind === 'original' && b.text === 'Peça única' ? (item.medium && /madeira|acr|óleo|tela/i.test(item.medium) ? 'Pintura original' : 'Original') : b.text }),
-        ]),
-        el('div', { class: 'row' }, [el('b', { text: item.title }), mono(shopPriceLine(item))]),
-        left !== null ? el('div', { class: 'stock', role: 'img', 'aria-label': `Restam ${item.stock || 0} de ${item.editionSize}` }, el('i', { style: `width:${Math.round(left * 100)}%` })) : null,
-      ]);
-    };
     return el('section', { class: 'v-sec', id: 'loja', 'aria-labelledby': 'shop-title' }, el('div', { class: 'wrap' }, [
       vHead('Leva arte\npara casa.', null, btn3('Ir à loja', '#/loja', 'k'), 'shop-title'),
-      el('div', { class: 'v-pgrid' }, picks.map(prod)),
+      el('div', { class: 'v-pgrid' }, picks.map(prodCard)),
     ]));
   };
 
@@ -700,6 +701,7 @@
       const a = best.a;
       const bookable = a.acceptsBookings !== false && data.profile.bookingOpen !== false;
       params.set('artista', a.id);
+      params.set('pct', String(best.pct));
       const also = quizScore(answers).slice(1).find((r) => r.pct >= 50);
       const artistFlash = flash().filter((f) => f.artistId === a.id).slice(0, 3);
       rcard.replaceChildren(
@@ -916,74 +918,148 @@
     ])),
   ];
 
+  const SHORT_DAYS = { segunda: 'Seg', terça: 'Ter', terca: 'Ter', quarta: 'Qua', quinta: 'Qui', sexta: 'Sex', sábado: 'Sáb', sabado: 'Sáb', domingo: 'Dom' };
+  const shortDays = (text) => String(text || '').toLowerCase()
+    .replace(/(segunda|terça|terca|quarta|quinta|sexta|sábado|sabado|domingo)(-feira)?/g, (_, d) => SHORT_DAYS[d])
+    .replace(/\s+a\s+/g, '–');
+
+  /** Masonry of photos that open in the viewer; shows `step` at a time. */
+  const masonry = (items, caption, step = 12) => {
+    let shown = step;
+    const grid = el('div', { class: 'v-masonry' });
+    const more = el('p', { class: 'v-more' });
+    const draw = () => {
+      grid.replaceChildren(...items.slice(0, shown).map((p) => {
+        const cap = caption(p);
+        return el('button', { type: 'button', class: 'photo-btn', 'aria-label': `Ver maior: ${cap || p.title || 'fotografia'}`, onclick: () => openViewer(p, cap) }, [
+          el('img', { src: p.image?.url, alt: p.title || cap || '', loading: 'lazy', decoding: 'async' }),
+          cap ? el('span', { class: 'lab mono', text: cap }) : null,
+        ]);
+      }));
+      more.replaceChildren(items.length > shown
+        ? el('button', { type: 'button', class: 'v-btn k', onclick: () => { shown += step; draw(); } }, ['Ver mais', el('i', { 'aria-hidden': 'true', text: '↓' })])
+        : '');
+    };
+    draw();
+    return el('div', {}, [grid, more]);
+  };
+
   pages.artist = (id, params) => {
     const a = artistById(id);
     if (!a) return pages.notFound();
     document.title = `${a.displayName} · Ink Compatível`;
     const ig = instagramUrl(a.instagram);
-    const tattoos = work().filter((w) => w.artistId === a.id);
+    const mine = data.portfolio.filter((p) => p.artistId === a.id);
+    const tattoos = mine.filter((p) => !p.category || p.category === 'tattoo');
+    const art = mine.filter((p) => p.category === 'drawing' || p.category === 'art');
     const fl = flash().filter((f) => f.artistId === a.id);
     const originals = data.shop.filter((s) => s.artistId === a.id && s.kind !== 'merch');
-    const tabs = [
-      ['tat', 'Tatuagens', () => {
-        const styles = [...new Set(tattoos.map((t) => t.style).filter(Boolean))];
-        let style = 'all';
-        const box = el('div');
-        const draw = () => box.replaceChildren(workGrid(tattoos.filter((t) => style === 'all' || t.style === style), { min: '280px' }));
-        draw();
-        return el('div', { class: 'stack' }, [
-          styles.length > 1
-            ? el('div', { class: 'chips', role: 'group', 'aria-label': 'Filtrar por estilo' }, ['all', ...styles].map((s) =>
-                el('button', { type: 'button', class: 'chip', 'aria-pressed': String(s === style), text: s === 'all' ? 'Tudo' : s,
-                  onclick: (e) => { style = s; $$('.chip', e.target.parentNode).forEach((b) => b.setAttribute('aria-pressed', String(b === e.target))); draw(); } })))
-            : null,
-          box,
-        ]);
-      }],
-      ['flash', 'Flash disponível', () => fl.length ? el('div', { class: 'grid two-up', style: '--min:260px' }, fl.map(flashCard)) : el('p', { class: 'empty', text: 'Sem flash disponível neste momento.' })],
-      ['orig', 'Originais e prints', () => originals.length ? el('div', { class: 'grid two-up' }, originals.map(shopCard)) : el('p', { class: 'empty', text: 'Sem peças à venda neste momento.' })],
-    ];
-    let current = tabs.some((t) => t[0] === params.get('tab')) ? params.get('tab') : 'tat';
-    const panel = el('div', { id: 'artist-panel', role: 'tabpanel' });
-    const tabButtons = tabs.map(([key, label]) =>
-      el('button', { type: 'button', class: 'tab', role: 'tab', id: `tab-${key}`, 'aria-controls': 'artist-panel', 'aria-selected': String(key === current), text: label,
-        onclick: () => { current = key; tabButtons.forEach((b, i) => b.setAttribute('aria-selected', String(tabs[i][0] === key))); drawPanel(); } }));
-    const drawPanel = () => { panel.setAttribute('aria-labelledby', `tab-${current}`); panel.replaceChildren(tabs.find((t) => t[0] === current)[2]()); };
-    drawPanel();
     const bookable = a.acceptsBookings !== false && data.profile.bookingOpen !== false;
+    const book = `#/marcar?artista=${encodeURIComponent(a.id)}`;
+    const firstName = String(a.fullName || a.displayName).split(/\s+/)[0];
+    const bio = String(a.bio || '').trim();
+    const [lead, ...restBio] = bio.split(/\n\s*\n/);
+    const caption = (p) => [p.title, p.style].filter(Boolean).join(' · ');
 
-    return [
-      el('div', { class: 'wrap switcher' }, [mono('Artistas:', 'muted'), ...data.artists.map((x) =>
-        el('a', { href: `#/artistas/${encodeURIComponent(x.id)}`, 'aria-current': x.id === a.id ? 'page' : null, text: x.displayName }))]),
-      el('section', { class: 'wrap artist-hero' }, [
-        photo(a.photo, `Retrato de ${a.displayName}`, 'r45'),
-        el('div', { class: 'stack', style: 'gap:22px' }, [
-          a.styles ? mono(a.styles, 'muted') : null,
-          el('h1', { class: 'disp', text: a.displayName }),
-          a.fullName ? mono(a.fullName, 'muted') : null,
-          a.bio ? el('p', { text: a.bio }) : null,
-          el('dl', { class: 'facts' }, [
-            ig ? el('dt', { class: 'mono', text: 'Instagram' }) : null,
-            ig ? el('dd', {}, el('a', { href: ig.url, target: '_blank', rel: 'noopener noreferrer', text: ig.label })) : null,
-            el('dt', { class: 'mono', text: 'Preço' }),
-            el('dd', { text: a.priceFrom ? `Desde ${eur(a.priceFrom)} · orçamento por peça` : 'Orçamento por peça' }),
+    // Hero photos: the portrait (or a typographic card) and one piece of work.
+    const showcase = tattoos[0] || art[0];
+    const pol = (img, alt, cap, cls) => el('figure', { class: `v-polaroid ${cls}` }, [
+      el('img', { src: img.url, alt, loading: 'eager', decoding: 'async' }), el('figcaption', { class: 'hand', text: cap }),
+    ]);
+    const portrait = safeUrl(a.photo?.url)
+      ? pol(a.photo, `Retrato de ${a.displayName}`, firstName.toLowerCase(), 'ah-p1')
+      : el('div', { class: 'v-polaroid ah-p1 ah-typo', role: 'img', 'aria-label': `${a.displayName}, retrato em breve` }, [
+          el('span', { class: 'disp', 'aria-hidden': 'true', text: initials(a.displayName) }),
+          el('span', { class: 'hand', 'aria-hidden': 'true', text: 'retrato em breve' }),
+        ]);
+    const piece = showcase && safeUrl(showcase.image?.url) ? pol(showcase.image, showcase.title || 'Tatuagem', (showcase.style || 'o trabalho').toLowerCase(), 'ah-p2') : null;
+
+    const days = String(data.profile.openingHours || '').split(/,\s*/)[0];
+    const facts = [
+      a.priceFrom ? [`desde ${eur(a.priceFrom)}`, 'peças pequenas'] : null,
+      fl.length ? [`${fl.length} flash`, fl.length === 1 ? 'disponível agora' : 'disponíveis agora'] : null,
+      days ? [shortDays(days), 'sessões com marcação'] : null,
+      ['48 h', 'para responder'],
+    ].filter(Boolean);
+
+    const hero = el('section', { class: 'v-hero v-grid v-ahero', 'aria-labelledby': 'artist-title' }, [
+      el('div', { class: 'ah-grid' }, [
+        el('div', { class: 'ah-text' }, [
+          el('nav', { class: 'mono ah-crumb', 'aria-label': 'Artistas' }, [
+            el('a', { href: '#/artistas', text: 'Artistas' }),
+            el('span', { 'aria-hidden': 'true', text: '/' }),
+            ...data.artists.map((x) => el('a', { href: artistHref(x), 'aria-current': x.id === a.id ? 'page' : null, text: x.id === a.id && a.fullName ? `${x.displayName} · ${a.fullName}` : x.displayName })),
           ]),
-          el('div', { class: 'hero-actions' }, [
-            bookable ? el('a', { class: 'btn', href: `#/marcar?artista=${encodeURIComponent(a.id)}`, text: `Marcar sessão com ${a.displayName}` }) : mono('Agenda fechada de momento', 'muted'),
-            el('a', { class: 'btn-out', href: '#trabalho', onclick: (e) => { e.preventDefault(); $('#trabalho').scrollIntoView(); }, text: 'Ver trabalho' }),
+          el('h1', { class: 'disp ah-name', id: 'artist-title' }, a.displayName.split(/\s+/).flatMap((w, j) => (j ? [el('br'), w] : [w]))),
+          styleTags(a).length ? el('ul', { class: 'ah-tags mono', 'aria-label': 'Estilos' }, styleTags(a).map((t) => el('li', { text: t }))) : null,
+          lead ? el('p', { class: 'ah-lead', text: lead }) : null,
+          el('div', { class: 'v-btns' }, [
+            bookable ? btn3(`Marcar com ${a.displayName}`, book, 'w') : el('span', { class: 'mono', text: 'Agenda fechada de momento' }),
+            fl.length ? btn3('Ver o flash', '#flash-artista', 'o', '↓') : null,
           ]),
+          ig ? el('a', { class: 'mono ah-ig', href: ig.url, ...ext, text: `${ig.label} ↗` }) : null,
+        ]),
+        el('div', { class: 'ah-photos' }, [
+          portrait,
+          piece,
+          bookable ? spinBadge(`MARCAR COM ${a.displayName.toUpperCase()} · 48 H ·`, book, `Marcar com ${a.displayName}`) : null,
         ]),
       ]),
-      el('section', { class: 'rule', id: 'trabalho', style: 'padding-bottom:96px' }, el('div', { class: 'wrap' }, [
-        el('div', { class: 'tabs', role: 'tablist', 'aria-label': `Trabalho de ${a.displayName}` }, tabButtons),
-        panel,
-      ])),
-      bookable
-        ? el('section', { class: 'section dark', style: 'padding:72px 0' }, el('div', { class: 'wrap cta-band' }, [
-            el('h2', { class: 'disp', text: `Tens uma ideia para ${a.displayName === 'Jojo' ? 'a' : 'o'} ${a.displayName}?` }),
-            el('a', { class: 'btn-light', href: `#/marcar?artista=${encodeURIComponent(a.id)}`, text: 'Conta-nos a ideia' }),
-          ]))
-        : null,
+      el('dl', { class: 'ah-facts', style: `--n:${facts.length}` }, facts.map(([b, t]) => el('div', {}, [el('dt', { class: 'disp', text: b }), el('dd', { text: t })]))),
+    ]);
+
+    // Portfolio tabs
+    const tabs = [
+      ['tat', 'Tatuagens', tattoos.length, () => masonry(tattoos, caption)],
+      ['flash', 'Flash', fl.length, () => masonry(fl, (p) => [p.flashNumber ? `Nº ${p.flashNumber}` : p.title, p.flashSize].filter(Boolean).join(' · '))],
+      ['arte', 'Desenho e arte', art.length, () => masonry(art, caption)],
+      ['orig', 'Originais à venda', originals.length, () => el('div', { class: 'v-pgrid' }, originals.map(prodCard))],
+    ].filter((t) => t[2] > 0);
+    let current = tabs.some((t) => t[0] === params.get('tab')) ? params.get('tab') : tabs[0]?.[0];
+    const panel = el('div', { id: 'artist-panel', role: 'tabpanel', tabindex: '0' });
+    const tabButtons = tabs.map(([key, label, n]) =>
+      el('button', { type: 'button', class: 'v-chip', role: 'tab', id: `tab-${key}`, 'aria-controls': 'artist-panel', 'aria-selected': String(key === current),
+        onclick: () => { current = key; tabButtons.forEach((b, i) => b.setAttribute('aria-selected', String(tabs[i][0] === key))); drawPanel(); } },
+        [label, el('b', { class: 'mono', text: String(n) })]));
+    const drawPanel = () => { if (!current) return; panel.setAttribute('aria-labelledby', `tab-${current}`); panel.replaceChildren(tabs.find((t) => t[0] === current)[3]()); };
+    drawPanel();
+    const portfolio = el('section', { class: 'v-sec', id: 'trabalho', 'aria-labelledby': 'port-title' }, el('div', { class: 'wrap' }, [
+      vHead('Portfólio.', null, tabs.length > 1 ? el('div', { class: 'v-tabs', role: 'tablist', 'aria-label': `Trabalho de ${a.displayName}` }, tabButtons) : null, 'port-title'),
+      tabs.length ? panel : el('p', { class: 'empty', text: 'O portfólio está a ser preparado. Entretanto, espreita o Instagram.' }),
+    ]));
+
+    // About: only when there is more to say than the hero line.
+    const artPiece = art.find((p) => safeUrl(p.image?.url));
+    const about = restBio.length
+      ? el('section', { class: 'v-sec', 'aria-labelledby': 'about-title' }, el('div', { class: 'wrap v-about' }, [
+          artPiece ? el('figure', { class: 'v-polaroid', style: '--r:-3deg' }, [
+            el('img', { src: artPiece.image.url, alt: artPiece.title || 'Desenho', loading: 'lazy', decoding: 'async' }),
+            el('figcaption', { class: 'hand', text: 'também no papel' }),
+          ]) : null,
+          el('div', {}, [
+            kicker(`Sobre ${a.displayName}`),
+            el('h2', { class: 'v-aq', id: 'about-title', text: restBio[0] }),
+            ...restBio.slice(1).map((t) => el('p', { class: 'v-lead', text: t })),
+          ]),
+        ]))
+      : null;
+
+    const cta = el('section', { class: 'v-cta v-grid', 'aria-labelledby': 'cta-title' }, [
+      el('p', { class: 'hand v-cta-hand', 'aria-hidden': 'true', text: 'gostas do traço?' }),
+      el('h2', { class: 'disp', id: 'cta-title' }, ['Marca com', el('br'), `${a.displayName}.`]),
+      el('p', { class: 'v-cta-text', text: 'Conta a ideia, a zona e o tamanho. Respondemos em 48 h com preço e datas.' }),
+      el('div', { class: 'v-btns center' }, [
+        bookable ? btn3('Marcar sessão', book, 'w') : null,
+        btn3('Não sei se é o meu traço: fazer o teste', '#/teste', 'o', null),
+      ]),
+    ]);
+
+    return [
+      hero,
+      portfolio,
+      flashV3({ items: fl, title: `Flash de\n${a.displayName}.`, text: 'Prontos a tatuar, um exemplar de cada. Escolhe o número e marca.', id: 'flash-artista', moreHref: `#/portfolio?cat=flash&artista=${encodeURIComponent(a.id)}` }),
+      about,
+      cta,
     ];
   };
 
@@ -1018,46 +1094,155 @@
     ];
   };
 
+  /** Adds one copy to the cart and explains what happens next in `status`. Returns false when no more copies fit. */
+  const addToCart = (item, status) => {
+    const max = item.kind === 'original' ? 1 : Math.min(item.stock || 0, 10);
+    if (cart.qty(item.id) >= max) {
+      status.replaceChildren(notice(item.kind === 'original' ? 'Esta peça já está no carrinho.' : 'Já tens no carrinho todas as cópias disponíveis.'));
+      return false;
+    }
+    cart.add(item.id, 1);
+    status.replaceChildren(el('div', { class: 'notice stack', style: 'gap:12px' }, [
+      el('p', { text: `No carrinho: ${item.title}. Ao finalizar a compra fica reservado para ti durante 30 minutos.` }),
+      el('div', { class: 'hero-actions' }, [
+        el('button', { type: 'button', class: 'btn', onclick: openCart, text: 'Finalizar compra' }),
+        el('a', { class: 'btn-out', href: '#/loja', text: 'Continuar a ver' }),
+      ]),
+    ]));
+    return true;
+  };
+
   pages.shop = (_, params) => {
-    const kinds = [['all', 'Tudo'], ['original', 'Originais'], ['edition', 'Edições limitadas'], ['merch', 'Merch']]
-      .filter(([k]) => k === 'all' || data.shop.some((i) => i.kind === k));
+    const KINDS = [['all', 'Tudo'], ['original', 'Originais'], ['edition', 'Edições limitadas'], ['merch', 'Merch']];
+    const count = (k) => (k === 'all' ? data.shop.length : data.shop.filter((i) => i.kind === k).length);
+    const kinds = KINDS.filter(([k]) => k === 'all' || count(k) > 0);
     let kind = kinds.some(([k]) => k === params.get('tipo')) ? params.get('tipo') : 'all';
-    let artist = 'all';
-    const box = el('div');
-    const draw = () => {
-      const items = data.shop
-        .filter((i) => (kind === 'all' || i.kind === kind) && (artist === 'all' || i.artistId === artist))
-        // available first, sold at the end
-        .sort((a, b) => Number(a.kind !== 'merch' && !sellable(a)) - Number(b.kind !== 'merch' && !sellable(b)));
-      box.replaceChildren(items.length ? el('div', { class: 'grid two-up' }, items.map(shopCard)) : el('p', { class: 'empty', text: 'Nada por aqui ainda. Volta em breve.' }));
-    };
-    const chipRow = (label, opts, get, set) =>
-      el('div', { class: 'filter-row', role: 'group', 'aria-label': label }, opts.map(([k, t]) =>
-        el('button', { type: 'button', class: 'chip', 'aria-pressed': String(get() === k), text: t,
-          onclick: (e) => { set(k); $$('.chip', e.target.parentNode).forEach((b) => b.setAttribute('aria-pressed', String(b === e.target))); draw(); } })));
-    draw();
+    let sort = 'casa';
     const merchUrl = safeUrl(data.profile.merchStoreUrl);
-    const shopArtists = data.artists.filter((a) => data.shop.some((i) => i.artistId === a.id));
+    const firstImg = (k) => data.shop.find((i) => i.kind === k && safeUrl(i.image?.url));
+    const eye = (cls = '') => el('img', { class: `eye ${cls}`.trim(), src: 'assets/ink-compativel-olho-escuro.svg', alt: '' });
+
+    // Hero: one polaroid per kind of thing the shop sells.
+    const orig = firstImg('original');
+    const edition = firstImg('edition');
+    const pols = [
+      orig ? el('figure', { class: 'v-polaroid lf-1' }, [el('img', { src: orig.image.url, alt: '', decoding: 'async' }), el('figcaption', { class: 'hand', text: 'original' })]) : null,
+      edition ? el('figure', { class: 'v-polaroid lf-2' }, [el('img', { src: edition.image.url, alt: '', decoding: 'async' }), el('figcaption', { class: 'hand', text: edition.editionSize ? `edição de ${edition.editionSize}` : 'edição limitada' })]) : null,
+      count('merch') ? el('figure', { class: 'v-polaroid lf-3' }, [el('div', { class: 'ink' }, eye()), el('figcaption', { class: 'hand', text: 'merch' })]) : null,
+    ];
+
+    const grid = el('div', { class: 'v-pgrid four' });
+    const merchBox = el('div');
+    const sortRow = el('div', { class: 'v-chips', role: 'group', 'aria-label': 'Ordenar' });
+    const listing = el('section', { class: 'v-sec', id: 'pecas', 'aria-labelledby': 'pecas-title' });
+    const merchSec = el('section', { class: 'v-sec', id: 'merch', 'aria-labelledby': 'merch-title' });
+
+    const soldStamp = (item) => (item.kind !== 'merch' && !sellable(item)
+      ? el('span', { class: 'v-sold', 'aria-hidden': 'true' }, el('span', { text: item.kind === 'edition' ? 'Esgotada' : item.status === 'reserved' ? 'Reservada' : 'Vendida' }))
+      : null);
+    const piece = (item) => {
+      const card = prodCard(item);
+      card.querySelector('.img').append(...[soldStamp(item)].filter(Boolean));
+      const spec = [artistName(item.artistId), item.medium, item.dimensions].filter(Boolean).join(' · ');
+      if (spec) card.append(el('p', { class: 'spec mono', text: spec }));
+      return card;
+    };
+    const merchCard = (item, i) => {
+      const link = safeUrl(item.externalUrl);
+      return el('a', { class: `v-merch t${i % 3}`, href: link || `#/loja/${encodeURIComponent(item.id)}`, ...(link ? ext : {}) }, [
+        el('span', { class: 'mono', text: item.medium || 'Merch' }),
+        safeUrl(item.image?.url) ? el('img', { src: item.image.url, alt: '', loading: 'lazy', decoding: 'async' }) : eye(),
+        el('span', { class: 'row' }, [el('b', { text: item.title }), mono(`desde ${eur(item.price)}${link ? ' ↗' : ''}`)]),
+      ]);
+    };
+
+    const draw = () => {
+      const pieces = data.shop.filter((i) => i.kind !== 'merch' && (kind === 'all' || i.kind === kind));
+      let shown = sort === 'livres' ? pieces.filter(sellable) : [...pieces];
+      if (sort === 'preco') shown.sort((a, b) => a.price - b.price);
+      else shown.sort((a, b) => Number(!sellable(a)) - Number(!sellable(b))); // sold at the end
+      grid.replaceChildren(...(shown.length ? shown.map(piece) : [el('p', { class: 'empty', text: 'Nada por aqui de momento. Volta em breve.' })]));
+      listing.hidden = kind === 'merch' || !pieces.length;
+      const merch = data.shop.filter((i) => i.kind === 'merch');
+      merchBox.replaceChildren(el('div', { class: 'v-merchgrid' }, merch.map(merchCard)));
+      merchSec.hidden = !(kind === 'all' || kind === 'merch') || !merch.length;
+      sortRow.replaceChildren(...[['casa', 'Destaques'], ['preco', 'Preço'], ['livres', 'Disponíveis']].map(([k, t]) =>
+        el('button', { type: 'button', class: 'v-chip', 'aria-pressed': String(k === sort), text: t, onclick: () => { sort = k; draw(); } })));
+      tabs.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.kind === kind)));
+    };
+
+    const thumb = (k) => {
+      if (k === 'merch') return el('span', { class: 'th ink' }, eye());
+      const it = firstImg(k);
+      return it ? el('img', { class: 'th', src: it.image.url, alt: '' }) : null;
+    };
+    const tabs = kinds.map(([k, t]) =>
+      el('button', { type: 'button', class: 'v-cat', 'data-kind': k, 'aria-pressed': String(k === kind), onclick: () => { kind = k; draw(); } },
+        [k === 'all' ? null : thumb(k), t, el('small', { class: 'mono', text: String(count(k)) })]));
+
+    // Featured edition: the first one still for sale.
+    const feat = data.shop.find((i) => i.kind === 'edition' && sellable(i) && safeUrl(i.image?.url));
+    let featured = null;
+    if (feat) {
+      const status = el('div', { 'aria-live': 'polite' });
+      const left = feat.editionSize ? Math.max(0, Math.min(1, (feat.stock || 0) / feat.editionSize)) : null;
+      const label = () => (cart.qty(feat.id) ? 'Adicionar outra' : 'Adicionar ao carrinho');
+      const addBtn = el('button', { type: 'button', class: 'v-btn k', onclick: () => { if (addToCart(feat, status)) addBtn.firstChild.textContent = label(); } }, [label(), el('i', { 'aria-hidden': 'true', text: '+' })]);
+      featured = el('section', { class: 'v-sec', 'aria-labelledby': 'ed-title' }, el('div', { class: 'wrap' }, el('div', { class: 'v-ed' }, [
+        el('a', { class: 'pic', href: `#/loja/${encodeURIComponent(feat.id)}`, 'aria-label': `Ver ${feat.title}` }, el('img', { src: feat.image.url, alt: feat.title, decoding: 'async' })),
+        el('div', { class: 'txt' }, [
+          el('div', {}, [
+            kicker('Edição em destaque'),
+            el('h2', { class: 'disp', id: 'ed-title', text: feat.title }),
+            feat.description ? el('p', { class: 'desc', text: feat.description }) : null,
+            mono([artistName(feat.artistId), feat.medium, feat.dimensions].filter(Boolean).join(' · '), 'spec'),
+          ]),
+          el('div', {}, [
+            el('div', { class: 'nums' }, [
+              el('div', {}, [el('span', { class: 'disp big', text: String(feat.stock || 0) }), mono(feat.editionSize ? `restam de ${feat.editionSize}` : 'restam')]),
+              el('span', { class: 'disp price', text: eur(feat.price) }),
+            ]),
+            left !== null ? el('div', { class: 'stock', role: 'img', 'aria-label': `Restam ${feat.stock || 0} de ${feat.editionSize}` }, el('i', { style: `width:${Math.round(left * 100)}%` })) : null,
+            el('div', { class: 'v-btns' }, [addBtn, btn3('Ver detalhes', `#/loja/${encodeURIComponent(feat.id)}`, 'o', null)]),
+            mono('Pagamento seguro pelo Stripe · Fica reservada 30 min ao finalizar', 'note'),
+            status,
+          ]),
+        ]),
+      ])));
+    }
+
+    listing.append(el('div', { class: 'wrap' }, [vHead('Originais e\nedições.', null, sortRow, 'pecas-title'), grid]));
+    merchSec.append(el('div', { class: 'wrap' }, [
+      el('div', { class: 'v-ahead' }, [
+        el('div', {}, [kicker(merchUrl ? `Feito e enviado pela ${merchStoreName(merchUrl)}` : 'Feito e enviado pela loja online'), el('h2', { class: 'disp v-h2', id: 'merch-title', text: 'Merch.' })]),
+        merchUrl ? btn3(`Ver tudo na ${merchStoreName(merchUrl)}`, merchUrl, 'o', '↗', ext) : null,
+      ]),
+      merchBox,
+    ]));
+    draw();
+
     return [
-      el('section', { class: 'section' }, el('div', { class: 'wrap' }, [
-        el('div', { class: 'section-head' }, [
-          el('div', { class: 'stack', style: 'gap:8px' }, [mono('Ink Compatível · Loja', 'muted'), el('h1', { class: 'disp h2', text: 'Loja' })]),
-          el('p', { class: 'muted', text: 'Originais são peças únicas, desenhadas à mão. Edições limitadas são numeradas e só se vendem aqui. O merch abre a loja online dos artistas.' }),
+      el('section', { class: 'v-hero v-lhero', 'aria-labelledby': 'shop-title' }, [
+        el('div', { class: 'lh' }, [
+          el('div', {}, [
+            kicker('Arte dos nossos artistas', 'light'),
+            el('h1', { class: 'disp', id: 'shop-title', text: 'Loja' }),
+            el('p', { class: 'lead', text: 'Originais únicos, edições numeradas que só existem aqui e merch com o olho da casa.' }),
+          ]),
+          el('div', { class: 'feat', 'aria-hidden': 'true' }, pols),
         ]),
-        el('div', { class: 'filters' }, [
-          kinds.length > 2 ? chipRow('Tipo de produto', kinds, () => kind, (v) => (kind = v)) : null,
-          shopArtists.length > 1 ? chipRow('Artista', [['all', 'Todos os artistas'], ...shopArtists.map((a) => [a.id, a.displayName])], () => artist, (v) => (artist = v)) : null,
-        ]),
-        box,
-        merchUrl ? el('p', { style: 'margin-top:32px' }, el('a', { class: 'btn-out', href: merchUrl, target: '_blank', rel: 'noopener noreferrer', text: `Ver todo o merch no ${merchStoreName(merchUrl)} ↗` })) : null,
-        el('div', { class: 'shop-info' }, [
-          ['Pagamento', 'Originais e edições pagam-se aqui, num só checkout seguro pelo Stripe.'],
-          ['Envio', 'Enviados do estúdio, bem embalados. Os portes aparecem antes de pagares.'],
-          ['Merch', 'Vendido e enviado pela loja online. Pagas lá, com a conta deles.'],
-        ].map(([t, d]) => el('div', {}, [mono(t), el('p', { text: d })])).concat(
-          el('div', {}, [mono('Devoluções'), el('p', {}, el('a', { href: '#/envios', text: 'Ler a política de envios e devoluções' }))])
-        )),
-      ])),
+        kinds.length > 2 ? el('div', { class: 'v-cats', role: 'group', 'aria-label': 'Tipo de peça' }, tabs) : null,
+      ]),
+      featured,
+      listing,
+      merchSec,
+      el('section', { class: 'v-sec' }, el('div', { class: 'wrap' }, el('div', { class: 'v-shopinfo' }, [
+        ['Pagamento', 'Originais e edições pagam-se aqui, num só checkout seguro pelo Stripe.'],
+        ['Envio', 'Enviados do estúdio, bem embalados. Os portes aparecem antes de pagares.'],
+        ['Merch', 'Vendido e enviado pela loja online. Pagas lá, com a conta deles.'],
+      ].map(([t, d]) => el('div', {}, [mono(t), el('p', { text: d })])).concat(
+        el('div', {}, [mono('Devoluções'), el('p', {}, el('a', { href: '#/envios', text: 'Ler a política de envios e devoluções' }))])
+      )))),
     ];
   };
 
@@ -1073,20 +1258,7 @@
 
     const add = (e) => {
       const button = e.currentTarget;
-      const max = item.kind === 'original' ? 1 : Math.min(item.stock || 0, 10);
-      if (cart.qty(item.id) >= max) {
-        status.replaceChildren(notice(item.kind === 'original' ? 'Esta peça já está no carrinho.' : 'Já tens no carrinho todas as cópias disponíveis.'));
-        return;
-      }
-      cart.add(item.id, 1);
-      button.textContent = item.kind === 'edition' ? 'Adicionar outra' : 'Já está no carrinho';
-      status.replaceChildren(el('div', { class: 'notice stack', style: 'gap:12px' }, [
-        el('p', { text: `No carrinho: ${item.title}. Ao finalizar a compra fica reservado para ti durante 30 minutos.` }),
-        el('div', { class: 'hero-actions' }, [
-          el('button', { type: 'button', class: 'btn', onclick: openCart, text: 'Finalizar compra' }),
-          el('a', { class: 'btn-out', href: '#/loja', text: 'Continuar a ver' }),
-        ]),
-      ]));
+      if (addToCart(item, status)) button.textContent = item.kind === 'edition' ? 'Adicionar outra' : 'Já está no carrinho';
     };
 
     const facts = [
@@ -1210,15 +1382,34 @@
     if (params.get('tamanho')) v.size = params.get('tamanho').slice(0, 100);
     if (params.get('primeira') === '1') v.firstTattoo = true;
     if (['Braço', 'Perna', 'Costas', 'Peito', 'Mão', 'Outra'].includes(params.get('zona'))) v.placement = params.get('zona');
+    if (/^\d{1,3}$/.test(params.get('pct') || '')) v.fromTest = Number(params.get('pct'));
     if (Object.keys(Object.fromEntries(params)).length) history.replaceState(null, '', '#/marcar');
 
     const bookable = data.artists.filter((a) => a.acceptsBookings !== false);
-    const formBox = el('div');
-    const progress = el('ol', { class: 'progress' });
+    const formBox = el('div', { class: 'v-formcard' });
+    const progress = el('ol', { class: 'v-steps', 'aria-label': 'Passos' });
+    const summary = el('dl');
+    const drawSummary = () => {
+      const artist = artistById(v.artistId);
+      const rows = [
+        ['Artista', artist ? artist.displayName : 'Sugerido por nós'],
+        ['Tipo', v.tattooType || 'Desenho novo'],
+        v.tattooType === 'Flash' && v.flashNumber ? ['Flash', `Nº ${v.flashNumber}`] : null,
+        v.style && v.style !== 'Não sei' ? ['Estilo', v.style] : null,
+        v.size ? ['Tamanho', v.size] : null,
+        v.placement ? ['Zona', v.placement] : null,
+        v.firstTattoo ? ['Primeira', 'Sim, explicamos tudo'] : null,
+      ].filter(Boolean);
+      summary.replaceChildren(...rows.flatMap(([k, t]) => [el('dt', { class: 'mono', text: k }), el('dd', { text: t })]));
+    };
     const draw = () => {
-      progress.replaceChildren(...['Artista e tipo', 'A ideia', 'Contacto'].map((label, i) =>
-        el('li', { class: booking.step > i ? 'on' : '', 'aria-current': booking.step === i + 1 ? 'step' : null }, [mono(`0${i + 1} · ${label}`)])));
+      progress.replaceChildren(...[['Artista e tipo', 'agora'], ['A ideia', 'zona, tamanho, referências'], ['Contacto', 'e confirmação']].map(([label, sub], i) =>
+        el('li', { class: booking.step === i + 1 ? 'on' : booking.step > i + 1 ? 'done' : '', 'aria-current': booking.step === i + 1 ? 'step' : null }, [
+          el('i', { 'aria-hidden': 'true', text: booking.step > i + 1 ? '✓' : String(i + 1) }),
+          el('span', {}, [el('b', { text: label }), el('small', { class: 'mono', text: booking.step === i + 1 ? 'agora' : sub })]),
+        ])));
       progress.hidden = booking.step === 4;
+      drawSummary();
       formBox.replaceChildren(stepViews[booking.step]());
       const first = formBox.querySelector('h2');
       if (first && draw.moved) { first.setAttribute('tabindex', '-1'); first.focus(); }
@@ -1242,8 +1433,8 @@
     };
     const firstInvalid = (form) => form.querySelector('[aria-invalid="true"]')?.focus();
     const actions = (back, nextLabel) => el('div', { class: 'form-actions' }, [
-      back ? el('button', { type: 'button', class: 'btn-out', onclick: () => { save(back.form); booking.step -= 1; draw(); }, text: 'Voltar' }) : el('span'),
-      el('button', { type: 'submit', class: 'btn', text: nextLabel }),
+      back ? el('button', { type: 'button', class: 'v-btn o', onclick: () => { save(back.form); booking.step -= 1; draw(); }, text: 'Voltar' }) : mono(`Passo ${booking.step} de 3`, 'muted'),
+      el('button', { type: 'submit', class: 'v-btn k' }, [nextLabel, el('i', { 'aria-hidden': 'true', text: '→' })]),
     ]);
     const save = (form) => {
       for (const elx of form.elements) {
@@ -1258,20 +1449,45 @@
       1: () => {
         const form = el('form', { class: 'form', novalidate: true });
         const flashBox = el('div', { hidden: v.tattooType !== 'Flash' }, field('flashNumber', 'Número do flash', el('input', { id: 'flashNumber', name: 'flashNumber', inputmode: 'numeric', maxlength: '20', value: v.flashNumber || '' }), 'Está na legenda do desenho, por exemplo 014.'));
+        const fromTest = v.fromTest && artistById(v.artistId)
+          ? el('div', { class: 'v-fromtest' }, [
+              el('b', { class: 'p disp', text: `${v.fromTest}%` }),
+              el('span', {}, [el('b', { text: 'Vens do teste de compatibilidade.' }), el('br'), el('span', { class: 'muted', text: `Já escolhemos ${artistById(v.artistId).displayName} e guardámos as tuas respostas. Podes mudar tudo.` })]),
+              el('a', { class: 'lnk', href: '#/teste', text: 'Refazer' }),
+            ])
+          : null;
+        const artistOption = (a, i) => {
+          const pic = safeUrl(a.photo?.url);
+          return el('label', { class: `v-ap${pic ? '' : ` plain t${i % 2}`}` }, [
+            el('input', { type: 'radio', name: 'artistId', value: a.id, checked: v.artistId === a.id || null }),
+            pic ? el('img', { src: a.photo.url, alt: '' }) : null,
+            el('span', { class: 'ok', 'aria-hidden': 'true', text: '✓' }),
+            el('b', { class: 'disp' }, a.displayName.split(/\s+/).flatMap((w, j) => (j ? [el('br'), w] : [w]))),
+            a.styles ? el('small', { class: 'mono', text: a.styles }) : null,
+          ]);
+        };
         form.append(
-          el('h2', { class: 'disp', text: 'Com quem?' }),
+          fromTest,
           el('fieldset', {}, [
-            el('legend', { class: 'hint', text: 'Escolhe o artista. Se não souberes, ajudamos.' }),
-            el('div', { class: 'options' }, [
-              ...bookable.map((a) => option('artistId', a.id, a.displayName, a.styles, v.artistId === a.id)),
-              option('artistId', '', 'Não sei, ajudem-me', 'Sugerimos pelo estilo', !v.artistId),
+            el('legend', {}, el('h2', { class: 'v-q', text: 'Com quem queres marcar?' })),
+            el('div', { class: 'v-apick' }, [
+              ...bookable.map(artistOption),
+              el('label', { class: 'v-ap help' }, [
+                el('input', { type: 'radio', name: 'artistId', value: '', checked: !v.artistId || null }),
+                el('span', { class: 'ok', 'aria-hidden': 'true', text: '✓' }),
+                el('b', { class: 'disp' }, ['Não sei,', el('br'), 'ajudem-me']),
+                el('small', { class: 'mono', text: 'Escolhemos por ti' }),
+              ]),
             ]),
           ]),
           el('fieldset', {}, [
-            el('legend', { text: 'O que procuras?' }),
-            el('div', { class: 'options', onchange: (e) => { if (e.target.name === 'tattooType') flashBox.hidden = e.target.value !== 'Flash'; } }, [
-              ['Desenho novo', 'Feito para ti'], ['Flash', 'Diz-nos o número'], ['Cover-up', 'Tapar uma antiga'], ['Retoque', 'Feita no estúdio'],
-            ].map(([t, n]) => option('tattooType', t, t, n, (v.tattooType || 'Desenho novo') === t))),
+            el('legend', {}, el('h2', { class: 'v-q', text: 'O que procuras?' })),
+            el('div', { class: 'v-kinds', onchange: (e) => { if (e.target.name === 'tattooType') flashBox.hidden = e.target.value !== 'Flash'; } }, [
+              ['Desenho novo', 'Feito para ti'], ['Flash', 'Diz-nos o nº'], ['Cover-up', 'Tapar uma antiga'], ['Retoque', 'Feita cá'],
+            ].map(([t, n]) => el('label', { class: 'v-kind' }, [
+              el('input', { type: 'radio', name: 'tattooType', value: t, checked: (v.tattooType || 'Desenho novo') === t || null }),
+              el('b', { text: t }), el('small', { class: 'mono', text: n }),
+            ]))),
           ]),
           flashBox,
           actions(null, 'Continuar'),
@@ -1282,13 +1498,14 @@
           if (v.tattooType !== 'Flash') v.flashNumber = '';
           booking.step = 2; draw();
         });
+        form.addEventListener('change', () => { save(form); drawSummary(); });
         return form;
       },
       2: () => {
         const form = el('form', { class: 'form', novalidate: true });
         const zones = ['Antebraço', 'Braço', 'Ombro', 'Mão', 'Perna', 'Costas', 'Peito', 'Costela', 'Pescoço', 'Outra'];
         form.append(
-          el('h2', { class: 'disp', text: 'A ideia' }),
+          el('h2', { class: 'v-q', text: 'A ideia' }),
           field('idea', 'Descreve o que imaginas', el('textarea', { id: 'idea', name: 'idea', maxlength: '4000', required: true, placeholder: v.tattooType === 'Cover-up' ? 'O que queres tapar e o que gostavas de ter no lugar.' : 'O desenho, o significado, o que não queres…' }, v.idea || '')),
           el('div', { class: 'two' }, [
             field('placement', 'Zona do corpo', el('select', { id: 'placement', name: 'placement' }, [el('option', { value: '', text: 'Escolhe' }), ...zones.map((z) => el('option', { value: z, text: z, selected: v.placement === z || null }))])),
@@ -1319,7 +1536,7 @@
         const status = el('div', { 'aria-live': 'assertive' });
         const startedAt = Date.now();
         form.append(
-          el('h2', { class: 'disp', text: 'Como falamos contigo' }),
+          el('h2', { class: 'v-q', text: 'Como falamos contigo' }),
           el('div', { class: 'two' }, [
             field('name', 'Nome', el('input', { id: 'name', name: 'name', autocomplete: 'name', maxlength: '120', required: true, value: v.name || '' })),
             field('phone', 'Telemóvel (WhatsApp)', el('input', { id: 'phone', name: 'phone', type: 'tel', autocomplete: 'tel', maxlength: '40', required: true, value: v.phone || '' })),
@@ -1356,7 +1573,7 @@
             booking.step = 4; booking.sentId = null; return draw(); // bot: pretend it worked
           }
           const button = form.querySelector('[type=submit]');
-          button.disabled = true; button.textContent = 'A enviar…';
+          button.disabled = true; button.firstChild.textContent = 'A enviar…';
           const now = new Date().toISOString();
           const artist = artistById(v.artistId);
           try {
@@ -1372,7 +1589,7 @@
             booking.step = 4; draw();
           } catch (err) {
             console.error(err);
-            button.disabled = false; button.textContent = 'Enviar pedido';
+            button.disabled = false; button.firstChild.textContent = 'Enviar pedido';
             status.replaceChildren(notice(`Não conseguimos enviar o pedido. Tenta outra vez${wa ? ' ou fala connosco pelo WhatsApp' : ''}.`, true));
           }
         });
@@ -1390,9 +1607,9 @@
             'Pagas o sinal por um link seguro e a data fica tua.',
             'Antes da sessão vês o esboço final.',
           ].map((t, i) => el('li', {}, [mono(`0${i + 1}`, 'muted'), el('span', { text: t })]))),
-          el('div', { class: 'hero-actions' }, [
-            el('a', { class: 'btn-out', href: '#/', text: 'Voltar ao início' }),
-            el('a', { class: 'btn', href: '#/portfolio', text: 'Ver mais trabalho' }),
+          el('div', { class: 'v-btns' }, [
+            btn3('Ver mais trabalho', '#/portfolio', 'k'),
+            btn3('Voltar ao início', '#/', 'o', null),
           ]),
         ]);
       },
@@ -1408,25 +1625,34 @@
 
     draw.moved = false;
     draw();
-    return [el('section', { class: 'wrap booking' }, [
-      el('div', {}, [
-        mono('Pedido de orçamento', 'muted'),
-        el('h1', { class: 'disp', text: 'Marcar sessão' }),
-        el('p', { style: 'margin:16px 0 0;font-size:18px;max-width:560px', text: 'Conta-nos a ideia, o tamanho e onde a queres. Respondemos em 48 h.' }),
+    return [
+      el('section', { class: 'v-hero v-grid v-mhero', 'aria-labelledby': 'booking-title' }, [
+        el('div', { class: 'mh' }, [
+          el('div', {}, [
+            kicker('Respondemos em 48 h', 'white'),
+            el('h1', { class: 'disp', id: 'booking-title' }, ['Marcar', el('br'), 'sessão']),
+          ]),
+          polaroid('vespa-lapis', '', 'conta-nos a ideia', 'mh-pol'),
+        ]),
         progress,
+      ]),
+      el('section', { class: 'v-sec v-booking' }, el('div', { class: 'wrap mgrid' }, [
         formBox,
-      ]),
-      el('aside', { class: 'aside' }, [
-        el('h2', { class: 'disp', style: 'font-size:32px', text: 'Como funciona' }),
-        el('ol', {}, [
-          'Mandas o pedido. Não pagas nada.',
-          'O artista responde em 48 h com preço e datas.',
-          p.depositInfo || 'Pagas um sinal para guardar a data. Desconta no preço final.',
-          'Afinamos o esboço contigo antes da sessão.',
-        ].map((t, i) => el('li', {}, [mono(`0${i + 1}`, 'muted'), el('span', { text: t })]))),
-        wa ? el('div', { class: 'stack', style: 'gap:8px' }, [el('span', { style: 'font-weight:600', text: 'Preferes falar já?' }), el('a', { class: 'btn-out', href: wa, target: '_blank', rel: 'noopener noreferrer', text: 'WhatsApp do estúdio' })]) : null,
-      ]),
-    ])];
+        el('aside', { class: 'v-side' }, [
+          el('div', { class: 'how' }, [
+            el('h2', { class: 'disp', text: 'Como funciona' }),
+            el('ol', {}, [
+              ['Envias o pedido', 'Não pagas nada. Vai direto para a agenda do artista.'],
+              ['Respondemos em 48 h', 'Com preço, datas e perguntas sobre o desenho.'],
+              ['O sinal', p.depositInfo || 'Guarda a data e desconta no preço final.'],
+              ['Afinamos o esboço', 'Vês o desenho final antes da sessão.'],
+            ].map(([t, d], i) => el('li', {}, [el('i', { class: 'disp', 'aria-hidden': 'true', text: String(i + 1) }), el('span', {}, [el('b', { text: t }), el('br'), el('span', { text: d })])]))),
+          ]),
+          el('div', { class: 'sum' }, [mono('O teu pedido'), summary]),
+          wa ? btn3('Prefiro falar no WhatsApp', wa, 'o', null, ext) : null,
+        ]),
+      ])),
+    ];
   };
 
   // ------------------------------------------------------------------ cart
@@ -1599,6 +1825,9 @@
     main.replaceChildren(...[].concat(content).filter(Boolean));
     document.body.classList.toggle('has-mobile-cta', match.name !== 'booking');
     document.body.classList.toggle('home', match.name === 'home');
+    // Pages that open with a red hero get the see-through header over it.
+    document.body.classList.toggle('overhero', main.firstElementChild?.classList.contains('v-hero') || false);
+    document.body.classList.toggle('overdark', main.firstElementChild?.classList.contains('v-lhero') || false);
     onScroll();
     $('[data-mobile-cta]').hidden = match.name === 'booking';
     if (anchor) document.getElementById(anchor)?.scrollIntoView();
@@ -1609,7 +1838,7 @@
   // On the home page the header sits transparent over the red hero until the page scrolls.
   const onScroll = () => {
     const header = $('.site-header');
-    header.classList.toggle('solid', !document.body.classList.contains('home') || window.scrollY > 40 || $('#main-nav').classList.contains('open'));
+    header.classList.toggle('solid', !document.body.classList.contains('overhero') || window.scrollY > 40 || $('#main-nav').classList.contains('open'));
   };
 
   // ------------------------------------------------------------------ boot
