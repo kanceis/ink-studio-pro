@@ -272,7 +272,6 @@ fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
   .mobile-cta .v-btn { flex: 1; justify-content: space-between; min-height: 52px; padding-left: 22px; }
   .mcta-wa { flex: none; width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--vermelho); color: #fff; }
   .mcta-wa[hidden] { display: none; }
-  body.has-mobile-cta .demo-badge { bottom: calc(76px + env(safe-area-inset-bottom)); }
 }
 @media (max-width: 640px) { .progress .mono { font-size: 10px; letter-spacing: .4px; } }
 .studio-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
@@ -1044,5 +1043,3 @@ body.overdark .site-header:not(.solid) .main-nav .btn { background: var(--vermel
 }
 
 /* Preview build only (demo-data.js) */
-.demo-badge{position:fixed;left:12px;bottom:12px;z-index:60;background:#111;color:#fff;font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:6px 10px;border-radius:999px;pointer-events:none;opacity:.85}
-@media (max-width: 640px) { .demo-badge { left: 16px; bottom: calc(10px + env(safe-area-inset-bottom)); font-size: 9px; padding: 4px 9px; } }
