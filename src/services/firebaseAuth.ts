@@ -1,4 +1,3 @@
-import { initializeApp, getApps } from 'firebase/app';
 import {
   getAuth,
   signInWithPopup,
@@ -6,16 +5,17 @@ import {
   onAuthStateChanged,
   User,
   signOut,
+  connectAuthEmulator,
 } from 'firebase/auth';
-import firebaseConfig from '../../firebase-applet-config.json';
+import { firebaseApp, USE_EMULATORS } from './firebaseApp';
 
 export const SCOPES = [
   'https://www.googleapis.com/auth/calendar.events',
   'https://www.googleapis.com/auth/gmail.send',
 ];
 
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-export const auth = getAuth(app);
+export const auth = getAuth(firebaseApp);
+if (USE_EMULATORS) connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
 
 const provider = new GoogleAuthProvider();
 SCOPES.forEach((scope) => provider.addScope(scope));
@@ -69,6 +69,23 @@ export const getAccessToken = async (): Promise<string | null> => {
   return cachedAccessToken;
 };
 
+/**
+ * Sign in to the studio app (identity only, no Calendar/Gmail scopes).
+ * Access to the data is decided by Firestore rules (studios/{id}.members).
+ */
+export const signInToStudio = async (): Promise<User> => {
+  const loginProvider = new GoogleAuthProvider();
+  loginProvider.setCustomParameters({ prompt: 'select_account' });
+  const result = await signInWithPopup(auth, loginProvider);
+  return result.user;
+};
+
+/** Forget the Google Calendar/Gmail token but stay signed in to the studio. */
+export const disconnectGoogleWorkspace = () => {
+  cachedAccessToken = null;
+};
+
+/** Full sign-out from the studio app. */
 export const logout = async () => {
   await signOut(auth);
   cachedAccessToken = null;

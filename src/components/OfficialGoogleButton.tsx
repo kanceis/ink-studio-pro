@@ -3,9 +3,10 @@ import React from 'react';
 interface Props {
   onClick: () => void;
   isLoading?: boolean;
+  label?: string;
 }
 
-export const OfficialGoogleButton: React.FC<Props> = ({ onClick, isLoading = false }) => {
+export const OfficialGoogleButton: React.FC<Props> = ({ onClick, isLoading = false, label = 'Ligar Google Agenda & Gmail' }) => {
   return (
     <button
       onClick={onClick}
@@ -22,7 +23,7 @@ export const OfficialGoogleButton: React.FC<Props> = ({ onClick, isLoading = fal
           <path fill="none" d="M0 0h48v48H0z" />
         </svg>
       </div>
-      <span>{isLoading ? 'A ligar...' : 'Ligar Google Agenda & Gmail'}</span>
+      <span>{isLoading ? 'A ligar...' : label}</span>
     </button>
   );
 };
