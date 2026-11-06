@@ -14,6 +14,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&amp;family=Archivo:wght@400;500;600;700;800&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=Caveat:wght@700&amp;display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="motion.css">
 </head>
 <body>
   <a class="skip" href="#main">Saltar para o conteúdo</a>
@@ -32,7 +33,7 @@
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" aria-hidden="true"><path d="M3 7h18M3 12h18M3 17h18"/></svg>
         </button>
       </div>
-      <nav class="main-nav" id="main-nav" aria-label="Principal">
+      <nav class="main-nav" id="main-nav" data-lenis-prevent aria-label="Principal">
         <div class="nav-pill">
           <a href="#/artistas" data-nav="artistas">Artistas</a>
           <a href="#/portfolio" data-nav="portfolio">Portfólio</a>
@@ -89,7 +90,7 @@
   </div>
 
   <!-- Cart -->
-  <dialog class="drawer" id="cart" aria-labelledby="cart-title">
+  <dialog class="drawer" id="cart" data-lenis-prevent aria-labelledby="cart-title">
     <div class="drawer-head">
       <h2 id="cart-title" class="disp">Carrinho</h2>
       <button type="button" class="icon-btn" data-close-cart aria-label="Fechar carrinho">
@@ -100,7 +101,7 @@
   </dialog>
 
   <!-- Photo viewer -->
-  <dialog class="viewer" id="viewer" aria-label="Fotografia">
+  <dialog class="viewer" id="viewer" data-lenis-prevent aria-label="Fotografia">
     <button type="button" class="icon-btn viewer-close" data-close-viewer aria-label="Fechar">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg>
     </button>
@@ -113,5 +114,7 @@
   <script src="demo-data.js"></script>
   <script src="config.js"></script>
   <script src="app.js"></script>
+  <script src="vendor/lenis.min.js"></script>
+  <script src="motion.js"></script>
 </body>
 </html>
