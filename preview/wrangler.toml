@@ -1,0 +1,5 @@
+# Cloudflare Pages project "inkcompativel": static preview of the site with sample data.
+# Lives in preview/ so Pages uses it instead of the app's wrangler.toml at the repo root.
+name = "inkcompativel"
+compatibility_date = "2026-10-01"
+pages_build_output_dir = "."
