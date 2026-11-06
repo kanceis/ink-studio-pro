@@ -114,7 +114,8 @@ html.mo .rot svg.draw path { animation: ink-draw .6s var(--ease-ink) .12s both; 
 @keyframes ink-draw { to { stroke-dashoffset: 0; } }
 
 /* 13 · wordmark do rodapé: as letras sobem e reagem ao rato */
-.footer-wordmark.wm { display: flex; }
+/* Clip only at the bottom (letters rise in from below); above, letters near the cursor have room to lift. */
+.footer-wordmark.wm { display: flex; overflow: visible; clip-path: inset(-60% 0 0 0); }
 .footer-wordmark.wm span { display: inline-block; transition: translate .5s var(--ease-ink), color .3s ease; transition-delay: calc(var(--i, 0) * 25ms); }
 html.mo .footer-wordmark.wm:not(.in) span { translate: 0 100%; }
 .footer-wordmark.wm.live span { transition-delay: 0s; }
