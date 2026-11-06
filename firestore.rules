@@ -24,7 +24,7 @@ service cloud.firestore {
     function validBookingRequest(d) {
       return d.keys().hasOnly(['name', 'email', 'phone', 'instagram', 'artistId', 'artistName',
                                'tattooType', 'flashNumber', 'firstTattoo', 'idea',
-                               'placement', 'size', 'style', 'preferredDates', 'referenceUrl',
+                               'placement', 'size', 'style', 'preferredDates', 'referenceUrl', 'language',
                                'status', 'createdAt', 'adultConfirmedAt', 'privacyAcceptedAt'])
         && requiredString(d, 'name', 120)
         && requiredString(d, 'email', 200)
@@ -47,7 +47,9 @@ service cloud.firestore {
         && optionalString(d, 'style', 100)
         && optionalString(d, 'preferredDates', 300)
         // Up to 5 links, one per line
-        && optionalString(d, 'referenceUrl', 2600);
+        && optionalString(d, 'referenceUrl', 2600)
+        // Sent from the English site
+        && (!('language' in d) || d.language == 'en');
     }
 
     match /studios/{studioId} {

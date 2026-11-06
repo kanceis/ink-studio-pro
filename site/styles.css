@@ -91,6 +91,12 @@ button { font: inherit; color: inherit; }
 .header-actions { display: flex; align-items: center; gap: 4px; order: 2; }
 .main-nav { order: 1; }
 .cart-count { font-size: 12px; }
+/* Language switch: EN on the Portuguese site, PT on the English one. */
+.lang-btn {
+  display: inline-flex; align-items: center; justify-content: center; min-width: 44px; height: 44px; padding: 0 8px;
+  color: var(--tinta); font-size: 13px; letter-spacing: .06em; text-decoration: none; border-radius: var(--radius);
+}
+.lang-btn:hover { color: var(--vermelho-escuro); text-decoration: underline; text-underline-offset: 5px; }
 .menu-btn { display: none; }
 
 @media (max-width: 860px) {
@@ -390,6 +396,7 @@ body.overhero .site-header:not(.solid) .nav-pill a { color: #fff !important; }
 body.overhero .site-header:not(.solid) .nav-pill a:hover { background: rgba(255, 255, 255, .16); }
 body.overhero .site-header:not(.solid) .main-nav .btn { background: var(--tinta); }
 body.overhero .site-header:not(.solid) .icon-btn { color: #fff; }
+body.overhero .site-header:not(.solid) .lang-btn { color: #fff; }
 .site-header.solid { box-shadow: 0 1px 0 var(--nevoa); }
 
 /* HERO */
@@ -399,6 +406,8 @@ body.overhero .site-header:not(.solid) .icon-btn { color: #fff; }
 .v-row { display: flex; justify-content: center; align-items: center; gap: .12em; }
 /* Room for the accent on "À", so it doesn't touch the "O" above it and look like a "Q". */
 .v-hl .v-row + .v-row { margin-top: .16em; }
+/* "From paper" is longer than "Do papel": the English headline is set smaller so it fits. */
+html[lang="en"] .v-hl { font-size: clamp(72px, 10.6vw, 168px); }
 .v-inpic { display: inline-block; flex: none; height: .74em; width: 1.5em; border-radius: 999px; overflow: hidden; border: 6px solid #fff; box-shadow: 0 10px 30px rgba(0, 0, 0, .25); }
 .v-inpic img { width: 100%; height: 100%; object-fit: cover; }
 .v-float { position: absolute; z-index: 3; }
@@ -687,6 +696,7 @@ body.overhero .site-header:not(.solid) .icon-btn { color: #fff; }
   .v-hl { position: relative; top: 0; margin-top: 28px; font-size: 23vw; line-height: .96; }
   .v-row { gap: .22em; }
   .v-hl .v-row + .v-row { margin-top: .16em; }
+  html[lang="en"] .v-hl { font-size: 17vw; }
   .v-inpic, .v-polaroid.pol-a, .v-doodle, .ap-1, .ap-2 { display: none; }
   .v-polaroid.pol-b { top: auto; right: auto; left: 7%; bottom: 26px; width: 46%; transform: rotate(5deg); }
   .ap-0 { left: 16px; top: 8px; }

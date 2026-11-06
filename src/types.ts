@@ -269,6 +269,7 @@ export interface BookingRequest {
   style?: string;
   preferredDates?: string;
   referenceUrl?: string;
+  language?: 'en'; // sent from the English site (/en/…): reply in English
   status: BookingRequestStatus;
   createdAt: string; // ISO timestamp
   adultConfirmedAt: string; // "I am 18+" ticked at (ISO), GDPR proof

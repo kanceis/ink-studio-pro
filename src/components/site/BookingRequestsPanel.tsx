@@ -22,6 +22,7 @@ export const BookingRequestsPanel: React.FC<{ content: SiteContent }> = ({ conte
       `Pedido pelo site (${new Date(req.createdAt).toLocaleDateString('pt-PT')}):`,
       req.idea,
       req.artistName && `Artista: ${req.artistName}`,
+      req.language === 'en' && 'Pedido feito no site em inglês: responder em inglês.',
       req.tattooType && `Tipo: ${req.tattooType}${req.flashNumber ? ` (flash #${req.flashNumber})` : ''}`,
       req.firstTattoo !== undefined && `Primeira tatuagem: ${req.firstTattoo ? 'sim' : 'não'}`,
       req.placement && `Zona: ${req.placement}`,
@@ -127,6 +128,7 @@ export const BookingRequestsPanel: React.FC<{ content: SiteContent }> = ({ conte
               <Detail label="Tipo" value={`${req.tattooType}${req.flashNumber ? ` · #${req.flashNumber}` : ''}`} />
             )}
             {req.firstTattoo !== undefined && <Detail label="1.ª tatuagem" value={req.firstTattoo ? 'Sim' : 'Não'} />}
+            {req.language === 'en' && <Detail label="Língua" value="Inglês (responder em inglês)" />}
             {req.placement && <Detail label="Zona" value={req.placement} />}
             {req.size && <Detail label="Tamanho" value={req.size} />}
             {req.style && <Detail label="Estilo" value={req.style} />}
