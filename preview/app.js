@@ -1946,13 +1946,15 @@
       content = pages.notFound();
     }
     main.replaceChildren(...[].concat(content).filter(Boolean));
-    document.body.classList.toggle('has-mobile-cta', match.name !== 'booking');
+    // The floating booking bar would compete with the page's own main action on the shop and booking pages.
+    const noCta = ['booking', 'shop', 'product', 'thanks', 'shipping'].includes(match.name);
+    document.body.classList.toggle('has-mobile-cta', !noCta);
     document.body.classList.toggle('home', match.name === 'home');
     // Pages that open with a red hero get the see-through header over it.
     document.body.classList.toggle('overhero', main.firstElementChild?.classList.contains('v-hero') || false);
     document.body.classList.toggle('overdark', main.firstElementChild?.classList.contains('v-lhero') || false);
     onScroll();
-    $('[data-mobile-cta]').hidden = match.name === 'booking';
+    $('[data-mobile-cta]').hidden = noCta;
     if (anchor) document.getElementById(anchor)?.scrollIntoView();
     else if (path !== lastPath) { window.scrollTo(0, 0); if (lastPath !== null) main.focus({ preventScroll: true }); }
     lastPath = path;
@@ -1962,7 +1964,9 @@
   const onScroll = () => {
     const header = $('.site-header');
     header.classList.toggle('solid', !document.body.classList.contains('overhero') || window.scrollY > 40 || $('#main-nav').classList.contains('open'));
+    $('[data-mobile-cta]').classList.toggle('away', window.scrollY < 320 || footerInView);
   };
+  let footerInView = false;
 
   // ------------------------------------------------------------------ boot
   const boot = async () => {
@@ -1980,6 +1984,7 @@
     $('#viewer').addEventListener('click', (e) => { if (e.target.tagName !== 'IMG') $('#viewer').close(); });
     window.addEventListener('hashchange', route);
     window.addEventListener('scroll', onScroll, { passive: true });
+    new IntersectionObserver(([e]) => { footerInView = e.isIntersecting; onScroll(); }).observe($('.site-footer'));
     updateCartCount();
 
     // Back from Stripe: ?compra=ok
