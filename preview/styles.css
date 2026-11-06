@@ -468,13 +468,15 @@ html[lang="en"] .v-hl { font-size: clamp(72px, 10.6vw, 168px); }
 .v-acards { display: grid; grid-template-columns: 1.25fr 1fr 1fr; gap: 18px; align-items: end; }
 .v-acards.n1 { grid-template-columns: minmax(0, 520px); }
 .v-acards.n2 { grid-template-columns: 1.25fr 1fr; }
-.v-acard { position: relative; display: block; overflow: hidden; border-radius: 28px; color: #fff; text-decoration: none; aspect-ratio: 3 / 4; background: var(--tinta); }
+.v-acard { position: relative; display: block; overflow: hidden; border-radius: 28px; color: #fff; text-decoration: none; aspect-ratio: 3 / 4; background: var(--tinta); container-type: inline-size; }
 .v-acard:hover { color: #fff; }
 .v-acard .ph { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 40% 40%; transition: transform .5s ease; }
 .v-acard:hover .ph { transform: scale(1.04); }
 .v-acard .over { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: space-between; padding: 22px; background: linear-gradient(180deg, rgba(20, 18, 19, 0) 40%, rgba(20, 18, 19, .75)); }
 .v-acard .over .mono { display: block; margin-bottom: 8px; }
-.v-acard .name { font: 900 clamp(56px, 6vw, 96px)/.82 var(--font-display); text-transform: uppercase; }
+/* The name never reaches the round arrow (bottom right, 80px from the edge): it shrinks to fit the card
+   width minus the arrow's room. A letter of this font is at most ~.48em wide; --len is the longest word. */
+.v-acard .name { --fit: calc((100cqi - 116px) / (var(--len, 6) * .48)); font: 900 min(clamp(56px, 6vw, 96px), var(--fit))/.82 var(--font-display); text-transform: uppercase; }
 .v-acard .tags { display: flex; flex-wrap: wrap; gap: 6px; }
 .v-acard .tags span { padding: 6px 12px; border-radius: 999px; background: rgba(255, 255, 255, .16); border: 1px solid rgba(255, 255, 255, .4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); font: 500 11px var(--font-mono); letter-spacing: .6px; text-transform: uppercase; }
 .v-acard .go { position: absolute; right: 20px; bottom: 20px; width: 60px; height: 60px; border-radius: 50%; background: #fff; color: var(--tinta); display: flex; align-items: center; justify-content: center; font-size: 24px; transition: transform .2s ease; }
@@ -744,7 +746,7 @@ html[lang="en"] .v-hl { font-size: clamp(72px, 10.6vw, 168px); }
   .v-score { font-size: 150px; }
   .v-h2 { font-size: clamp(52px, 15vw, 80px); }
   .v-teste .v-h2 { font-size: clamp(56px, 16vw, 90px); }
-  .v-acard .name { font-size: 64px; }
+  .v-acard .name { font-size: min(64px, var(--fit)); }
   .v-btn { min-height: 52px; }
 }
 

@@ -328,7 +328,9 @@
     const hasPhoto = safeUrl(a.photo?.url);
     const go = el('span', { class: 'go', 'aria-hidden': 'true', text: '↗' });
     const words = (tags[0] || a.displayName).split(/\s+/).pop();
-    const name = el('div', { class: 'name' }, a.displayName.split(/\s+/).flatMap((w, j) => (j ? [el('br'), w] : [w])));
+    // --len (longest word) lets the CSS shrink long names so they never run under the round arrow.
+    const nameWords = a.displayName.split(/\s+/);
+    const name = el('div', { class: 'name', style: `--len:${Math.max(...nameWords.map((w) => w.length))}` }, nameWords.flatMap((w, j) => (j ? [el('br'), w] : [w])));
     if (hasPhoto) {
       return el('a', { class: 'v-acard', href: artistHref(a), 'aria-label': `${a.displayName}${a.styles ? `, ${a.styles}` : ''}` }, [
         el('img', { class: 'ph', src: a.photo.url, alt: '', loading: 'lazy', decoding: 'async' }),
