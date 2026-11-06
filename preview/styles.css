@@ -34,6 +34,8 @@ img { max-width: 100%; display: block; }
 a { color: var(--vermelho-escuro); }
 a:hover { color: var(--tinta); }
 :focus-visible { outline: 3px solid var(--vermelho); outline-offset: 2px; }
+/* On red or black backgrounds a red ring disappears: use white there. */
+.v-hero :focus-visible, .v-cta :focus-visible, .v-teste :focus-visible, .v-flash :focus-visible, .site-footer :focus-visible, .v-rcard :focus-visible, .mobile-cta .v-btn:focus-visible, .mcta-wa:focus-visible, body.overhero .site-header:not(.solid) :focus-visible { outline-color: #fff; }
 button { font: inherit; color: inherit; }
 [hidden] { display: none !important; }
 
@@ -473,6 +475,8 @@ body.overhero .site-header:not(.solid) .icon-btn { color: #fff; }
 .v-acard.typo.ink { background: var(--tinta); }
 .v-acard.typo .over { background: none; }
 .v-acard .bgword { position: absolute; inset: -10px -40px auto; font: 900 220px/.78 var(--font-display); text-transform: uppercase; opacity: .14; white-space: nowrap; }
+/* Decorative word drawn from a data attribute, so it is not text for screen readers or contrast checks. */
+.v-acard .bgword::before { content: attr(data-w); }
 .v-acard .soon { position: absolute; top: 44%; right: 22px; transform: rotate(8deg); font-size: 24px; background: var(--papel); color: var(--tinta); padding: 4px 14px; border-radius: 999px; }
 .v-acard.ink .soon { transform: rotate(-6deg); }
 
@@ -593,6 +597,7 @@ body.overhero .site-header:not(.solid) .icon-btn { color: #fff; }
 .v-quote.q0 { grid-column: span 2; background: var(--tinta); color: var(--papel); border: 0; }
 .v-quote.q0 p { font-size: clamp(28px, 3vw, 44px); line-height: 1.05; -webkit-line-clamp: 5; }
 .v-quote.q2 { background: var(--vermelho); color: #fff; border: 0; transform: rotate(1.5deg); }
+.v-quote.q2 .who .mono { opacity: 1; }
 .v-quote .who { display: flex; align-items: center; gap: 12px; }
 .v-quote .who img, .v-quote .who i { width: 40px; height: 40px; flex: none; border-radius: 50%; }
 .v-quote .who i { display: flex; align-items: center; justify-content: center; font-style: normal; font-weight: 800; background: var(--vermelho); color: #fff; }
@@ -612,7 +617,7 @@ body.overhero .site-header:not(.solid) .icon-btn { color: #fff; }
 .v-info { grid-column: span 4; grid-row: span 3; display: flex; flex-direction: column; justify-content: space-between; gap: 18px; padding: 30px; border-radius: 24px; background: var(--vermelho); color: #fff; }
 .v-info .big { margin: 12px 0 22px; font-size: 54px; line-height: 1; }
 .v-info dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 10px 20px; font-size: 16px; }
-.v-info dt { opacity: .85; padding-top: 4px; font-size: 11px; }
+.v-info dt { padding-top: 4px; font-size: 11px; }
 .v-info dd { margin: 0; font-weight: 600; }
 .v-info a { color: #fff; }
 
@@ -1043,3 +1048,14 @@ body.overdark .site-header:not(.solid) .main-nav .btn { background: var(--vermel
 }
 
 /* Preview build only (demo-data.js) */
+
+/* Selects: our own chevron with room on the right, instead of the native arrow against the border. */
+select, .fld select, .v-formcard .fld select {
+  -webkit-appearance: none; appearance: none;
+  padding-right: 48px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9' fill='none' stroke='%23141213' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 1.5l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 18px center;
+  background-size: 14px 9px;
+}
+select::-ms-expand { display: none; }

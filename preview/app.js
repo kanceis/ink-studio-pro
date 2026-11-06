@@ -85,6 +85,8 @@
     return decodeFields((await res.json()).fields);
   };
 
+  // Reference links typed one per line (or separated by spaces).
+  const refLinks = (text) => String(text || '').split(/\s+/).map((l) => l.trim()).filter(Boolean);
   const sendBooking = async (data) => {
     if (DEMO) { await new Promise((r) => setTimeout(r, 600)); return `demo-${Date.now()}`; }
     const fields = {};
@@ -143,7 +145,8 @@
 
   const zoomable = (item, ratio = 'r11', caption = '') =>
     el('button', { type: 'button', class: 'photo-btn', 'aria-label': `Ver maior: ${item.title || 'fotografia'}`, onclick: () => openViewer(item, caption) }, [
-      photo(item.image, item.title || 'Tatuagem', ratio),
+      // The button already says what the photo is; an alt here would be read twice.
+      photo(item.image, '', ratio, item.title || 'Tatuagem'),
     ]);
 
   const openViewer = (item, caption) => {
@@ -156,9 +159,9 @@
     dlg.showModal();
   };
 
-  const sectionHead = (title, text, extra) =>
+  const sectionHead = (title, text, extra, tag = 'h2') =>
     el('div', { class: 'section-head' }, [
-      el('h2', { class: 'disp h2', text: title }),
+      el(tag, { class: 'disp h2', text: title }),
       text ? el('p', { class: 'muted', text }) : null,
       extra || null,
     ]);
@@ -181,8 +184,8 @@
   };
   const studioImg = ([name, alt], ratio = 'r43', sizes = '(max-width: 640px) 100vw, 50vw') => {
     const src = (w) => `assets/estudio/${name}-${w}.webp`;
-    return el('button', { type: 'button', class: 'photo-btn', 'aria-label': `Ver maior: ${alt}`, onclick: () => openViewer({ image: { url: new URL(src(1600), location.href).href }, title: alt }, alt) }, [
-      el('div', { class: `ph ${ratio}` }, el('img', { src: src(800), srcset: `${src(800)} 800w, ${src(1600)} 1600w`, sizes, alt, loading: 'lazy', decoding: 'async' })),
+    return el('button', { type: 'button', class: 'photo-btn', 'aria-label': `Ver maior: ${alt}`, onclick: () => openViewer({ image: { url: new URL(src(1600), document.baseURI).href }, title: alt }, alt) }, [
+      el('div', { class: `ph ${ratio}` }, el('img', { src: src(800), srcset: `${src(800)} 800w, ${src(1600)} 1600w`, sizes, alt: '', loading: 'lazy', decoding: 'async' })),
     ]);
   };
 
@@ -215,10 +218,10 @@
   const kicker = (text, cls = '') => el('div', { class: `v-kicker mono ${cls}`.trim() }, [el('b', { 'aria-hidden': 'true' }), text]);
   const initials = (name) => String(name || '?').split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase();
   const styleTags = (a) => String(a.styles || '').split(/[·,/|]/).map((s) => s.trim()).filter(Boolean);
-  const artistHref = (a) => `#/artistas/${encodeURIComponent(a.id)}`;
+  const artistHref = (a) => `/artistas/${encodeURIComponent(a.id)}`;
   const polaroid = (name, alt, cap, cls, pos) => el('figure', { class: `v-polaroid ${cls}` }, [v3img(name, alt, { pos }), el('figcaption', { class: 'hand', text: cap })]);
 
-  const spinBadge = (label = 'MARCAR SESSÃO · RESPOSTA EM 48 H ·', href = '#/marcar', aria = 'Marcar sessão, respondemos em 48 horas') => {
+  const spinBadge = (label = 'MARCAR SESSÃO · RESPOSTA EM 48 H ·', href = '/marcar', aria = 'Marcar sessão, respondemos em 48 horas') => {
     const ring = document.createElementNS(SVGNS, 'svg');
     ring.setAttribute('viewBox', '0 0 200 200');
     ring.setAttribute('class', 'v-spin');
@@ -263,7 +266,7 @@
       el('div', { class: 'v-hero-foot' }, [
         el('div', { class: 'v-hero-copy' }, [
           el('p', { text: p.tagline || `${n === 3 ? 'Três artistas' : 'Artistas'}, um estúdio em Vila Nova de Gaia. Cada tatuagem começa num desenho feito à mão, para ti.` }),
-          el('div', { class: 'v-btns' }, [btn3('Marcar sessão', '#/marcar', 'w'), n ? btn3('Fazer o teste', '#/#teste', 'o', null) : null]),
+          el('div', { class: 'v-btns' }, [btn3('Marcar sessão', '/marcar', 'w'), n ? btn3('Fazer o teste', '/#teste', 'o', null) : null]),
         ]),
         stamp,
       ]),
@@ -335,7 +338,7 @@
       ]);
     }
     return el('a', { class: `v-acard typo ${i % 2 ? 'ink' : 'red'}`, href: artistHref(a), 'aria-label': `${a.displayName}${a.styles ? `, ${a.styles}` : ''}` }, [
-      el('div', { class: 'bgword', 'aria-hidden': 'true', text: `${words} ${words}` }),
+      el('div', { class: 'bgword', 'aria-hidden': 'true', 'data-w': `${words} ${words}` }),
       el('span', { class: 'soon hand', 'aria-hidden': 'true', text: 'retrato em breve' }),
       el('div', { class: 'over' }, [
         el('div', { class: 'tags' }, tags.map((t) => el('span', { text: t }))),
@@ -376,7 +379,7 @@
         kicker('Estilos da casa'),
         el('h2', { class: 'visually-hidden', id: 'estilos-title', text: 'Estilos da casa' }),
         el('ol', {}, items.map((s, i) => el('li', { class: i ? '' : 'on' }, el('button', { type: 'button', text: s.label, 'aria-label': `Ver ${s.label}` })))),
-        btn3('Ver portfólio', '#/portfolio', 'k'),
+        btn3('Ver portfólio', '/portfolio', 'k'),
       ]),
       el('div', { class: 'v-eframe' }, [
         el('div', { class: 'prog', 'aria-hidden': 'true' }, items.map(() => el('i', {}, el('b')))),
@@ -418,14 +421,14 @@
     let filter = 'all';
     const grid = el('div', { class: 'v-bento' });
     const tileFor = (p, cls) => el('button', { type: 'button', class: `v-tile ${cls}`, 'aria-label': `Ver maior: ${p.title || 'tatuagem'}`, onclick: () => openViewer(p, workCaption(p)) }, [
-      el('img', { src: p.image?.url, alt: p.title || '', loading: 'lazy', decoding: 'async' }),
+      el('img', { src: p.image?.url, alt: '', loading: 'lazy', decoding: 'async' }),
       el('span', { class: 'lab mono', text: [artistName(p.artistId), p.style].filter(Boolean).join(' · ') || p.title || '' }),
     ]);
     const draw = () => {
       const items = work().filter((w) => safeUrl(w.image?.url) && (filter === 'all' || w.artistId === filter));
       const featured = items.filter((w) => w.featured);
       const pick = (featured.length >= 4 ? featured : items).slice(0, 4);
-      const more = el('a', { class: 'v-tile more', href: filter === 'all' ? '#/portfolio' : `#/portfolio?artista=${encodeURIComponent(filter)}` }, [
+      const more = el('a', { class: 'v-tile more', href: filter === 'all' ? '/portfolio' : `/portfolio?artista=${encodeURIComponent(filter)}` }, [
         el('span', { class: 'disp' }, ['Ver portfólio', el('br'), 'completo']), el('span', { class: 'dot', 'aria-hidden': 'true', text: '↗' }),
       ]);
       grid.replaceChildren(
@@ -450,7 +453,7 @@
     ]));
   };
 
-  const flashV3 = ({ items = flash(), title = 'Flash\nda casa.', text = 'Desenhos prontos a tatuar, feitos no estúdio. Cada um só se tatua uma vez: depois sai da lista.', id = 'flash', moreHref = '#/portfolio?cat=flash' } = {}) => {
+  const flashV3 = ({ items = flash(), title = 'Flash\nda casa.', text = 'Desenhos prontos a tatuar, feitos no estúdio. Cada um só se tatua uma vez: depois sai da lista.', id = 'flash', moreHref = '/portfolio?cat=flash' } = {}) => {
     if (!items.length) return null;
     const rot = ['-3deg', '2deg', '-1.5deg', '3deg'];
     return el('section', { class: `v-flash${items.length < 3 ? ' compact' : ''}`, id, 'aria-labelledby': `${id}-title` }, [
@@ -470,7 +473,7 @@
                 el('img', { src: p.image?.url, alt: p.title || 'Flash', loading: 'lazy', decoding: 'async' })),
               el('div', { class: 'meta' }, [
                 el('span', {}, [el('span', { class: 'num', text: p.flashNumber ? `Nº ${p.flashNumber}` : p.title }), specs ? mono(specs) : null, price ? el('span', { class: 'mono price', text: price }) : null]),
-                el('a', { class: 'gb', href: `#/marcar?${params}`, 'aria-label': `Marcar o flash ${p.flashNumber || p.title}`, text: '↗' }),
+                el('a', { class: 'gb', href: `/marcar?${params}`, 'aria-label': `Marcar o flash ${p.flashNumber || p.title}`, text: '↗' }),
               ]),
             ]);
           }),
@@ -520,11 +523,11 @@
     const wa = whatsappUrl();
     const mapUrl = p.address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${p.address} ${p.city || ''}`)}` : null;
     const [days, hours] = String(p.openingHours || '').split(/,\s*/);
-    const tile = (name, alt, cls, lab, pos) => el('button', { type: 'button', class: `v-tile ${cls}`, 'aria-label': `Ver maior: ${alt}`, onclick: () => openViewer({ image: { url: new URL(`assets/v3/${name}-1600.webp`, location.href).href }, title: alt }, alt) }, [
-      v3img(name, alt, { pos, big: true, sizes: '(max-width: 760px) 100vw, 40vw' }), lab ? el('span', { class: 'lab mono', text: lab }) : null,
+    const tile = (name, alt, cls, lab, pos) => el('button', { type: 'button', class: `v-tile ${cls}`, 'aria-label': `Ver maior: ${alt}`, onclick: () => openViewer({ image: { url: new URL(`assets/v3/${name}-1600.webp`, document.baseURI).href }, title: alt }, alt) }, [
+      v3img(name, '', { pos, big: true, sizes: '(max-width: 760px) 100vw, 40vw' }), lab ? el('span', { class: 'lab mono', text: lab }) : null,
     ]);
-    const estudio = (name, alt, cls, lab) => el('button', { type: 'button', class: `v-tile ${cls}`, 'aria-label': `Ver maior: ${alt}`, onclick: () => openViewer({ image: { url: new URL(`assets/estudio/${name}-1600.webp`, location.href).href }, title: alt }, alt) }, [
-      el('img', { src: `assets/estudio/${name}-800.webp`, srcset: `assets/estudio/${name}-800.webp 800w, assets/estudio/${name}-1600.webp 1600w`, sizes: '(max-width: 760px) 100vw, 40vw', alt, loading: 'lazy', decoding: 'async' }),
+    const estudio = (name, alt, cls, lab) => el('button', { type: 'button', class: `v-tile ${cls}`, 'aria-label': `Ver maior: ${alt}`, onclick: () => openViewer({ image: { url: new URL(`assets/estudio/${name}-1600.webp`, document.baseURI).href }, title: alt }, alt) }, [
+      el('img', { src: `assets/estudio/${name}-800.webp`, srcset: `assets/estudio/${name}-800.webp 800w, assets/estudio/${name}-1600.webp 1600w`, sizes: '(max-width: 760px) 100vw, 40vw', alt: '', loading: 'lazy', decoding: 'async' }),
       lab ? el('span', { class: 'lab mono', text: lab }) : null,
     ]);
     return el('section', { class: 'v-sec', id: 'estudio', 'aria-labelledby': 'studio-title' }, el('div', { class: 'wrap' }, [
@@ -562,7 +565,7 @@
     const b = shopBadge(item);
     const link = item.kind === 'merch' ? safeUrl(item.externalUrl) : null;
     const left = item.kind === 'edition' && item.editionSize ? Math.max(0, Math.min(1, (item.stock || 0) / item.editionSize)) : null;
-    return el('a', { class: 'v-prod', href: link || `#/loja/${encodeURIComponent(item.id)}`, ...(link ? ext : {}) }, [
+    return el('a', { class: 'v-prod', href: link || `/loja/${encodeURIComponent(item.id)}`, ...(link ? ext : {}) }, [
       el('div', { class: `img k-${item.kind}` }, [
         el('img', { src: item.image?.url, alt: item.title, loading: 'lazy', decoding: 'async' }),
         el('span', { class: `bdg mono${/gone/.test(b.cls) ? ' gone' : ''}`, text: item.kind === 'original' && b.text === 'Peça única' ? (item.medium && /madeira|acr|óleo|tela/i.test(item.medium) ? 'Pintura original' : 'Original') : b.text }),
@@ -577,7 +580,7 @@
     const picks = [firstOf('original'), firstOf('edition'), firstOf('merch')].filter(Boolean);
     if (!picks.length) return null;
     return el('section', { class: 'v-sec', id: 'loja', 'aria-labelledby': 'shop-title' }, el('div', { class: 'wrap' }, [
-      vHead('Leva arte\npara casa.', null, btn3('Ir à loja', '#/loja', 'k'), 'shop-title'),
+      vHead('Leva arte\npara casa.', null, btn3('Ir à loja', '/loja', 'k'), 'shop-title'),
       el('div', { class: 'v-pgrid' }, picks.map(prodCard)),
     ]));
   };
@@ -612,7 +615,7 @@
         '?',
       ]),
       el('p', { class: 'v-cta-text', text: 'Conta-nos o que imaginas. Respondemos em 48 h com preço e datas.' }),
-      el('div', { class: 'v-btns center' }, [btn3('Marcar sessão', '#/marcar', 'w'), wa ? btn3('WhatsApp', wa, 'o', null, ext) : null]),
+      el('div', { class: 'v-btns center' }, [btn3('Marcar sessão', '/marcar', 'w'), wa ? btn3('WhatsApp', wa, 'o', null, ext) : null]),
       polaroid('vespa-lapis', '', 'a tua ideia', 'cta-a'),
       polaroid('tatuagem-081', '', 'na tua pele', 'cta-b'),
     ]);
@@ -703,6 +706,7 @@
     const answers = [];
     let step = 0;
     let firstTattoo = false;
+    const qTag = standalone ? 'h2' : 'h3';
     const qcard = el('div', { class: 'v-qcard', 'aria-live': 'polite' });
     const rcard = el('div', { class: 'v-rcard' });
     const focusHead = () => { const h = qcard.querySelector('[data-quiz-focus]'); if (h && draw.moved) h.focus(); draw.moved = true; };
@@ -715,7 +719,7 @@
           step > 0 ? el('button', { type: 'button', class: 'quiz-back mono', onclick: () => { step -= 1; draw(); }, text: '← Voltar' }) : null,
         ]),
         el('div', { class: 'v-bars', 'aria-hidden': 'true' }, QUIZ.map((_, i) => el('i', { class: i <= step ? 'on' : '' }))),
-        el('h3', { class: 'quiz-q', tabindex: '-1', 'data-quiz-focus': '', id: `quiz-q-${step}`, text: s.q }),
+        el(qTag, { class: 'quiz-q', tabindex: '-1', 'data-quiz-focus': '', id: `quiz-q-${step}`, text: s.q }),
         s.first
           ? el('label', { class: 'quiz-check' }, [
               el('input', { type: 'checkbox', checked: firstTattoo || null, onchange: (e) => { firstTattoo = e.target.checked; } }),
@@ -751,8 +755,8 @@
 
       const best = quizScore(answers)[0];
       if (!best) {
-        rcard.replaceChildren(mono('O teu resultado'), el('p', { class: 'disp name', text: 'Fala connosco' }), btn3('Marcar sessão', `#/marcar?${params}`, 'w'));
-        return [el('h3', { class: 'quiz-q', tabindex: '-1', 'data-quiz-focus': '', text: 'Conta-nos a ideia' }), restart];
+        rcard.replaceChildren(mono('O teu resultado'), el('p', { class: 'disp name', text: 'Fala connosco' }), btn3('Marcar sessão', `/marcar?${params}`, 'w'));
+        return [el(qTag, { class: 'quiz-q', tabindex: '-1', 'data-quiz-focus': '', text: 'Conta-nos a ideia' }), restart];
       }
       const a = best.a;
       const bookable = a.acceptsBookings !== false && data.profile.bookingOpen !== false;
@@ -764,11 +768,11 @@
         mono('O teu resultado'),
         el('p', { class: 'v-pctrow quiz-pct' }, [el('span', { class: 'disp pct', text: `${best.pct}%` }), el('span', {}, ['És compatível', el('br'), 'com'])]),
         el('p', { class: 'disp name', text: a.displayName }),
-        bookable ? btn3(`Marcar com ${a.displayName}`, `#/marcar?${params}`, 'w') : mono('Agenda fechada de momento'),
+        bookable ? btn3(`Marcar com ${a.displayName}`, `/marcar?${params}`, 'w') : mono('Agenda fechada de momento'),
       );
       return [
         el('div', { class: 'v-qtop' }, [mono('O teu resultado', 'quiz-count'), restart]),
-        el('h3', { class: 'quiz-q', tabindex: '-1', 'data-quiz-focus': '', text: `És ${best.pct}% compatível com ${a.displayName}` }),
+        el(qTag, { class: 'quiz-q', tabindex: '-1', 'data-quiz-focus': '', text: `És ${best.pct}% compatível com ${a.displayName}` }),
         el('ul', { class: 'quiz-match' }, [
           ...best.yes.map((t) => el('li', { class: 'yes' }, [el('span', { 'aria-hidden': 'true', text: '✓' }), `Combina: ${t}`])),
           ...best.talk.map((t) => el('li', { class: 'talk' }, [el('span', { 'aria-hidden': 'true', text: '…' }), `A conversar: ${t}`])),
@@ -780,7 +784,7 @@
           ? el('div', { class: 'quiz-flash' }, [
               mono(`Flash de ${a.displayName} pronto a tatuar`),
               el('div', { class: 'quiz-flash-row' }, artistFlash.map((f) =>
-                el('a', { href: `#/marcar?${new URLSearchParams({ artista: a.id, tipo: 'flash', ...(f.flashNumber ? { flash: f.flashNumber } : {}) })}`, 'aria-label': `Marcar o flash ${f.flashNumber || f.title}` }, [
+                el('a', { href: `/marcar?${new URLSearchParams({ artista: a.id, tipo: 'flash', ...(f.flashNumber ? { flash: f.flashNumber } : {}) })}`, 'aria-label': `Marcar o flash ${f.flashNumber || f.title}` }, [
                   el('img', { src: f.image?.url, alt: '', loading: 'lazy' }),
                   f.flashNumber ? mono(`Nº ${f.flashNumber}`) : null,
                 ]))),
@@ -837,7 +841,7 @@
       zoomable(p, 'r11', `Flash nº ${p.flashNumber || ''} · ${artistName(p.artistId)}`),
       mono([p.flashNumber ? `Flash nº ${p.flashNumber}` : p.title, artistName(p.artistId)].filter(Boolean).join(' · '), 'muted'),
       specs ? mono(specs) : null,
-      el('a', { href: `#/marcar?${params}`, class: 'lnk', style: 'color:inherit', text: 'Quero este' }),
+      el('a', { href: `/marcar?${params}`, class: 'lnk', style: 'color:inherit', text: 'Quero este' }),
     ]);
   };
 
@@ -875,7 +879,7 @@
     const spec = [artistName(item.artistId), item.dimensions, item.medium].filter(Boolean).join(' · ');
     return el('a', {
       class: 'card',
-      href: ext || `#/loja/${encodeURIComponent(item.id)}`,
+      href: ext || `/loja/${encodeURIComponent(item.id)}`,
       target: ext ? '_blank' : null,
       rel: ext ? 'noopener noreferrer' : null,
     }, [
@@ -887,7 +891,7 @@
   };
 
   const artistCard = (a) =>
-    el('a', { class: 'card', href: `#/artistas/${encodeURIComponent(a.id)}` }, [
+    el('a', { class: 'card', href: `/artistas/${encodeURIComponent(a.id)}` }, [
       photo(a.photo, `Retrato de ${a.displayName}`, 'r34'),
       el('span', { class: 'disp artist-name', text: a.displayName }),
       a.styles ? mono(a.styles, 'muted') : null,
@@ -952,7 +956,7 @@
           contacts.length ? el('dd', {}, contacts.flatMap((c, i) => (i ? [' · ', c] : [c]))) : null,
         ]),
         mapUrl ? el('p', { style: 'margin:0' }, el('a', { class: 'lnk', href: mapUrl, target: '_blank', rel: 'noopener noreferrer', text: 'Abrir no mapa ↗' })) : null,
-        el('h3', { class: 'disp', style: 'font-size:32px;margin-top:16px', text: 'Antes de vir' }),
+        el(full ? 'h2' : 'h3', { class: 'disp', style: 'font-size:32px;margin-top:16px', text: 'Antes de vir' }),
         el('ul', { style: 'margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px' }, [
           'Só tatuamos maiores de 18 anos, com documento de identificação.',
           'Dorme bem, come antes da sessão e evita álcool nas 24 h anteriores.',
@@ -970,7 +974,7 @@
 
   pages.artists = () => [
     el('section', { class: 'section' }, el('div', { class: 'wrap' }, [
-      sectionHead('Os artistas', 'Escolhe pelo traço. Cada um tem o seu portfólio, o seu flash e a sua agenda.'),
+      sectionHead('Os artistas', 'Escolhe pelo traço. Cada um tem o seu portfólio, o seu flash e a sua agenda.', null, 'h1'),
       data.artists.length ? el('div', { class: 'scroller' }, data.artists.map(artistCard)) : el('p', { class: 'empty', text: 'Em breve.' }),
     ])),
   ];
@@ -989,7 +993,7 @@
       grid.replaceChildren(...items.slice(0, shown).map((p) => {
         const cap = caption(p);
         return el('button', { type: 'button', class: 'photo-btn', 'aria-label': `Ver maior: ${cap || p.title || 'fotografia'}`, onclick: () => openViewer(p, cap) }, [
-          el('img', { src: p.image?.url, alt: p.title || cap || '', loading: 'lazy', decoding: 'async' }),
+          el('img', { src: p.image?.url, alt: '', loading: 'lazy', decoding: 'async' }),
           cap ? el('span', { class: 'lab mono', text: cap }) : null,
         ]);
       }));
@@ -1013,7 +1017,7 @@
     const fl = flash().filter((f) => f.artistId === a.id);
     const originals = data.shop.filter((s) => s.artistId === a.id && s.kind !== 'merch');
     const bookable = a.acceptsBookings !== false && data.profile.bookingOpen !== false;
-    const book = `#/marcar?artista=${encodeURIComponent(a.id)}`;
+    const book = `/marcar?artista=${encodeURIComponent(a.id)}`;
     const firstName = String(a.fullName || a.displayName).split(/\s+/)[0];
     const bio = String(a.bio || '').trim();
     const [lead, ...restBio] = bio.split(/\n\s*\n/);
@@ -1044,7 +1048,7 @@
       el('div', { class: 'ah-grid' }, [
         el('div', { class: 'ah-text' }, [
           el('nav', { class: 'mono ah-crumb', 'aria-label': 'Artistas' }, [
-            el('a', { href: '#/artistas', text: 'Artistas' }),
+            el('a', { href: '/artistas', text: 'Artistas' }),
             el('span', { 'aria-hidden': 'true', text: '/' }),
             ...data.artists.map((x) => el('a', { href: artistHref(x), 'aria-current': x.id === a.id ? 'page' : null, text: x.id === a.id && a.fullName ? `${x.displayName} · ${a.fullName}` : x.displayName })),
           ]),
@@ -1108,14 +1112,14 @@
       el('p', { class: 'v-cta-text', text: 'Conta a ideia, a zona e o tamanho. Respondemos em 48 h com preço e datas.' }),
       el('div', { class: 'v-btns center' }, [
         bookable ? btn3('Marcar sessão', book, 'w') : null,
-        btn3('Não sei se é o meu traço: fazer o teste', '#/teste', 'o', null),
+        btn3('Não sei se é o meu traço: fazer o teste', '/teste', 'o', null),
       ]),
     ]);
 
     return [
       hero,
       portfolio,
-      flashV3({ items: fl, title: `Flash de\n${a.displayName}.`, text: 'Prontos a tatuar, um exemplar de cada. Escolhe o número e marca.', id: 'flash-artista', moreHref: `#/portfolio?cat=flash&artista=${encodeURIComponent(a.id)}` }),
+      flashV3({ items: fl, title: `Flash de\n${a.displayName}.`, text: 'Prontos a tatuar, um exemplar de cada. Escolhe o número e marca.', id: 'flash-artista', moreHref: `/portfolio?cat=flash&artista=${encodeURIComponent(a.id)}` }),
       about,
       cta,
     ];
@@ -1142,7 +1146,7 @@
     draw();
     return [
       el('section', { class: 'section' }, el('div', { class: 'wrap' }, [
-        sectionHead('Portfólio', 'Trabalho dos três artistas. Toca numa foto para a ver maior.'),
+        sectionHead('Portfólio', 'Trabalho dos três artistas. Toca numa foto para a ver maior.', null, 'h1'),
         el('div', { class: 'filters' }, [
           cats.length > 2 ? chipRow('Tipo de trabalho', cats, () => cat, (v) => (cat = v)) : null,
           data.artists.length > 1 ? chipRow('Artista', [['all', 'Todos os artistas'], ...data.artists.map((a) => [a.id, a.displayName])], () => artist, (v) => (artist = v)) : null,
@@ -1165,7 +1169,7 @@
       el('p', { text: `No carrinho: ${n > 1 ? `${n} × ` : ''}${item.title}. Ao finalizar a compra fica reservado para ti durante 30 minutos.` }),
       el('div', { class: 'hero-actions' }, [
         el('button', { type: 'button', class: 'btn', onclick: openCart, text: 'Finalizar compra' }),
-        el('a', { class: 'btn-out', href: '#/loja', text: 'Continuar a ver' }),
+        el('a', { class: 'btn-out', href: '/loja', text: 'Continuar a ver' }),
       ]),
     ]));
     return true;
@@ -1208,7 +1212,7 @@
     };
     const merchCard = (item, i) => {
       const link = safeUrl(item.externalUrl);
-      return el('a', { class: `v-merch t${i % 3}`, href: link || `#/loja/${encodeURIComponent(item.id)}`, ...(link ? ext : {}) }, [
+      return el('a', { class: `v-merch t${i % 3}`, href: link || `/loja/${encodeURIComponent(item.id)}`, ...(link ? ext : {}) }, [
         el('span', { class: 'mono', text: item.medium || 'Merch' }),
         safeUrl(item.image?.url) ? el('img', { src: item.image.url, alt: '', loading: 'lazy', decoding: 'async' }) : eye(),
         el('span', { class: 'row' }, [el('b', { text: item.title }), mono(`desde ${eur(item.price)}${link ? ' ↗' : ''}`)]),
@@ -1256,7 +1260,7 @@
       const label = () => (cart.qty(feat.id) ? 'Adicionar outra' : 'Adicionar ao carrinho');
       const addBtn = el('button', { type: 'button', class: 'v-btn k', onclick: () => { if (addToCart(feat, status)) addBtn.firstChild.textContent = label(); } }, [label(), el('i', { 'aria-hidden': 'true', text: '+' })]);
       featured = el('section', { class: 'v-sec', 'aria-labelledby': 'ed-title' }, el('div', { class: 'wrap' }, el('div', { class: 'v-ed' }, [
-        el('a', { class: 'pic', href: `#/loja/${encodeURIComponent(feat.id)}`, 'aria-label': `Ver ${feat.title}` }, el('img', { src: feat.image.url, alt: feat.title, decoding: 'async' })),
+        el('a', { class: 'pic', href: `/loja/${encodeURIComponent(feat.id)}`, 'aria-label': `Ver ${feat.title}` }, el('img', { src: feat.image.url, alt: feat.title, decoding: 'async' })),
         el('div', { class: 'txt' }, [
           el('div', {}, [
             kicker('Edição em destaque'),
@@ -1270,7 +1274,7 @@
               el('span', { class: 'disp price', text: eur(feat.price) }),
             ]),
             left !== null ? el('div', { class: 'stock', role: 'img', 'aria-label': `Restam ${feat.stock || 0} de ${feat.editionSize}` }, el('i', { style: `width:${Math.round(left * 100)}%` })) : null,
-            el('div', { class: 'v-btns' }, [addBtn, btn3('Ver detalhes', `#/loja/${encodeURIComponent(feat.id)}`, 'o', null)]),
+            el('div', { class: 'v-btns' }, [addBtn, btn3('Ver detalhes', `/loja/${encodeURIComponent(feat.id)}`, 'o', null)]),
             mono('Pagamento seguro pelo Stripe · Fica reservada 30 min ao finalizar', 'note'),
             status,
           ]),
@@ -1308,7 +1312,7 @@
         ['Envio', 'Enviados do estúdio, bem embalados. Os portes aparecem antes de pagares.'],
         ['Merch', 'Vendido e enviado pela loja online. Pagas lá, com a conta deles.'],
       ].map(([t, d]) => el('div', {}, [mono(t), el('p', { text: d })])).concat(
-        el('div', {}, [mono('Devoluções'), el('p', {}, el('a', { href: '#/envios', text: 'Ler a política de envios e devoluções' }))])
+        el('div', {}, [mono('Devoluções'), el('p', {}, el('a', { href: '/envios', text: 'Ler a política de envios e devoluções' }))])
       )))),
     ];
   };
@@ -1335,7 +1339,7 @@
         ? el('span', { class: 'stamp ink' }, [el('span', { class: 'mono', text: item.status === 'available' ? 'peça' : '' }), el('b', { class: 'disp', text: item.status === 'available' ? 'única' : item.status === 'sold' ? 'vendida' : 'reservada' })])
         : null;
     const gallery = el('div', { class: 'v-gal' }, el('button', { type: 'button', class: `main k-${item.kind}`, 'aria-label': `Ver maior: ${item.title}`, onclick: () => openViewer(item, item.title) }, [
-      el('img', { class: 'art', src: item.image?.url, alt: item.title, decoding: 'async' }),
+      el('img', { class: 'art', src: item.image?.url, alt: '', decoding: 'async' }),
       stamp,
       isEd ? el('span', { class: 'note hand', 'aria-hidden': 'true', text: 'numerada à mão' }) : null,
     ]));
@@ -1401,7 +1405,7 @@
         ? el('div', { class: 'v-acc' }, [
             el('details', { open: true }, [el('summary', { text: 'Envios e devoluções' }), el('p', {}, [
               `Sai do estúdio, em Gaia, bem embalado. Portes: ${item.shippingPrice ? eur(item.shippingPrice) : 'grátis'}. Tens 14 dias para devolver, como manda a lei. `,
-              el('a', { href: '#/envios', text: 'Ler a política' }),
+              el('a', { href: '/envios', text: 'Ler a política' }),
             ])]),
             el('details', {}, [el('summary', { text: 'Cuidados' }), el('p', { text: 'Guarda longe do sol direto e da humidade. Para emoldurar, um vidro com proteção UV ajuda a manter as cores.' })]),
             el('details', {}, [el('summary', { text: 'Pagamento' }), el('p', { text: 'Pagas aqui no site, num checkout seguro do Stripe. Os meios de pagamento disponíveis aparecem lá.' })]),
@@ -1417,15 +1421,15 @@
     return [
       el('section', { class: 'v-product' }, el('div', { class: 'wrap' }, [
         el('nav', { class: 'mono v-crumbs', 'aria-label': 'Caminho' }, [
-          el('a', { href: '#/loja', text: 'Loja' }), ' / ',
-          el('a', { href: `#/loja?tipo=${item.kind}`, text: kindLabel }), ' / ',
+          el('a', { href: '/loja', text: 'Loja' }), ' / ',
+          el('a', { href: `/loja?tipo=${item.kind}`, text: kindLabel }), ' / ',
           el('span', { 'aria-current': 'page', text: item.title }),
         ]),
         el('div', { class: 'pwrap' }, [gallery, panel]),
       ])),
       more.length
         ? el('section', { class: 'v-sec', 'aria-labelledby': 'more-title' }, el('div', { class: 'wrap' }, [
-            vHead('Também\npodes gostar.', null, btn3('Ver a loja', '#/loja', 'o'), 'more-title'),
+            vHead('Também\npodes gostar.', null, btn3('Ver a loja', '/loja', 'o'), 'more-title'),
             el('div', { class: 'v-pgrid four' }, more.map(prodCard)),
           ]))
         : null,
@@ -1445,7 +1449,7 @@
         mono('Pagamento recebido', 'muted'),
         el('h1', { class: 'disp h2', text: 'Obrigado!' }),
         el('p', { text: 'A tua encomenda está confirmada. Recebes o recibo do Stripe por email e avisamos-te quando sair do estúdio.' }),
-        el('div', { class: 'hero-actions' }, [el('a', { class: 'btn-out', href: '#/loja', text: 'Voltar à loja' }), el('a', { class: 'btn', href: '#/marcar', text: 'Marcar sessão' })]),
+        el('div', { class: 'hero-actions' }, [el('a', { class: 'btn-out', href: '/loja', text: 'Voltar à loja' }), el('a', { class: 'btn', href: '/marcar', text: 'Marcar sessão' })]),
       ])),
     ];
   };
@@ -1483,7 +1487,7 @@
 
   pages.notFound = () => [el('section', { class: 'section' }, el('div', { class: 'wrap stack' }, [
     el('h1', { class: 'disp h2', text: 'Não encontrámos esta página' }),
-    el('p', {}, el('a', { class: 'lnk', href: '#/', text: 'Voltar ao início' })),
+    el('p', {}, el('a', { class: 'lnk', href: '/', text: 'Voltar ao início' })),
   ]))];
 
   // ------------------------------------------------------------------ booking (3 steps)
@@ -1505,7 +1509,7 @@
     if (params.get('primeira') === '1') v.firstTattoo = true;
     if (['Braço', 'Perna', 'Costas', 'Peito', 'Mão', 'Outra'].includes(params.get('zona'))) v.placement = params.get('zona');
     if (/^\d{1,3}$/.test(params.get('pct') || '')) v.fromTest = Number(params.get('pct'));
-    if (Object.keys(Object.fromEntries(params)).length) history.replaceState(null, '', '#/marcar');
+    if (Object.keys(Object.fromEntries(params)).length) history.replaceState(null, '', '/marcar');
 
     const bookable = data.artists.filter((a) => a.acceptsBookings !== false);
     const formBox = el('div', { class: 'v-formcard' });
@@ -1575,7 +1579,7 @@
           ? el('div', { class: 'v-fromtest' }, [
               el('b', { class: 'p disp', text: `${v.fromTest}%` }),
               el('span', {}, [el('b', { text: 'Vens do teste de compatibilidade.' }), el('br'), el('span', { class: 'muted', text: `Já escolhemos ${artistById(v.artistId).displayName} e guardámos as tuas respostas. Podes mudar tudo.` })]),
-              el('a', { class: 'lnk', href: '#/teste', text: 'Refazer' }),
+              el('a', { class: 'lnk', href: '/teste', text: 'Refazer' }),
             ])
           : null;
         const artistOption = (a, i) => {
@@ -1589,7 +1593,7 @@
           ]);
         };
         form.append(
-          fromTest,
+          ...(fromTest ? [fromTest] : []),
           el('fieldset', {}, [
             el('legend', {}, el('h2', { class: 'v-q', text: 'Com quem queres marcar?' })),
             el('div', { class: 'v-apick' }, [
@@ -1637,7 +1641,7 @@
             el('legend', { text: 'Estilo' }),
             el('div', { class: 'options' }, ['Sketch', 'Black & grey', 'Black & red', 'Aguarela', 'Não sei'].map((s) => option('style', s, s, null, (v.style || 'Não sei') === s))),
           ]),
-          field('referenceUrl', 'Link para referências (opcional)', el('input', { id: 'referenceUrl', name: 'referenceUrl', type: 'url', maxlength: '500', placeholder: 'https://', value: v.referenceUrl || '' }), 'Também podes mandar fotos pelo WhatsApp depois de enviar o pedido.'),
+          field('referenceUrl', 'Links para referências (opcional)', el('textarea', { id: 'referenceUrl', name: 'referenceUrl', rows: '3', maxlength: '2600', inputmode: 'url', autocapitalize: 'off', spellcheck: 'false', placeholder: 'https://instagram.com/p/…\nhttps://pinterest.com/pin/…' }, v.referenceUrl || ''), 'Um por linha, até 5 (Instagram, Pinterest, Google Drive…). Também podes mandar fotos pelo WhatsApp depois de enviar o pedido.'),
           el('label', { class: 'check' }, [el('input', { type: 'checkbox', name: 'firstTattoo', checked: v.firstTattoo || null }), 'É a minha primeira tatuagem']),
           actions({ form }, 'Continuar'),
         );
@@ -1646,7 +1650,7 @@
           save(form);
           const ok = [
             setError(form, 'idea', (v.idea || '').trim().length < 10 ? 'Conta-nos um pouco mais (pelo menos uma frase).' : ''),
-            setError(form, 'referenceUrl', v.referenceUrl && !/^https?:\/\/\S+\.\S+/.test(v.referenceUrl.trim()) ? 'Cola um link completo, começado por https://' : ''),
+            setError(form, 'referenceUrl', refLinks(v.referenceUrl).length > 5 ? 'Até 5 links.' : refLinks(v.referenceUrl).some((l) => !/^https?:\/\/\S+\.\S+$/.test(l)) ? 'Cola cada link completo, começado por https://, um por linha.' : ''),
           ].every(Boolean);
           if (!ok) return firstInvalid(form);
           booking.step = 3; draw();
@@ -1674,7 +1678,7 @@
             el('label', { class: 'check' }, [el('input', { type: 'checkbox', name: 'adult', id: 'adult', checked: v.adult || null }), 'Tenho 18 anos ou mais.']),
             el('p', { class: 'err', id: 'adult-err', hidden: true }),
             el('label', { class: 'check' }, [el('input', { type: 'checkbox', name: 'privacy', id: 'privacy', checked: v.privacy || null }),
-              el('span', {}, ['Aceito que a Ink Compatível guarde estes dados para responder ao pedido. ', el('a', { href: '#/privacidade', target: '_blank', text: 'Política de privacidade' })])]),
+              el('span', {}, ['Aceito que a Ink Compatível guarde estes dados para responder ao pedido. ', el('a', { href: '/privacidade', target: '_blank', text: 'Política de privacidade' })])]),
             el('p', { class: 'err', id: 'privacy-err', hidden: true }),
           ]),
           status,
@@ -1705,7 +1709,7 @@
               tattooType: v.tattooType, flashNumber: v.tattooType === 'Flash' ? v.flashNumber : '',
               firstTattoo: !!v.firstTattoo,
               idea: v.idea, placement: v.placement, size: v.size, style: v.style,
-              preferredDates: v.preferredDates, referenceUrl: v.referenceUrl,
+              preferredDates: v.preferredDates, referenceUrl: refLinks(v.referenceUrl).join('\n'),
               status: 'new', createdAt: now, adultConfirmedAt: now, privacyAcceptedAt: now,
             });
             booking.step = 4; draw();
@@ -1730,8 +1734,8 @@
             'Antes da sessão vês o esboço final.',
           ].map((t, i) => el('li', {}, [mono(`0${i + 1}`, 'muted'), el('span', { text: t })]))),
           el('div', { class: 'v-btns' }, [
-            btn3('Ver mais trabalho', '#/portfolio', 'k'),
-            btn3('Voltar ao início', '#/', 'o', null),
+            btn3('Ver mais trabalho', '/portfolio', 'k'),
+            btn3('Voltar ao início', '/', 'o', null),
           ]),
         ]);
       },
@@ -1760,7 +1764,7 @@
       ]),
       el('section', { class: 'v-sec v-booking' }, el('div', { class: 'wrap mgrid' }, [
         formBox,
-        el('aside', { class: 'v-side' }, [
+        el('div', { class: 'v-side' }, [
           el('div', { class: 'how' }, [
             el('h2', { class: 'disp', text: 'Como funciona' }),
             el('ol', {}, [
@@ -1833,7 +1837,7 @@
     const items = cart.lines.map((l) => ({ line: l, item: data.shop.find((i) => i.id === l.id) })).filter((x) => x.item);
     const msgs = [message ? notice(message, true) : null, removed.length ? notice(`Já não está disponível: ${removed.join(', ')}.`) : null];
     if (!items.length) {
-      body.replaceChildren(...msgs.filter(Boolean), el('p', { class: 'muted', text: 'O carrinho está vazio.' }), el('a', { class: 'btn-out', href: '#/loja', onclick: closeCart, text: 'Ver a loja' }));
+      body.replaceChildren(...msgs.filter(Boolean), el('p', { class: 'muted', text: 'O carrinho está vazio.' }), el('a', { class: 'btn-out', href: '/loja', onclick: closeCart, text: 'Ver a loja' }));
       return;
     }
     const subtotal = items.reduce((s, { line, item }) => s + line.qty * (item.price || 0), 0);
@@ -1847,7 +1851,7 @@
         return el('div', { class: 'cart-line' }, [
           photo(item.image, item.title, ''),
           el('div', { class: 'stack', style: 'gap:6px' }, [
-            el('a', { href: `#/loja/${encodeURIComponent(item.id)}`, onclick: closeCart, style: 'color:inherit;font-weight:600', text: item.title }),
+            el('a', { href: `/loja/${encodeURIComponent(item.id)}`, onclick: closeCart, style: 'color:inherit;font-weight:600', text: item.title }),
             mono(item.kind === 'original' ? 'Original · peça única' : 'Edição limitada', 'muted'),
             item.kind === 'edition'
               ? el('div', { class: 'qty' }, [
@@ -1878,12 +1882,12 @@
     if (!APP_API) return renderCart(ERRORS.shop_closed());
     button.disabled = true;
     button.textContent = 'A preparar o pagamento…';
-    const here = `${location.origin}${location.pathname}`;
+    const here = location.origin;
     try {
       const res = await fetch(`${APP_API}/api/checkout`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ items: cart.lines, successUrl: `${here}?compra=ok`, cancelUrl: `${here}#/loja` }),
+        body: JSON.stringify({ items: cart.lines, successUrl: `${here}/obrigado`, cancelUrl: `${here}/loja` }),
       });
       const out = await res.json().catch(() => ({}));
       if (res.ok && out.url) { location.href = out.url; return; }
@@ -1903,6 +1907,93 @@
   const closeCart = () => $('#cart').close();
 
   // ------------------------------------------------------------------ router
+  // ------------------------------------------------------------------ SEO: per-page description, canonical link, social tags
+  // Search engines run the JS, so these follow each route. Link previews (WhatsApp, Facebook) don't run JS
+  // and use the defaults written in index.html.
+  const SITE_URL = (cfg.siteUrl || 'https://inkcompativel.pt').replace(/\/$/, '');
+  const DEFAULT_DESC = document.querySelector('meta[name="description"]')?.content || '';
+  const PAGE_DESC = {
+    artists: 'Os artistas da Ink Compatível, em Vila Nova de Gaia. Cada um com o seu traço, portfólio, flash e agenda.',
+    portfolio: 'Tatuagens, flash e desenhos feitos na Ink Compatível, estúdio de tatuagem em Vila Nova de Gaia.',
+    shop: 'Originais, edições limitadas numeradas e merch dos artistas da Ink Compatível. Envio para todo o país.',
+    studio: 'O estúdio Ink Compatível em Vila Nova de Gaia: morada, horário, como funciona uma sessão e cuidados.',
+    booking: 'Marca uma sessão na Ink Compatível. Conta a ideia, a zona e o tamanho: respondemos em 48 h com preço e datas.',
+    quiz: 'Quatro perguntas sobre traço, cor, tamanho e zona para descobrir com qual dos artistas da Ink Compatível combinas.',
+    shipping: 'Envios, prazos e devoluções das compras na loja Ink Compatível.',
+    privacy: 'Como a Ink Compatível trata os teus dados pessoais.',
+  };
+  const clip = (t, n = 158) => { const x = String(t || '').replace(/\s+/g, ' ').trim(); return x.length > n ? `${x.slice(0, n - 1).replace(/\s+\S*$/, '')}…` : x; };
+  const headTag = (sel, make) => document.head.querySelector(sel) || document.head.appendChild(make());
+  const metaTag = (attr, key) => headTag(`meta[${attr}="${key}"]`, () => { const m = document.createElement('meta'); m.setAttribute(attr, key); return m; });
+  const setMeta = (name, path) => {
+    const id = decodeURIComponent(path.split('/')[2] || '');
+    let desc = PAGE_DESC[name] || DEFAULT_DESC;
+    if (name === 'artist') {
+      const a = artistById(id);
+      if (a) desc = clip(`${a.displayName}${a.styles ? ` · ${a.styles}` : ''}. Portfólio, flash e marcação na Ink Compatível, Vila Nova de Gaia. ${a.bio || ''}`);
+    }
+    if (name === 'product') {
+      const item = data.shop.find((i) => i.id === id);
+      if (item) desc = clip(`${item.title}. ${item.description || 'Na loja da Ink Compatível.'}`);
+    }
+    const url = `${SITE_URL}${path}`;
+    metaTag('name', 'description').content = desc;
+    headTag('link[rel="canonical"]', () => Object.assign(document.createElement('link'), { rel: 'canonical' })).href = url;
+    metaTag('property', 'og:title').content = document.title;
+    metaTag('property', 'og:description').content = desc;
+    metaTag('property', 'og:url').content = url;
+    metaTag('name', 'twitter:title').content = document.title;
+    metaTag('name', 'twitter:description').content = desc;
+    // A page that doesn't exist must not be indexed (the server answers 200 for every path).
+    let robots = document.head.querySelector('meta[name="robots"][data-route]');
+    if (name === 'notFound' && !robots) {
+      robots = Object.assign(document.createElement('meta'), { name: 'robots', content: 'noindex' });
+      robots.setAttribute('data-route', '');
+      document.head.append(robots);
+    }
+    if (name !== 'notFound' && robots) robots.remove();
+  };
+
+  // Structured data for Google (TattooParlor), from the public profile in the app.
+  const DAY_CODES = { segunda: 'Monday', terça: 'Tuesday', terca: 'Tuesday', quarta: 'Wednesday', quinta: 'Thursday', sexta: 'Friday', sábado: 'Saturday', sabado: 'Saturday', domingo: 'Sunday' };
+  const DAY_ORDER = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  const openingSpec = (text) => {
+    const t = String(text || '').toLowerCase();
+    const h = t.match(/(\d{1,2})\s*h\s*(\d{2})?\s*[–-]\s*(\d{1,2})\s*h\s*(\d{2})?/);
+    const d = t.match(/(segunda|terça|terca|quarta|quinta|sexta|sábado|sabado|domingo)(?:-feira)?\s*(?:a|-|–)\s*(segunda|terça|terca|quarta|quinta|sexta|sábado|sabado|domingo)/);
+    if (!h || !d) return null;
+    const from = DAY_ORDER.indexOf(DAY_CODES[d[1]]);
+    const to = DAY_ORDER.indexOf(DAY_CODES[d[2]]);
+    if (from < 0 || to < from) return null;
+    const hh = (x, m) => `${String(x).padStart(2, '0')}:${m || '00'}`;
+    return [{ '@type': 'OpeningHoursSpecification', dayOfWeek: DAY_ORDER.slice(from, to + 1), opens: hh(h[1], h[2]), closes: hh(h[3], h[4]) }];
+  };
+  const addStructuredData = () => {
+    const p = data.profile;
+    const postal = String(p.address || '').match(/\d{4}-\d{3}/)?.[0];
+    const street = String(p.address || '').replace(/,?\s*\d{4}-\d{3}.*$/, '').trim();
+    const ig = instagramUrl(p.instagram);
+    const ld = {
+      '@context': 'https://schema.org',
+      '@type': 'TattooParlor',
+      name: p.name || 'Ink Compatível',
+      url: `${SITE_URL}/`,
+      logo: `${SITE_URL}/assets/logo-512.png`,
+      image: `${SITE_URL}/assets/og-image.jpg`,
+      description: DEFAULT_DESC,
+      telephone: p.phone ? `+351 ${p.phone}` : undefined,
+      email: p.email || undefined,
+      address: street ? { '@type': 'PostalAddress', streetAddress: street, postalCode: postal, addressLocality: p.city || 'Vila Nova de Gaia', addressCountry: 'PT' } : undefined,
+      openingHoursSpecification: openingSpec(p.openingHours) || undefined,
+      sameAs: [ig?.url, ...data.artists.flatMap((a) => String(a.instagram || '').split(/[\s,;]+/).map((h) => instagramUrl(h)?.url))].filter(Boolean),
+      employee: data.artists.map((a) => ({ '@type': 'Person', name: a.displayName, url: `${SITE_URL}/artistas/${encodeURIComponent(a.id)}` })),
+    };
+    const s = document.createElement('script');
+    s.type = 'application/ld+json';
+    s.textContent = JSON.stringify(ld);
+    document.head.append(s);
+  };
+
   const routes = [
     [/^\/?$/, 'home', 'Ink Compatível · Tattoo studio em Vila Nova de Gaia', ''],
     [/^\/artistas\/?$/, 'artists', 'Artistas · Ink Compatível', 'artistas'],
@@ -1918,14 +2009,17 @@
     [/^\/envios\/?$/, 'shipping', 'Envios e devoluções · Ink Compatível', 'loja'],
   ];
 
+  // Real paths (/artistas/arants) so every page can be indexed and shared. Cloudflare Pages serves
+  // index.html for any path without a file, and <base href="/"> keeps relative asset URLs working.
   let lastPath = null;
+  let lastKey = null;
   const route = () => {
-    const raw = location.hash.replace(/^#/, '') || '/';
-    // In-page anchors (e.g. "#trabalho") are not routes.
-    if (!raw.startsWith('/')) return;
-    const [pathAndAnchor, query = ''] = raw.split('?');
-    const [path, anchor] = pathAndAnchor.split('#');
-    const params = new URLSearchParams(query);
+    const path = location.pathname.replace(/\/index\.html$/, '/') || '/';
+    const params = new URLSearchParams(location.search);
+    const anchor = decodeURIComponent(location.hash.slice(1));
+    const key = path + location.search;
+    // Only the #anchor changed: scroll there, keep the page.
+    if (key === lastKey && data.ready) { if (anchor) document.getElementById(anchor)?.scrollIntoView(); return; }
     const main = $('#main');
     $('#main-nav').classList.remove('open');
     $('.menu-btn').setAttribute('aria-expanded', 'false');
@@ -1955,9 +2049,43 @@
     document.body.classList.toggle('overdark', main.firstElementChild?.classList.contains('v-lhero') || false);
     onScroll();
     $('[data-mobile-cta]').hidden = noCta;
+    setMeta(match.name, path);
     if (anchor) document.getElementById(anchor)?.scrollIntoView();
     else if (path !== lastPath) { window.scrollTo(0, 0); if (lastPath !== null) main.focus({ preventScroll: true }); }
     lastPath = path;
+    lastKey = key;
+    document.dispatchEvent(new Event('ink:route'));
+  };
+
+  // Same-site links move with history.pushState instead of reloading the page.
+  const go = (url) => { history.pushState(null, '', url); route(); };
+  const onLinkClick = (e) => {
+    const a = e.target.closest('a[href]');
+    if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    if (a.target && a.target !== '_self') return;
+    if (a.hasAttribute('download')) return;
+    const raw = a.getAttribute('href');
+    if (raw.startsWith('#')) {
+      // In-page anchor (with <base href="/"> it would otherwise point at the home page).
+      e.preventDefault();
+      const id = decodeURIComponent(raw.slice(1));
+      const t = document.getElementById(id);
+      if (t) {
+        history.replaceState(null, '', `${location.pathname}${location.search}#${id}`);
+        t.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+        if (id === 'main') t.focus({ preventScroll: true });
+      }
+      return;
+    }
+    const url = new URL(a.href);
+    if (url.origin !== location.origin || /\.\w{2,5}$/.test(url.pathname)) return;
+    e.preventDefault();
+    if (url.pathname + url.search === location.pathname + location.search) {
+      history.replaceState(null, '', url.pathname + url.search + url.hash);
+      if (url.hash) route(); else window.scrollTo(0, 0);
+      return;
+    }
+    go(url.pathname + url.search + url.hash);
   };
 
   // On the home page the header sits transparent over the red hero until the page scrolls.
@@ -1971,25 +2099,34 @@
   // ------------------------------------------------------------------ boot
   const boot = async () => {
     $('[data-year]').textContent = String(new Date().getFullYear());
-    $('.menu-btn').addEventListener('click', (e) => {
-      const nav = $('#main-nav');
-      nav.classList.toggle('open');
-      e.currentTarget.setAttribute('aria-expanded', String(nav.classList.contains('open')));
+    // Phone menu: the button toggles it; Escape, a tap outside the header or growing to desktop width close it.
+    const setMenu = (open, restoreFocus) => {
+      $('#main-nav').classList.toggle('open', open);
+      $('.menu-btn').setAttribute('aria-expanded', String(open));
+      if (restoreFocus) $('.menu-btn').focus();
       onScroll();
-    });
+    };
+    const menuOpen = () => $('#main-nav').classList.contains('open');
+    $('.menu-btn').addEventListener('click', () => setMenu(!menuOpen()));
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && menuOpen()) setMenu(false, true); });
+    document.addEventListener('click', (e) => { if (menuOpen() && !e.target.closest('.site-header')) setMenu(false); });
+    matchMedia('(min-width: 861px)').addEventListener('change', (e) => { if (e.matches && menuOpen()) setMenu(false); });
     $$('[data-open-cart]').forEach((b) => b.addEventListener('click', openCart));
     $('[data-close-cart]').addEventListener('click', closeCart);
     $('#cart').addEventListener('click', (e) => { if (e.target === e.currentTarget) closeCart(); });
     $('[data-close-viewer]').addEventListener('click', () => $('#viewer').close());
     $('#viewer').addEventListener('click', (e) => { if (e.target.tagName !== 'IMG') $('#viewer').close(); });
-    window.addEventListener('hashchange', route);
+    document.addEventListener('click', onLinkClick);
+    window.addEventListener('popstate', route);
     window.addEventListener('scroll', onScroll, { passive: true });
     new IntersectionObserver(([e]) => { footerInView = e.isIntersecting; onScroll(); }).observe($('.site-footer'));
     updateCartCount();
 
     // Back from Stripe: ?compra=ok
     const search = new URLSearchParams(location.search);
-    if (search.get('compra') === 'ok') history.replaceState(null, '', `${location.pathname}#/obrigado`);
+    if (search.get('compra') === 'ok') history.replaceState(null, '', '/obrigado');
+    // Old links from the preview used #/path; move them to the real path.
+    if (location.hash.startsWith('#/')) history.replaceState(null, '', location.hash.slice(1));
 
     try { await load(); } catch (err) { console.error(err); data.ready = true; data.failed = true; }
 
@@ -2003,6 +2140,7 @@
     if (fig) { const a = $('[data-footer-instagram]'); a.href = fig.url; a.hidden = false; }
     $('[data-footer-contact]').textContent = [[p.address, p.city].filter(Boolean).join(', '), p.phone, p.email].filter(Boolean).join('\n');
     cart.reconcile();
+    if (!data.failed) addStructuredData();
     route();
   };
 

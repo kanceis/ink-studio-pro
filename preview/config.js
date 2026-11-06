@@ -14,6 +14,7 @@
         apiKey: '',
         firestoreHost: 'http://127.0.0.1:8080',
         apiBase: 'http://127.0.0.1:8788',
+        siteUrl: location.origin,
       }
     : {
         projectId: 'gen-lang-client-0172609399',
@@ -24,5 +25,7 @@
         // The INK Studio Pro app on Cloudflare Pages (checkout API). Add this site's origin
         // to ALLOWED_ORIGINS in the app's wrangler.toml.
         apiBase: 'https://ink-studio-pro.pages.dev',
+        // Canonical address of the public site (canonical links, sitemap, structured data).
+        siteUrl: 'https://inkcompativel.pt',
       };
 })();

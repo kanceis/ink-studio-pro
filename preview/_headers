@@ -1,2 +1,17 @@
+# Cloudflare Pages headers for the public site (same approach as the RLR site).
+# connect-src: Firestore (content, booking requests) and the INK Studio Pro app API (reviews, checkout).
+# Referrer-Policy keeps the origin on cross-site requests because the Firebase web key is restricted by referrer.
 /*
-  X-Robots-Tag: noindex
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; font-src 'self'; connect-src 'self' https://firestore.googleapis.com https://ink-studio-pro.pages.dev; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; frame-src 'none'; upgrade-insecure-requests
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
+  Strict-Transport-Security: max-age=31536000
+  X-Robots-Tag: noindex, nofollow
+
+/assets/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/assets/*
+  Cache-Control: public, max-age=604800
