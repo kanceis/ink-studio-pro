@@ -3,16 +3,32 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <!-- Paths like /artistas/arants are routes of this one page; every relative URL resolves from the site root. -->
+  <base href="/">
   <title>Ink Compatível · Tattoo studio em Vila Nova de Gaia</title>
   <meta name="description" content="Três artistas, um estúdio em Vila Nova de Gaia. Tatuagens sketch, black &amp; grey e black &amp; red, flash disponível e loja de originais e edições limitadas.">
+  <link rel="canonical" href="https://inkcompativel.pt/">
+  <meta name="theme-color" content="#D0201A">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Ink Compatível">
+  <meta property="og:locale" content="pt_PT">
   <meta property="og:title" content="Ink Compatível · Tattoo studio · Gaia">
   <meta property="og:description" content="Do papel à pele. Três artistas, um estúdio em Vila Nova de Gaia.">
-  <meta property="og:type" content="website">
-  <meta name="theme-color" content="#D0201A">
+  <meta property="og:url" content="https://inkcompativel.pt/">
+  <meta property="og:image" content="https://inkcompativel.pt/assets/og-image.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Ink Compatível, do papel à pele: tatuagem de caveira em sketch no antebraço">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Ink Compatível · Tattoo studio · Gaia">
+  <meta name="twitter:description" content="Do papel à pele. Três artistas, um estúdio em Vila Nova de Gaia.">
+  <meta name="twitter:image" content="https://inkcompativel.pt/assets/og-image.jpg">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&amp;family=Archivo:wght@400;500;600;700;800&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=Caveat:wght@700&amp;display=swap" rel="stylesheet">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <!-- Fonts are served from the site itself (no requests to Google), like the RLR site. -->
+  <link rel="preload" href="assets/fonts/big-shoulders-display-latin-8a3351.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/archivo-latin-2d6953.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="assets/fonts/fonts.css">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="motion.css">
 </head>
@@ -21,7 +37,7 @@
 
   <header class="site-header">
     <div class="wrap header-row">
-      <a class="brand" href="#/" aria-label="Ink Compatível, início">
+      <a class="brand" href="/" aria-label="Ink Compatível, início">
         <img src="assets/ink-compativel-logo-linha-claro.svg" alt="Ink Compatível" width="186" height="40">
       </a>
       <div class="header-actions">
@@ -35,12 +51,12 @@
       </div>
       <nav class="main-nav" id="main-nav" data-lenis-prevent aria-label="Principal">
         <div class="nav-pill">
-          <a href="#/artistas" data-nav="artistas">Artistas</a>
-          <a href="#/portfolio" data-nav="portfolio">Portfólio</a>
-          <a href="#/loja" data-nav="loja">Loja</a>
-          <a href="#/estudio" data-nav="estudio">Estúdio</a>
+          <a href="/artistas" data-nav="artistas">Artistas</a>
+          <a href="/portfolio" data-nav="portfolio">Portfólio</a>
+          <a href="/loja" data-nav="loja">Loja</a>
+          <a href="/estudio" data-nav="estudio">Estúdio</a>
         </div>
-        <a class="btn" href="#/marcar" data-nav="marcar">Marcar sessão</a>
+        <a class="btn" href="/marcar" data-nav="marcar">Marcar sessão</a>
       </nav>
     </div>
   </header>
@@ -53,14 +69,14 @@
     <div class="wrap footer-inner">
       <div class="footer-top">
         <nav class="footer-nav" aria-label="Rodapé">
-          <a href="#/artistas">Artistas</a>
-          <a href="#/loja">Loja</a>
-          <a href="#/marcar">Marcar sessão</a>
-          <a href="#/portfolio?cat=flash">Flash</a>
-          <a href="#/estudio">Estúdio e cuidados</a>
-          <a href="#/envios">Envios e devoluções</a>
-          <a href="#/teste">Teste de compatibilidade</a>
-          <a href="#/estudio#contactos">Contactos</a>
+          <a href="/artistas">Artistas</a>
+          <a href="/loja">Loja</a>
+          <a href="/marcar">Marcar sessão</a>
+          <a href="/portfolio?cat=flash">Flash</a>
+          <a href="/estudio">Estúdio e cuidados</a>
+          <a href="/envios">Envios e devoluções</a>
+          <a href="/teste">Teste de compatibilidade</a>
+          <a href="/estudio#contactos">Contactos</a>
         </nav>
         <div class="footer-side">
           <img src="assets/ink-compativel-logo-empilhado-escuro.svg" alt="Ink Compatível" width="300" height="98">
@@ -75,7 +91,7 @@
       <div class="footer-bottom">
         <span>© <span data-year></span> Ink Compatível · Vila Nova de Gaia</span>
         <span class="footer-legal">
-          <a href="#/privacidade">Privacidade</a>
+          <a href="/privacidade">Privacidade</a>
           <a href="https://www.livroreclamacoes.pt/" target="_blank" rel="noopener noreferrer">Livro de Reclamações</a>
         </span>
       </div>
@@ -83,7 +99,7 @@
   </footer>
 
   <nav class="mobile-cta" data-mobile-cta aria-label="Marcação rápida">
-    <a class="v-btn k" href="#/marcar">Marcar sessão<i aria-hidden="true">↗</i></a>
+    <a class="v-btn k" href="/marcar">Marcar sessão<i aria-hidden="true">↗</i></a>
     <a class="mcta-wa" data-whatsapp hidden aria-label="Falar no WhatsApp" target="_blank" rel="noopener noreferrer">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l1.4-4A8 8 0 1 1 8 18.6L4 20z"/></svg>
     </a>

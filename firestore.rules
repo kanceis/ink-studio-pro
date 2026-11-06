@@ -46,7 +46,8 @@ service cloud.firestore {
         && optionalString(d, 'size', 100)
         && optionalString(d, 'style', 100)
         && optionalString(d, 'preferredDates', 300)
-        && optionalString(d, 'referenceUrl', 500);
+        // Up to 5 links, one per line
+        && optionalString(d, 'referenceUrl', 2600);
     }
 
     match /studios/{studioId} {

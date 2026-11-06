@@ -244,7 +244,7 @@
   let lenis = null;
   if (!RM && window.Lenis) lenis = new window.Lenis({ lerp: 0.1, smoothWheel: true });
   // Depois de uma mudança de rota o app.js mexe no scroll; o Lenis tem de partir dessa posição.
-  addEventListener('hashchange', () => { if (lenis) requestAnimationFrame(() => lenis.scrollTo(scrollY, { immediate: true, force: true })); });
+  document.addEventListener('ink:route', () => { if (lenis) requestAnimationFrame(() => lenis.scrollTo(scrollY, { immediate: true, force: true })); });
 
   let lastY = scrollY;
   let vel = 0;

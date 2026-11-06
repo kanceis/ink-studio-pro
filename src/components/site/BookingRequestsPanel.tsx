@@ -28,7 +28,7 @@ export const BookingRequestsPanel: React.FC<{ content: SiteContent }> = ({ conte
       req.size && `Tamanho: ${req.size}`,
       req.style && `Estilo: ${req.style}`,
       req.preferredDates && `Disponibilidade: ${req.preferredDates}`,
-      req.referenceUrl && `Referência: ${req.referenceUrl}`,
+      req.referenceUrl && `Referências: ${req.referenceUrl.split(/\s+/).filter(Boolean).join(' ')}`,
     ]
       .filter(Boolean)
       .join('\n');
@@ -145,16 +145,21 @@ export const BookingRequestsPanel: React.FC<{ content: SiteContent }> = ({ conte
                 <Instagram className="w-3.5 h-3.5" /> {req.instagram}
               </span>
             )}
-            {req.referenceUrl && /^https?:\/\//.test(req.referenceUrl) && (
-              <a
-                href={req.referenceUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 hover:underline"
-              >
-                <ExternalLink className="w-3.5 h-3.5" /> Referência
-              </a>
-            )}
+            {(req.referenceUrl || '')
+              .split(/\s+/)
+              .filter((link) => /^https?:\/\//.test(link))
+              .slice(0, 5)
+              .map((link, i, all) => (
+                <a
+                  key={link + i}
+                  href={link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 hover:underline"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" /> Referência{all.length > 1 ? ` ${i + 1}` : ''}
+                </a>
+              ))}
           </div>
 
           {(req.adultConfirmedAt || req.privacyAcceptedAt) && (
