@@ -9,6 +9,8 @@
   const STUDIO = `${DB_PATH}/studios/${cfg.studioId || 'main'}`;
   const FS_API = `${(cfg.firestoreHost || 'https://firestore.googleapis.com').replace(/\/$/, '')}/v1`;
   const APP_API = (cfg.apiBase || '').replace(/\/$/, '');
+  // Preview build: window.INK_DEMO (demo-data.js) replaces Firestore, reviews and checkout.
+  const DEMO = window.INK_DEMO || null;
   const withKey = (url) => (cfg.apiKey ? `${url}${url.includes('?') ? '&' : '?'}key=${cfg.apiKey}` : url);
 
   // ------------------------------------------------------------------ DOM helpers
@@ -54,6 +56,10 @@
   };
 
   const getPublished = async (collectionId) => {
+    if (DEMO) {
+      return (DEMO[collectionId] || []).filter((d) => d.published)
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || String(b.createdAt).localeCompare(String(a.createdAt)));
+    }
     const res = await fetch(withKey(`${FS_API}/${STUDIO}:runQuery`), {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -73,12 +79,14 @@
   };
 
   const getProfile = async () => {
+    if (DEMO) return DEMO.profile || {};
     const res = await fetch(withKey(`${FS_API}/${STUDIO}/meta/public`));
     if (!res.ok) return {};
     return decodeFields((await res.json()).fields);
   };
 
   const sendBooking = async (data) => {
+    if (DEMO) { await new Promise((r) => setTimeout(r, 600)); return `demo-${Date.now()}`; }
     const fields = {};
     for (const [k, v] of Object.entries(data)) {
       if (typeof v === 'string' && !v.trim()) continue;
@@ -569,7 +577,7 @@
   let reviewsRequest = null;
   const getReviews = () => {
     if (!reviewsRequest) {
-      reviewsRequest = APP_API
+      reviewsRequest = DEMO ? Promise.resolve(DEMO.reviews || null) : APP_API
         ? fetch(`${APP_API}/api/reviews`).then((r) => (r.ok ? r.json() : null)).catch(() => null)
         : Promise.resolve(null);
     }
@@ -1816,6 +1824,7 @@
   };
 
   const checkout = async (button) => {
+    if (DEMO) return renderCart('Isto é uma pré-visualização: o pagamento ainda não está ligado.');
     if (!APP_API) return renderCart(ERRORS.shop_closed());
     button.disabled = true;
     button.textContent = 'A preparar o pagamento…';
@@ -1939,6 +1948,7 @@
     if (fig) { const a = $('[data-footer-instagram]'); a.href = fig.url; a.hidden = false; }
     $('[data-footer-contact]').textContent = [[p.address, p.city].filter(Boolean).join(', '), p.phone, p.email].filter(Boolean).join('\n');
     cart.reconcile();
+    if (DEMO) document.body.append(el('div', { class: 'demo-badge mono', text: 'Pré-visualização · dados de exemplo' }));
     route();
   };
 
