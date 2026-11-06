@@ -2003,7 +2003,6 @@
     if (fig) { const a = $('[data-footer-instagram]'); a.href = fig.url; a.hidden = false; }
     $('[data-footer-contact]').textContent = [[p.address, p.city].filter(Boolean).join(', '), p.phone, p.email].filter(Boolean).join('\n');
     cart.reconcile();
-    if (DEMO) document.body.append(el('div', { class: 'demo-badge mono', text: 'Pré-visualização · dados de exemplo' }));
     route();
   };
 
