@@ -265,9 +265,14 @@ fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
 /* Sticky booking bar on phones */
 .mobile-cta { display: none; }
 @media (max-width: 640px) {
-  .mobile-cta { display: flex; gap: 8px; position: fixed; left: 0; right: 0; bottom: 0; z-index: 15; padding: 12px 16px; background: var(--papel); border-top: var(--traco) solid var(--tinta); }
-  .mobile-cta .btn { flex: 1; }
-  body.has-mobile-cta { padding-bottom: 76px; }
+  /* Floating pill: hidden at the top of the page (the hero has its own buttons) and over the footer. */
+  .mobile-cta { display: flex; align-items: center; gap: 6px; position: fixed; left: 12px; right: 12px; bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 15; padding: 6px; border-radius: 999px; background: color-mix(in srgb, var(--papel) 88%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); box-shadow: 0 14px 34px rgba(20, 18, 19, .24); transition: translate .4s cubic-bezier(.22, 1, .36, 1), opacity .3s ease; }
+  .mobile-cta[hidden] { display: none; }
+  .mobile-cta.away { translate: 0 calc(100% + 24px); opacity: 0; pointer-events: none; }
+  .mobile-cta .v-btn { flex: 1; justify-content: space-between; min-height: 52px; padding-left: 22px; }
+  .mcta-wa { flex: none; width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--vermelho); color: #fff; }
+  .mcta-wa[hidden] { display: none; }
+  body.has-mobile-cta .demo-badge { bottom: calc(76px + env(safe-area-inset-bottom)); }
 }
 @media (max-width: 640px) { .progress .mono { font-size: 10px; letter-spacing: .4px; } }
 .studio-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
@@ -1040,3 +1045,4 @@ body.overdark .site-header:not(.solid) .main-nav .btn { background: var(--vermel
 
 /* Preview build only (demo-data.js) */
 .demo-badge{position:fixed;left:12px;bottom:12px;z-index:60;background:#111;color:#fff;font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:6px 10px;border-radius:999px;pointer-events:none;opacity:.85}
+@media (max-width: 640px) { .demo-badge { left: 16px; bottom: calc(10px + env(safe-area-inset-bottom)); font-size: 9px; padding: 4px 9px; } }
