@@ -11,6 +11,8 @@
   const APP_API = (cfg.apiBase || '').replace(/\/$/, '');
   // Preview build: window.INK_DEMO (demo-data.js) replaces Firestore, reviews and checkout.
   const DEMO = window.INK_DEMO || null;
+  // Language layer (i18n.js): English under /en/…, Portuguese everywhere else.
+  const I = window.INK_I18N || { lang: 'pt', en: false, locale: 'pt-PT', t: (s) => s, L: (u) => u, toPt: (p) => p, toEn: (u) => u, apply: () => {}, isEnPath: () => false };
   const withKey = (url) => (cfg.apiKey ? `${url}${url.includes('?') ? '&' : '?'}key=${cfg.apiKey}` : url);
 
   // ------------------------------------------------------------------ DOM helpers
@@ -32,7 +34,7 @@
   const mono = (text, cls = '') => el('span', { class: `mono ${cls}`.trim(), text });
   const safeUrl = (u) => (typeof u === 'string' && /^https?:\/\//i.test(u) ? u : null);
   const eur = (n) =>
-    new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR', minimumFractionDigits: Number.isInteger(n) ? 0 : 2 }).format(n || 0);
+    new Intl.NumberFormat(I.locale, { style: 'currency', currency: 'EUR', minimumFractionDigits: Number.isInteger(n) ? 0 : 2 }).format(n || 0);
   const digits = (s) => String(s || '').replace(/\D/g, '');
 
   // ------------------------------------------------------------------ Firestore REST
@@ -128,7 +130,7 @@
     const n = digits(data.profile.whatsapp || data.profile.phone);
     if (!n) return null;
     const full = n.length === 9 ? `351${n}` : n;
-    return `https://wa.me/${full}${text ? `?text=${encodeURIComponent(text)}` : ''}`;
+    return `https://wa.me/${full}${text ? `?text=${encodeURIComponent(I.t(text))}` : ''}`;
   };
   const instagramUrl = (handle) => {
     const h = String(handle || '').trim().replace(/^@/, '').replace(/^https?:\/\/(www\.)?instagram\.com\//, '').replace(/\/$/, '');
@@ -634,7 +636,7 @@
     }
     return reviewsRequest;
   };
-  const decimal = (n) => new Intl.NumberFormat('pt-PT', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(n);
+  const decimal = (n) => new Intl.NumberFormat(I.locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(n);
   const stars = (n, cls = '') =>
     el('span', { class: `stars ${cls}`.trim(), role: 'img', 'aria-label': `${decimal(n)} de 5 estrelas` },
       [1, 2, 3, 4, 5].map((i) => el('span', { class: i <= Math.round(n) ? 'on' : '', 'aria-hidden': 'true', text: '★' })));
@@ -833,6 +835,7 @@
   const flashCard = (p) => {
     const specs = [p.flashSize, p.flashSessions ? `${p.flashSessions} ${p.flashSessions === 1 ? 'sessão' : 'sessões'}` : '', p.priceFrom ? `desde ${eur(p.priceFrom)}` : '']
       .filter(Boolean)
+      .map((x) => I.t(x))
       .join(' · ');
     const params = new URLSearchParams({ tipo: 'flash' });
     if (p.artistId) params.set('artista', p.artistId);
@@ -1320,7 +1323,7 @@
   pages.product = (id) => {
     const item = data.shop.find((i) => i.id === id);
     if (!item) return pages.notFound();
-    document.title = `${item.title} · Loja Ink Compatível`;
+    document.title = I.t(`${item.title} · Loja Ink Compatível`);
     const kindLabel = { original: 'Originais', edition: 'Edições limitadas', merch: 'Merch' }[item.kind];
     const a = artistById(item.artistId);
     const canBuy = sellable(item) && item.kind !== 'merch';
@@ -1509,7 +1512,7 @@
     if (params.get('primeira') === '1') v.firstTattoo = true;
     if (['Braço', 'Perna', 'Costas', 'Peito', 'Mão', 'Outra'].includes(params.get('zona'))) v.placement = params.get('zona');
     if (/^\d{1,3}$/.test(params.get('pct') || '')) v.fromTest = Number(params.get('pct'));
-    if (Object.keys(Object.fromEntries(params)).length) history.replaceState(null, '', '/marcar');
+    if (Object.keys(Object.fromEntries(params)).length) history.replaceState(null, '', I.L('/marcar'));
 
     const bookable = data.artists.filter((a) => a.acceptsBookings !== false);
     const formBox = el('div', { class: 'v-formcard' });
@@ -1711,6 +1714,8 @@
               idea: v.idea, placement: v.placement, size: v.size, style: v.style,
               preferredDates: v.preferredDates, referenceUrl: refLinks(v.referenceUrl).join('\n'),
               status: 'new', createdAt: now, adultConfirmedAt: now, privacyAcceptedAt: now,
+              // Sent from the English site: the studio answers in English.
+              ...(I.en ? { language: 'en' } : {}),
             });
             booking.step = 4; draw();
           } catch (err) {
@@ -1887,7 +1892,7 @@
       const res = await fetch(`${APP_API}/api/checkout`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ items: cart.lines, successUrl: `${here}/obrigado`, cancelUrl: `${here}/loja` }),
+        body: JSON.stringify({ items: cart.lines, successUrl: `${here}${I.L('/obrigado')}`, cancelUrl: `${here}${I.L('/loja')}` }),
       });
       const out = await res.json().catch(() => ({}));
       if (res.ok && out.url) { location.href = out.url; return; }
@@ -1927,16 +1932,25 @@
   const metaTag = (attr, key) => headTag(`meta[${attr}="${key}"]`, () => { const m = document.createElement('meta'); m.setAttribute(attr, key); return m; });
   const setMeta = (name, path) => {
     const id = decodeURIComponent(path.split('/')[2] || '');
-    let desc = PAGE_DESC[name] || DEFAULT_DESC;
+    let desc = I.t(PAGE_DESC[name] || DEFAULT_DESC);
     if (name === 'artist') {
       const a = artistById(id);
-      if (a) desc = clip(`${a.displayName}${a.styles ? ` · ${a.styles}` : ''}. Portfólio, flash e marcação na Ink Compatível, Vila Nova de Gaia. ${a.bio || ''}`);
+      const line = I.en ? 'Portfolio, flash and bookings at Ink Compatível, Vila Nova de Gaia.' : 'Portfólio, flash e marcação na Ink Compatível, Vila Nova de Gaia.';
+      if (a) desc = clip(`${a.displayName}${a.styles ? ` · ${a.styles}` : ''}. ${line} ${a.bio || ''}`);
     }
     if (name === 'product') {
       const item = data.shop.find((i) => i.id === id);
-      if (item) desc = clip(`${item.title}. ${item.description || 'Na loja da Ink Compatível.'}`);
+      if (item) desc = clip(`${item.title}. ${item.description || I.t('Na loja da Ink Compatível.')}`);
     }
-    const url = `${SITE_URL}${path}`;
+    // Each page exists in Portuguese and in English (/en/…); search engines get both addresses.
+    const ptUrl = `${SITE_URL}${path}`;
+    const enUrl = `${SITE_URL}${I.toEn(path)}`;
+    const url = I.en ? enUrl : ptUrl;
+    const alternates = name === 'notFound' ? [] : [['pt-PT', ptUrl], ['en', enUrl], ['x-default', ptUrl]];
+    document.head.querySelectorAll('link[rel="alternate"][hreflang]').forEach((l) => l.remove());
+    alternates.forEach(([hreflang, href]) => document.head.append(Object.assign(document.createElement('link'), { rel: 'alternate', hreflang, href })));
+    metaTag('property', 'og:locale').content = I.en ? 'en_GB' : 'pt_PT';
+    metaTag('property', 'og:locale:alternate').content = I.en ? 'pt_PT' : 'en_GB';
     metaTag('name', 'description').content = desc;
     headTag('link[rel="canonical"]', () => Object.assign(document.createElement('link'), { rel: 'canonical' })).href = url;
     metaTag('property', 'og:title').content = document.title;
@@ -2014,7 +2028,7 @@
   let lastPath = null;
   let lastKey = null;
   const route = () => {
-    const path = location.pathname.replace(/\/index\.html$/, '/') || '/';
+    const path = I.toPt(location.pathname.replace(/\/index\.html$/, '/') || '/');
     const params = new URLSearchParams(location.search);
     const anchor = decodeURIComponent(location.hash.slice(1));
     const key = path + location.search;
@@ -2026,11 +2040,11 @@
 
     if (!data.ready) return;
     if (data.failed) {
-      main.replaceChildren(el('div', { class: 'wrap loading', role: 'alert', text: 'Não foi possível carregar o site. Tenta recarregar a página.' }));
+      main.replaceChildren(el('div', { class: 'wrap loading', role: 'alert', text: I.t('Não foi possível carregar o site. Tenta recarregar a página.') }));
       return;
     }
     const match = routes.map(([re, name, title, nav]) => ({ m: path.match(re), name, title, nav })).find((r) => r.m) || { name: 'notFound', m: [], nav: '' };
-    document.title = match.title || 'Ink Compatível';
+    document.title = I.t(match.title || 'Ink Compatível');
     $$('[data-nav]').forEach((a) => (a.dataset.nav === match.nav ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current')));
     let content;
     try {
@@ -2040,6 +2054,8 @@
       content = pages.notFound();
     }
     main.replaceChildren(...[].concat(content).filter(Boolean));
+    // Translate now, before motion.js splits headlines into lines and letters.
+    I.apply(main);
     // The floating booking bar would compete with the page's own main action on the shop and booking pages.
     const noCta = ['booking', 'shop', 'product', 'thanks', 'shipping'].includes(match.name);
     document.body.classList.toggle('has-mobile-cta', !noCta);
@@ -2064,6 +2080,8 @@
     if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     if (a.target && a.target !== '_self') return;
     if (a.hasAttribute('download')) return;
+    // The language switch loads the page again in the other language.
+    if (a.hasAttribute('data-lang-switch')) return;
     const raw = a.getAttribute('href');
     if (raw.startsWith('#')) {
       // In-page anchor (with <base href="/"> it would otherwise point at the home page).
@@ -2124,7 +2142,7 @@
 
     // Back from Stripe: ?compra=ok
     const search = new URLSearchParams(location.search);
-    if (search.get('compra') === 'ok') history.replaceState(null, '', '/obrigado');
+    if (search.get('compra') === 'ok') history.replaceState(null, '', I.L('/obrigado'));
     // Old links from the preview used #/path; move them to the real path.
     if (location.hash.startsWith('#/')) history.replaceState(null, '', location.hash.slice(1));
 
