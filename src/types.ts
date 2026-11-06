@@ -280,10 +280,10 @@ export interface BookingRequest {
 /** An artist as shown on the public site. Internal data (commission, phone) stays private. */
 export interface PublicArtist {
   id: string; // internal Artist id
-  displayName: string; // e.g. "Arants", "Rock Ink", "Jojo"
+  displayName: string; // e.g. "Arants", "Rock Ink", "Carolina"
   fullName?: string; // e.g. "Miguel Alves"
   bio?: string;
-  instagram?: string;
+  instagram?: string; // one or more handles, comma-separated
   styles?: string; // e.g. "Sketch · Black & Red"
   priceFrom?: number; // EUR, optional "desde X €"
   photo?: UploadedImage;

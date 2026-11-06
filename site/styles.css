@@ -740,6 +740,7 @@ body.overhero .site-header:not(.solid) .icon-btn { color: #fff; }
 .ah-lead { margin: 0; max-width: 520px; font-size: 20px; line-height: 1.45; }
 .ah-ig { color: #fff; text-decoration: none; font-size: 13px; }
 .ah-ig:hover { text-decoration: underline; }
+.ah-igs { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0; }
 .ah-photos { position: relative; height: 560px; }
 .ah-photos .v-polaroid { position: absolute; }
 .ah-p1 { left: 2%; top: 10px; width: 58%; transform: rotate(-5deg); z-index: 2; }

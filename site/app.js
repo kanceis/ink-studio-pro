@@ -355,6 +355,45 @@
     ]));
   };
 
+  // "Estilos da casa": a pinned list on the left; scrolling through the section swaps the photo on the right (motion.js).
+  const STYLE_NOTES = [[/sketch|esbo/i, 'riscos à vista'], [/grey|cinz/i, 'sombra a sombra'], [/red|vermelh/i, 'contraste forte'], [/fine|fina/i, 'linha fina, delicada'], [/aguarela|water|cor\b/i, 'aguarela na pele'], [/flash/i, 'pronto a tatuar']];
+  const estilosV3 = () => {
+    const groups = new Map();
+    work().filter((w) => w.style && safeUrl(w.image?.url)).forEach((w) => {
+      const k = w.style.trim().toLowerCase();
+      if (!groups.has(k)) groups.set(k, { label: w.style.trim(), items: [] });
+      groups.get(k).items.push(w);
+    });
+    // Prefer a piece that is not already featured in the portfolio block below.
+    const list = [...groups.values()].map((g) => ({ label: g.label, item: g.items.find((w) => !w.featured) || g.items[0] }));
+    const fl = flash().find((f) => safeUrl(f.image?.url));
+    if (fl) list.push({ label: 'Flash', item: fl });
+    const items = list.slice(0, 6);
+    if (items.length < 3) return null;
+    const note = (label) => (STYLE_NOTES.find(([re]) => re.test(label)) || [null, ''])[1];
+    return el('section', { class: 'v-estilos', id: 'estilos', 'aria-labelledby': 'estilos-title', style: `--n:${items.length}` }, el('div', { class: 'wrap v-stick' }, [
+      el('div', { class: 'v-elist' }, [
+        kicker('Estilos da casa'),
+        el('h2', { class: 'visually-hidden', id: 'estilos-title', text: 'Estilos da casa' }),
+        el('ol', {}, items.map((s, i) => el('li', { class: i ? '' : 'on' }, el('button', { type: 'button', text: s.label, 'aria-label': `Ver ${s.label}` })))),
+        btn3('Ver portfólio', '#/portfolio', 'k'),
+      ]),
+      el('div', { class: 'v-eframe' }, [
+        el('div', { class: 'prog', 'aria-hidden': 'true' }, items.map(() => el('i', {}, el('b')))),
+        ...items.map((s, i) => {
+          const a = artistById(s.item.artistId);
+          return el('figure', { class: i ? '' : 'on' }, [
+            el('img', { src: s.item.image.url, alt: s.label === 'Flash' ? 'Exemplo de flash' : `Exemplo de tatuagem em ${s.label}`, loading: 'lazy', decoding: 'async' }),
+            el('figcaption', {}, [
+              note(s.label) ? el('span', { class: 'hand', text: note(s.label) }) : el('span'),
+              a ? el('a', { class: 'pill', href: artistHref(a), text: `${a.displayName} ↗` }) : null,
+            ]),
+          ]);
+        }),
+      ]),
+    ]));
+  };
+
   // "Do papel à pele": the same piece as a drawing and as a finished piece, with a drag handle.
   const splitPiece = () => {
     const box = el('figure', { class: 'v-split', style: '--pos:54%' });
@@ -562,7 +601,16 @@
     const wa = whatsappUrl('Olá! Queria marcar uma tatuagem.');
     return el('section', { class: 'v-cta v-grid', 'aria-labelledby': 'cta-title' }, [
       el('p', { class: 'hand v-cta-hand', 'aria-hidden': 'true', text: 'e agora?' }),
-      el('h2', { class: 'disp', id: 'cta-title' }, ['Tens uma', el('br'), 'ideia?']),
+      // The last word rotates (motion.js); screen readers get "Tens uma ideia?".
+      el('h2', { class: 'disp', id: 'cta-title' }, [
+        'Tens uma', el('br'),
+        el('span', { class: 'visually-hidden', text: 'ideia' }),
+        el('span', { class: 'rot', 'aria-hidden': 'true' }, [
+          ...['ideia', 'flor', 'frase', 'data'].map((w, i) => el('span', { class: i ? 'w' : 'w on', text: w })),
+          svg('0 0 300 20', ['M4 14 C 60 4, 120 18, 180 9 S 270 6, 296 12'], 'brush', '#141213', 7),
+        ]),
+        '?',
+      ]),
       el('p', { class: 'v-cta-text', text: 'Conta-nos o que imaginas. Respondemos em 48 h com preço e datas.' }),
       el('div', { class: 'v-btns center' }, [btn3('Marcar sessão', '#/marcar', 'w'), wa ? btn3('WhatsApp', wa, 'o', null, ext) : null]),
       polaroid('vespa-lapis', '', 'a tua ideia', 'cta-a'),
@@ -864,6 +912,7 @@
     tapes(),
     manifesto(),
     artistsV3(),
+    estilosV3(),
     portfolioV3(),
     data.artists.length ? quizBlock() : null,
     flashV3(),
@@ -956,7 +1005,8 @@
     const a = artistById(id);
     if (!a) return pages.notFound();
     document.title = `${a.displayName} · Ink Compatível`;
-    const ig = instagramUrl(a.instagram);
+    // An artist can have more than one account (e.g. tattoos and illustration), separated by commas or spaces.
+    const igs = String(a.instagram || '').split(/[\s,;]+/).map(instagramUrl).filter(Boolean);
     const mine = data.portfolio.filter((p) => p.artistId === a.id);
     const tattoos = mine.filter((p) => !p.category || p.category === 'tattoo');
     const art = mine.filter((p) => p.category === 'drawing' || p.category === 'art');
@@ -1005,7 +1055,7 @@
             bookable ? btn3(`Marcar com ${a.displayName}`, book, 'w') : el('span', { class: 'mono', text: 'Agenda fechada de momento' }),
             fl.length ? btn3('Ver o flash', '#flash-artista', 'o', '↓') : null,
           ]),
-          ig ? el('a', { class: 'mono ah-ig', href: ig.url, ...ext, text: `${ig.label} ↗` }) : null,
+          igs.length ? el('p', { class: 'ah-igs' }, igs.map((ig) => el('a', { class: 'mono ah-ig', href: ig.url, ...ext, text: `${ig.label} ↗` }))) : null,
         ]),
         el('div', { class: 'ah-photos' }, [
           portrait,

@@ -254,7 +254,8 @@ export const PublicProfilePanel: React.FC<{ content: SiteContent }> = ({ content
                     className={inputClass}
                     value={a.instagram || ''}
                     onChange={(e) => setArtist(a.id, { instagram: e.target.value })}
-                    placeholder="@"
+                    placeholder="@conta, @outra_conta"
+                    title="Mais de uma conta? Separa com vírgulas."
                   />
                 </div>
               </div>
