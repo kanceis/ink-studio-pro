@@ -143,7 +143,8 @@
 
   const zoomable = (item, ratio = 'r11', caption = '') =>
     el('button', { type: 'button', class: 'photo-btn', 'aria-label': `Ver maior: ${item.title || 'fotografia'}`, onclick: () => openViewer(item, caption) }, [
-      photo(item.image, item.title || 'Tatuagem', ratio),
+      // The button already says what the photo is; an alt here would be read twice.
+      photo(item.image, '', ratio, item.title || 'Tatuagem'),
     ]);
 
   const openViewer = (item, caption) => {
@@ -156,9 +157,9 @@
     dlg.showModal();
   };
 
-  const sectionHead = (title, text, extra) =>
+  const sectionHead = (title, text, extra, tag = 'h2') =>
     el('div', { class: 'section-head' }, [
-      el('h2', { class: 'disp h2', text: title }),
+      el(tag, { class: 'disp h2', text: title }),
       text ? el('p', { class: 'muted', text }) : null,
       extra || null,
     ]);
@@ -182,7 +183,7 @@
   const studioImg = ([name, alt], ratio = 'r43', sizes = '(max-width: 640px) 100vw, 50vw') => {
     const src = (w) => `assets/estudio/${name}-${w}.webp`;
     return el('button', { type: 'button', class: 'photo-btn', 'aria-label': `Ver maior: ${alt}`, onclick: () => openViewer({ image: { url: new URL(src(1600), location.href).href }, title: alt }, alt) }, [
-      el('div', { class: `ph ${ratio}` }, el('img', { src: src(800), srcset: `${src(800)} 800w, ${src(1600)} 1600w`, sizes, alt, loading: 'lazy', decoding: 'async' })),
+      el('div', { class: `ph ${ratio}` }, el('img', { src: src(800), srcset: `${src(800)} 800w, ${src(1600)} 1600w`, sizes, alt: '', loading: 'lazy', decoding: 'async' })),
     ]);
   };
 
@@ -335,7 +336,7 @@
       ]);
     }
     return el('a', { class: `v-acard typo ${i % 2 ? 'ink' : 'red'}`, href: artistHref(a), 'aria-label': `${a.displayName}${a.styles ? `, ${a.styles}` : ''}` }, [
-      el('div', { class: 'bgword', 'aria-hidden': 'true', text: `${words} ${words}` }),
+      el('div', { class: 'bgword', 'aria-hidden': 'true', 'data-w': `${words} ${words}` }),
       el('span', { class: 'soon hand', 'aria-hidden': 'true', text: 'retrato em breve' }),
       el('div', { class: 'over' }, [
         el('div', { class: 'tags' }, tags.map((t) => el('span', { text: t }))),
@@ -418,7 +419,7 @@
     let filter = 'all';
     const grid = el('div', { class: 'v-bento' });
     const tileFor = (p, cls) => el('button', { type: 'button', class: `v-tile ${cls}`, 'aria-label': `Ver maior: ${p.title || 'tatuagem'}`, onclick: () => openViewer(p, workCaption(p)) }, [
-      el('img', { src: p.image?.url, alt: p.title || '', loading: 'lazy', decoding: 'async' }),
+      el('img', { src: p.image?.url, alt: '', loading: 'lazy', decoding: 'async' }),
       el('span', { class: 'lab mono', text: [artistName(p.artistId), p.style].filter(Boolean).join(' · ') || p.title || '' }),
     ]);
     const draw = () => {
@@ -521,10 +522,10 @@
     const mapUrl = p.address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${p.address} ${p.city || ''}`)}` : null;
     const [days, hours] = String(p.openingHours || '').split(/,\s*/);
     const tile = (name, alt, cls, lab, pos) => el('button', { type: 'button', class: `v-tile ${cls}`, 'aria-label': `Ver maior: ${alt}`, onclick: () => openViewer({ image: { url: new URL(`assets/v3/${name}-1600.webp`, location.href).href }, title: alt }, alt) }, [
-      v3img(name, alt, { pos, big: true, sizes: '(max-width: 760px) 100vw, 40vw' }), lab ? el('span', { class: 'lab mono', text: lab }) : null,
+      v3img(name, '', { pos, big: true, sizes: '(max-width: 760px) 100vw, 40vw' }), lab ? el('span', { class: 'lab mono', text: lab }) : null,
     ]);
     const estudio = (name, alt, cls, lab) => el('button', { type: 'button', class: `v-tile ${cls}`, 'aria-label': `Ver maior: ${alt}`, onclick: () => openViewer({ image: { url: new URL(`assets/estudio/${name}-1600.webp`, location.href).href }, title: alt }, alt) }, [
-      el('img', { src: `assets/estudio/${name}-800.webp`, srcset: `assets/estudio/${name}-800.webp 800w, assets/estudio/${name}-1600.webp 1600w`, sizes: '(max-width: 760px) 100vw, 40vw', alt, loading: 'lazy', decoding: 'async' }),
+      el('img', { src: `assets/estudio/${name}-800.webp`, srcset: `assets/estudio/${name}-800.webp 800w, assets/estudio/${name}-1600.webp 1600w`, sizes: '(max-width: 760px) 100vw, 40vw', alt: '', loading: 'lazy', decoding: 'async' }),
       lab ? el('span', { class: 'lab mono', text: lab }) : null,
     ]);
     return el('section', { class: 'v-sec', id: 'estudio', 'aria-labelledby': 'studio-title' }, el('div', { class: 'wrap' }, [
@@ -703,6 +704,7 @@
     const answers = [];
     let step = 0;
     let firstTattoo = false;
+    const qTag = standalone ? 'h2' : 'h3';
     const qcard = el('div', { class: 'v-qcard', 'aria-live': 'polite' });
     const rcard = el('div', { class: 'v-rcard' });
     const focusHead = () => { const h = qcard.querySelector('[data-quiz-focus]'); if (h && draw.moved) h.focus(); draw.moved = true; };
@@ -715,7 +717,7 @@
           step > 0 ? el('button', { type: 'button', class: 'quiz-back mono', onclick: () => { step -= 1; draw(); }, text: '← Voltar' }) : null,
         ]),
         el('div', { class: 'v-bars', 'aria-hidden': 'true' }, QUIZ.map((_, i) => el('i', { class: i <= step ? 'on' : '' }))),
-        el('h3', { class: 'quiz-q', tabindex: '-1', 'data-quiz-focus': '', id: `quiz-q-${step}`, text: s.q }),
+        el(qTag, { class: 'quiz-q', tabindex: '-1', 'data-quiz-focus': '', id: `quiz-q-${step}`, text: s.q }),
         s.first
           ? el('label', { class: 'quiz-check' }, [
               el('input', { type: 'checkbox', checked: firstTattoo || null, onchange: (e) => { firstTattoo = e.target.checked; } }),
@@ -752,7 +754,7 @@
       const best = quizScore(answers)[0];
       if (!best) {
         rcard.replaceChildren(mono('O teu resultado'), el('p', { class: 'disp name', text: 'Fala connosco' }), btn3('Marcar sessão', `#/marcar?${params}`, 'w'));
-        return [el('h3', { class: 'quiz-q', tabindex: '-1', 'data-quiz-focus': '', text: 'Conta-nos a ideia' }), restart];
+        return [el(qTag, { class: 'quiz-q', tabindex: '-1', 'data-quiz-focus': '', text: 'Conta-nos a ideia' }), restart];
       }
       const a = best.a;
       const bookable = a.acceptsBookings !== false && data.profile.bookingOpen !== false;
@@ -768,7 +770,7 @@
       );
       return [
         el('div', { class: 'v-qtop' }, [mono('O teu resultado', 'quiz-count'), restart]),
-        el('h3', { class: 'quiz-q', tabindex: '-1', 'data-quiz-focus': '', text: `És ${best.pct}% compatível com ${a.displayName}` }),
+        el(qTag, { class: 'quiz-q', tabindex: '-1', 'data-quiz-focus': '', text: `És ${best.pct}% compatível com ${a.displayName}` }),
         el('ul', { class: 'quiz-match' }, [
           ...best.yes.map((t) => el('li', { class: 'yes' }, [el('span', { 'aria-hidden': 'true', text: '✓' }), `Combina: ${t}`])),
           ...best.talk.map((t) => el('li', { class: 'talk' }, [el('span', { 'aria-hidden': 'true', text: '…' }), `A conversar: ${t}`])),
@@ -952,7 +954,7 @@
           contacts.length ? el('dd', {}, contacts.flatMap((c, i) => (i ? [' · ', c] : [c]))) : null,
         ]),
         mapUrl ? el('p', { style: 'margin:0' }, el('a', { class: 'lnk', href: mapUrl, target: '_blank', rel: 'noopener noreferrer', text: 'Abrir no mapa ↗' })) : null,
-        el('h3', { class: 'disp', style: 'font-size:32px;margin-top:16px', text: 'Antes de vir' }),
+        el(full ? 'h2' : 'h3', { class: 'disp', style: 'font-size:32px;margin-top:16px', text: 'Antes de vir' }),
         el('ul', { style: 'margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px' }, [
           'Só tatuamos maiores de 18 anos, com documento de identificação.',
           'Dorme bem, come antes da sessão e evita álcool nas 24 h anteriores.',
@@ -970,7 +972,7 @@
 
   pages.artists = () => [
     el('section', { class: 'section' }, el('div', { class: 'wrap' }, [
-      sectionHead('Os artistas', 'Escolhe pelo traço. Cada um tem o seu portfólio, o seu flash e a sua agenda.'),
+      sectionHead('Os artistas', 'Escolhe pelo traço. Cada um tem o seu portfólio, o seu flash e a sua agenda.', null, 'h1'),
       data.artists.length ? el('div', { class: 'scroller' }, data.artists.map(artistCard)) : el('p', { class: 'empty', text: 'Em breve.' }),
     ])),
   ];
@@ -989,7 +991,7 @@
       grid.replaceChildren(...items.slice(0, shown).map((p) => {
         const cap = caption(p);
         return el('button', { type: 'button', class: 'photo-btn', 'aria-label': `Ver maior: ${cap || p.title || 'fotografia'}`, onclick: () => openViewer(p, cap) }, [
-          el('img', { src: p.image?.url, alt: p.title || cap || '', loading: 'lazy', decoding: 'async' }),
+          el('img', { src: p.image?.url, alt: '', loading: 'lazy', decoding: 'async' }),
           cap ? el('span', { class: 'lab mono', text: cap }) : null,
         ]);
       }));
@@ -1142,7 +1144,7 @@
     draw();
     return [
       el('section', { class: 'section' }, el('div', { class: 'wrap' }, [
-        sectionHead('Portfólio', 'Trabalho dos três artistas. Toca numa foto para a ver maior.'),
+        sectionHead('Portfólio', 'Trabalho dos três artistas. Toca numa foto para a ver maior.', null, 'h1'),
         el('div', { class: 'filters' }, [
           cats.length > 2 ? chipRow('Tipo de trabalho', cats, () => cat, (v) => (cat = v)) : null,
           data.artists.length > 1 ? chipRow('Artista', [['all', 'Todos os artistas'], ...data.artists.map((a) => [a.id, a.displayName])], () => artist, (v) => (artist = v)) : null,
@@ -1335,7 +1337,7 @@
         ? el('span', { class: 'stamp ink' }, [el('span', { class: 'mono', text: item.status === 'available' ? 'peça' : '' }), el('b', { class: 'disp', text: item.status === 'available' ? 'única' : item.status === 'sold' ? 'vendida' : 'reservada' })])
         : null;
     const gallery = el('div', { class: 'v-gal' }, el('button', { type: 'button', class: `main k-${item.kind}`, 'aria-label': `Ver maior: ${item.title}`, onclick: () => openViewer(item, item.title) }, [
-      el('img', { class: 'art', src: item.image?.url, alt: item.title, decoding: 'async' }),
+      el('img', { class: 'art', src: item.image?.url, alt: '', decoding: 'async' }),
       stamp,
       isEd ? el('span', { class: 'note hand', 'aria-hidden': 'true', text: 'numerada à mão' }) : null,
     ]));
@@ -1760,7 +1762,7 @@
       ]),
       el('section', { class: 'v-sec v-booking' }, el('div', { class: 'wrap mgrid' }, [
         formBox,
-        el('aside', { class: 'v-side' }, [
+        el('div', { class: 'v-side' }, [
           el('div', { class: 'how' }, [
             el('h2', { class: 'disp', text: 'Como funciona' }),
             el('ol', {}, [
@@ -1971,12 +1973,18 @@
   // ------------------------------------------------------------------ boot
   const boot = async () => {
     $('[data-year]').textContent = String(new Date().getFullYear());
-    $('.menu-btn').addEventListener('click', (e) => {
-      const nav = $('#main-nav');
-      nav.classList.toggle('open');
-      e.currentTarget.setAttribute('aria-expanded', String(nav.classList.contains('open')));
+    // Phone menu: the button toggles it; Escape, a tap outside the header or growing to desktop width close it.
+    const setMenu = (open, restoreFocus) => {
+      $('#main-nav').classList.toggle('open', open);
+      $('.menu-btn').setAttribute('aria-expanded', String(open));
+      if (restoreFocus) $('.menu-btn').focus();
       onScroll();
-    });
+    };
+    const menuOpen = () => $('#main-nav').classList.contains('open');
+    $('.menu-btn').addEventListener('click', () => setMenu(!menuOpen()));
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && menuOpen()) setMenu(false, true); });
+    document.addEventListener('click', (e) => { if (menuOpen() && !e.target.closest('.site-header')) setMenu(false); });
+    matchMedia('(min-width: 861px)').addEventListener('change', (e) => { if (e.matches && menuOpen()) setMenu(false); });
     $$('[data-open-cart]').forEach((b) => b.addEventListener('click', openCart));
     $('[data-close-cart]').addEventListener('click', closeCart);
     $('#cart').addEventListener('click', (e) => { if (e.target === e.currentTarget) closeCart(); });

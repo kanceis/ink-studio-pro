@@ -60,7 +60,7 @@ html.mo .v-hero.go .v-doodle path { stroke-dashoffset: 0; }
 .v-stick { position: sticky; top: 0; height: 100vh; padding-top: 72px; display: grid; grid-template-columns: 5fr 7fr; gap: 50px; align-items: center; }
 .v-elist .v-kicker { margin-bottom: 26px; }
 .v-elist ol { list-style: none; margin: 0 0 34px; padding: 0; counter-reset: s; }
-.v-elist li { counter-increment: s; display: flex; align-items: baseline; gap: 18px; color: var(--nevoa); transition: color .35s ease, translate .5s var(--ease-ink); }
+.v-elist li { counter-increment: s; display: flex; align-items: baseline; gap: 18px; color: #878179; transition: color .35s ease, translate .5s var(--ease-ink); }
 .v-elist li::before { content: counter(s, decimal-leading-zero); font: 500 12px var(--font-mono, 'IBM Plex Mono'), monospace; letter-spacing: .6px; color: var(--grafite); translate: 0 -.6em; }
 .v-elist li button { font: 900 clamp(44px, 5.2vw, 84px)/.92 var(--font-display, 'Big Shoulders Display'), sans-serif; text-transform: uppercase; color: inherit; background: none; border: 0; padding: 0; text-align: left; cursor: pointer; }
 .v-elist li button:focus-visible { outline: 3px solid var(--vermelho); outline-offset: 4px; }
