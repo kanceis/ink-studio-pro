@@ -11,19 +11,24 @@ import {
   TattooReference,
   ClinicalHistory,
   ToastNotification,
+  BookingRequest,
 } from '../types';
+import { defaultSettings } from './initialData';
 import {
-  defaultArtists,
-  defaultClients,
-  defaultAppointments,
-  defaultInventory,
-  defaultSettings,
-  defaultNotificationLogs,
-} from './initialData';
+  subscribeCollection,
+  subscribeSettings,
+  saveItem,
+  patchItem,
+  removeItem,
+  incrementStock,
+  saveSettings,
+  batchWrite,
+  newId,
+} from '../services/studioStore';
 import {
   initAuth,
   googleSignIn,
-  logout,
+  disconnectGoogleWorkspace,
   getAccessToken,
 } from '../services/firebaseAuth';
 import {
@@ -48,8 +53,8 @@ import {
 interface StudioContextType {
   theme: ThemeMode;
   toggleTheme: () => void;
-  activeTab: 'calendar' | 'clients' | 'artists' | 'stock' | 'messages' | 'analytics' | 'profile';
-  setActiveTab: (tab: 'calendar' | 'clients' | 'artists' | 'stock' | 'messages' | 'analytics' | 'profile') => void;
+  activeTab: 'calendar' | 'clients' | 'artists' | 'stock' | 'messages' | 'analytics' | 'profile' | 'site';
+  setActiveTab: (tab: 'calendar' | 'clients' | 'artists' | 'stock' | 'messages' | 'analytics' | 'profile' | 'site') => void;
   
   // Google Workspace Integration
   googleUser: User | null;
@@ -106,6 +111,10 @@ interface StudioContextType {
   settings: StudioSettings;
   updateSettings: (newSettings: Partial<StudioSettings>) => void;
   
+  // Website booking requests
+  bookingRequests: BookingRequest[];
+  newBookingRequestCount: number;
+
   // Computed alerts
   expiringItems: { item: InventoryItem; daysUntilExpiration: number; isExpired: boolean }[];
   lowStockItems: InventoryItem[];
@@ -123,7 +132,7 @@ interface StudioContextType {
 
 const StudioContext = createContext<StudioContextType | undefined>(undefined);
 
-const LOCAL_STORAGE_KEY = 'inkstudio_data_v1';
+const byNewestId = (a: { id: string }, b: { id: string }) => b.id.localeCompare(a.id, undefined, { numeric: true });
 
 export const StudioProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Theme state
@@ -132,7 +141,7 @@ export const StudioProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return (saved as ThemeMode) || 'dark';
   });
 
-  const [activeTab, setActiveTab] = useState<'calendar' | 'clients' | 'artists' | 'stock' | 'messages' | 'analytics' | 'profile'>('calendar');
+  const [activeTab, setActiveTab] = useState<'calendar' | 'clients' | 'artists' | 'stock' | 'messages' | 'analytics' | 'profile' | 'site'>('calendar');
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
 
   // In-app toasts state
@@ -155,36 +164,18 @@ export const StudioProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [googleToken, setGoogleToken] = useState<string | null>(null);
   const [isConnectingGoogle, setIsConnectingGoogle] = useState(false);
 
-  // Studio entities state
-  const [settings, setSettings] = useState<StudioSettings>(() => {
-    const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_settings`);
-    return saved ? JSON.parse(saved) : defaultSettings;
-  });
-
-  const [artists, setArtists] = useState<Artist[]>(() => {
-    const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_artists`);
-    return saved ? JSON.parse(saved) : defaultArtists;
-  });
-
-  const [clients, setClients] = useState<Client[]>(() => {
-    const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_clients`);
-    return saved ? JSON.parse(saved) : defaultClients;
-  });
-
-  const [appointments, setAppointments] = useState<Appointment[]>(() => {
-    const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_appointments`);
-    return saved ? JSON.parse(saved) : defaultAppointments;
-  });
-
-  const [inventory, setInventory] = useState<InventoryItem[]>(() => {
-    const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_inventory`);
-    return saved ? JSON.parse(saved) : defaultInventory;
-  });
-
-  const [notificationLogs, setNotificationLogs] = useState<NotificationLog[]>(() => {
-    const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_notifications`);
-    return saved ? JSON.parse(saved) : defaultNotificationLogs;
-  });
+  // Studio entities state (live from Firestore, see services/studioStore.ts)
+  const [settings, setSettings] = useState<StudioSettings>(defaultSettings);
+  const [artists, setArtists] = useState<Artist[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [notificationLogs, setNotificationLogs] = useState<NotificationLog[]>([]);
+  const [bookingRequests, setBookingRequests] = useState<BookingRequest[]>([]);
+  const newBookingRequestCount = useMemo(
+    () => bookingRequests.filter((r) => r.status === 'new').length,
+    [bookingRequests]
+  );
 
   const [isNotificationCenterOpen, setIsNotificationCenterOpen] = useState(false);
 
@@ -205,15 +196,50 @@ export const StudioProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     localStorage.setItem('inkstudio_theme', theme);
   }, [theme]);
 
-  // Sync to local storage
+  // Live sync with Firestore: every device signed in to the studio sees the same data.
   useEffect(() => {
-    localStorage.setItem(`${LOCAL_STORAGE_KEY}_settings`, JSON.stringify(settings));
-    localStorage.setItem(`${LOCAL_STORAGE_KEY}_artists`, JSON.stringify(artists));
-    localStorage.setItem(`${LOCAL_STORAGE_KEY}_clients`, JSON.stringify(clients));
-    localStorage.setItem(`${LOCAL_STORAGE_KEY}_appointments`, JSON.stringify(appointments));
-    localStorage.setItem(`${LOCAL_STORAGE_KEY}_inventory`, JSON.stringify(inventory));
-    localStorage.setItem(`${LOCAL_STORAGE_KEY}_notifications`, JSON.stringify(notificationLogs));
-  }, [settings, artists, clients, appointments, inventory, notificationLogs]);
+    const onError = (err: Error) => {
+      console.error('Erro de sincronização com a base de dados:', err);
+      showToast('Sem ligação à base de dados. As alterações ficam guardadas e sincronizam quando voltar a ligação.', 'error');
+    };
+    const unsubs = [
+      subscribeSettings((data) => setSettings({ ...defaultSettings, ...(data ?? {}) }), onError),
+      subscribeCollection('artists', (items) => setArtists([...items].sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }))), onError),
+      subscribeCollection(
+        'clients',
+        (items) => setClients([...items].sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || '') || byNewestId(a, b))),
+        onError
+      ),
+      subscribeCollection(
+        'appointments',
+        (items) => setAppointments([...items].sort((a, b) => `${b.date}T${b.startTime}`.localeCompare(`${a.date}T${a.startTime}`))),
+        onError
+      ),
+      subscribeCollection('inventory', (items) => setInventory([...items].sort((a, b) => a.name.localeCompare(b.name, 'pt'))), onError),
+      subscribeCollection(
+        'notifications',
+        (items) => setNotificationLogs([...items].sort((a, b) => b.timestamp.localeCompare(a.timestamp))),
+        onError
+      ),
+      subscribeCollection(
+        'bookingRequests',
+        (items) => setBookingRequests([...items].sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))),
+        onError
+      ),
+    ];
+    return () => unsubs.forEach((u) => u());
+  }, [showToast]);
+
+  /** Fire-and-forget write: Firestore applies it locally at once and syncs in the background. */
+  const persist = useCallback(
+    (write: Promise<unknown>) => {
+      write.catch((err) => {
+        console.error('Erro ao guardar na base de dados:', err);
+        showToast('Não foi possível guardar a alteração. Verifica a ligação e tenta de novo.', 'error');
+      });
+    },
+    [showToast]
+  );
 
   // Init Google Auth listener
   useEffect(() => {
@@ -250,17 +276,16 @@ export const StudioProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const disconnectGoogle = async () => {
-    await logout();
+    disconnectGoogleWorkspace();
     setGoogleUser(null);
     setGoogleToken(null);
   };
 
   // Appointments actions
   const addAppointment = async (apptData: Omit<Appointment, 'id'>): Promise<Appointment> => {
-    const newId = `appt-${Date.now()}`;
     let newAppt: Appointment = {
       ...apptData,
-      id: newId,
+      id: newId('appt'),
     };
 
     // If Google token available and sync requested, push to Google Calendar
@@ -374,7 +399,7 @@ export const StudioProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
     }
 
-    setAppointments((prev) => [newAppt, ...prev]);
+    persist(saveItem('appointments', newAppt));
     return newAppt;
   };
 
@@ -392,7 +417,7 @@ export const StudioProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
     }
 
-    setAppointments((prev) => prev.map((a) => (a.id === id ? updated : a)));
+    persist(saveItem('appointments', updated));
   };
 
   const deleteAppointment = async (id: string): Promise<boolean> => {
@@ -407,7 +432,7 @@ export const StudioProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
     }
 
-    setAppointments((prev) => prev.filter((a) => a.id !== id));
+    persist(removeItem('appointments', id));
     showToast(`Marcação de ${target.clientName} cancelada e removida.`, 'info');
     return true;
   };
@@ -427,9 +452,7 @@ export const StudioProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         await updateGoogleCalendarEvent(target.gcalEventId, target, token);
       } else {
         const res = await createGoogleCalendarEvent(target, token);
-        setAppointments((prev) =>
-          prev.map((a) => (a.id === apptId ? { ...a, gcalEventId: res.id, syncToGoogleCalendar: true } : a))
-        );
+        persist(patchItem('appointments', apptId, { gcalEventId: res.id, syncToGoogleCalendar: true }));
       }
       showToast('Marcação sincronizada com a Google Agenda!', 'success');
     } catch (err: unknown) {
@@ -442,66 +465,62 @@ export const StudioProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const addClient = (clientData: Omit<Client, 'id' | 'createdAt'>): Client => {
     const newClient: Client = {
       ...clientData,
-      id: `client-${Date.now()}`,
+      id: newId('client'),
       createdAt: new Date().toISOString().split('T')[0],
     };
-    setClients((prev) => [newClient, ...prev]);
+    persist(saveItem('clients', newClient));
     return newClient;
   };
 
   const updateClient = (id: string, updates: Partial<Client>) => {
-    setClients((prev) => prev.map((c) => (c.id === id ? { ...c, ...updates } : c)));
+    persist(patchItem('clients', id, updates));
   };
 
   const deleteClient = (id: string) => {
     const client = clients.find((c) => c.id === id);
     if (!client) return;
-    setClients((prev) => prev.filter((c) => c.id !== id));
+    persist(removeItem('clients', id));
     showToast(`Cliente "${client.name}" removido com sucesso.`, 'info');
   };
 
   const updateClinicalHistory = (clientId: string, history: ClinicalHistory) => {
-    setClients((prev) =>
-      prev.map((c) => (c.id === clientId ? { ...c, clinicalHistory: history } : c))
-    );
+    persist(patchItem('clients', clientId, { clinicalHistory: history }));
   };
 
   const addClientReference = (clientId: string, referenceData: Omit<TattooReference, 'id'>) => {
     const newRef: TattooReference = {
       ...referenceData,
-      id: `ref-${Date.now()}`,
+      id: newId('ref'),
     };
-    setClients((prev) =>
-      prev.map((c) => (c.id === clientId ? { ...c, references: [newRef, ...c.references] } : c))
-    );
+    const client = clients.find((c) => c.id === clientId);
+    if (!client) return;
+    persist(patchItem('clients', clientId, { references: [newRef, ...(client.references || [])] }));
   };
 
   const deleteClientReference = (clientId: string, refId: string) => {
-    setClients((prev) =>
-      prev.map((c) =>
-        c.id === clientId ? { ...c, references: c.references.filter((r) => r.id !== refId) } : c
-      )
-    );
+    const client = clients.find((c) => c.id === clientId);
+    if (!client) return;
+    persist(patchItem('clients', clientId, { references: (client.references || []).filter((r) => r.id !== refId) }));
   };
 
   // Artists actions
   const addArtist = (artistData: Omit<Artist, 'id'>): Artist => {
     const newArtist: Artist = {
       ...artistData,
-      id: `artist-${Date.now()}`,
+      id: newId('artist'),
     };
-    setArtists((prev) => [...prev, newArtist]);
+    persist(saveItem('artists', newArtist));
     return newArtist;
   };
 
   const updateArtist = (id: string, updates: Partial<Artist>) => {
-    setArtists((prev) => prev.map((a) => (a.id === id ? { ...a, ...updates } : a)));
+    persist(patchItem('artists', id, updates));
   };
 
   const deleteArtist = (id: string) => {
     const artist = artists.find((a) => a.id === id);
     if (!artist) return;
-    setArtists((prev) => prev.filter((a) => a.id !== id));
+    persist(removeItem('artists', id));
     showToast(`Artista "${artist.name}" removido(a).`, 'info');
   };
 
@@ -509,53 +528,64 @@ export const StudioProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const addInventoryItem = (itemData: Omit<InventoryItem, 'id'>): InventoryItem => {
     const newItem: InventoryItem = {
       ...itemData,
-      id: `inv-${Date.now()}`,
+      id: newId('inv'),
     };
-    setInventory((prev) => [newItem, ...prev]);
+    persist(saveItem('inventory', newItem));
     return newItem;
   };
 
   const updateInventoryItem = (id: string, updates: Partial<InventoryItem>) => {
-    setInventory((prev) => prev.map((i) => (i.id === id ? { ...i, ...updates } : i)));
+    persist(patchItem('inventory', id, updates));
   };
 
   const deleteInventoryItem = (id: string) => {
     const item = inventory.find((i) => i.id === id);
     if (!item) return;
-    setInventory((prev) => prev.filter((i) => i.id !== id));
+    persist(removeItem('inventory', id));
     showToast(`Item "${item.name}" removido do inventário.`, 'info');
   };
 
   const adjustStockQuantity = (id: string, delta: number) => {
-    setInventory((prev) =>
-      prev.map((i) => (i.id === id ? { ...i, quantity: Math.max(0, i.quantity + delta) } : i))
-    );
+    const item = inventory.find((i) => i.id === id);
+    if (!item) return;
+    // Never go below zero; otherwise use an atomic increment so concurrent edits from two devices add up.
+    if (item.quantity + delta < 0) {
+      persist(patchItem('inventory', id, { quantity: 0 }));
+    } else {
+      persist(incrementStock(id, delta));
+    }
   };
 
   // Notifications
   const logNotification = useCallback((logData: Omit<NotificationLog, 'id' | 'timestamp'>) => {
     const newLog: NotificationLog = {
       ...logData,
-      id: `notif-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      id: newId('notif'),
       timestamp: new Date().toISOString(),
       read: logData.read ?? false,
     };
-    setNotificationLogs((prev) => [newLog, ...prev]);
-  }, []);
+    persist(saveItem('notifications', newLog));
+  }, [persist]);
 
   const markNotificationAsRead = useCallback((id: string) => {
-    setNotificationLogs((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-    );
-  }, []);
+    persist(patchItem('notifications', id, { read: true }));
+  }, [persist]);
 
   const markAllNotificationsAsRead = useCallback(() => {
-    setNotificationLogs((prev) => prev.map((n) => ({ ...n, read: true })));
-  }, []);
+    persist(
+      batchWrite(
+        notificationLogs
+          .filter((n) => !n.read)
+          .map((n) => ({ type: 'update' as const, name: 'notifications' as const, id: n.id, data: { read: true } }))
+      )
+    );
+  }, [notificationLogs, persist]);
 
   const clearAllNotifications = useCallback(() => {
-    setNotificationLogs([]);
-  }, []);
+    persist(
+      batchWrite(notificationLogs.map((n) => ({ type: 'delete' as const, name: 'notifications' as const, id: n.id })))
+    );
+  }, [notificationLogs, persist]);
 
   const requestSystemNotificationAccess = useCallback(async (): Promise<string> => {
     const perm = await requestSystemNotificationPermission();
@@ -593,7 +623,7 @@ export const StudioProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [logNotification, showToast]);
 
   const updateSettings = (newSettings: Partial<StudioSettings>) => {
-    setSettings((prev) => ({ ...prev, ...newSettings }));
+    persist(saveSettings(newSettings));
   };
 
   // Computed alerts
@@ -727,19 +757,15 @@ export const StudioProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
 
       if (sentSuccess) {
-        setAppointments((prev) =>
-          prev.map((a) =>
-            a.id === appt.id
-              ? { ...a, reminder24hSent: true, reminder24hSentAt: new Date().toISOString() }
-              : a
-          )
+        persist(
+          patchItem('appointments', appt.id, { reminder24hSent: true, reminder24hSentAt: new Date().toISOString() })
         );
         processedCount++;
       }
     }
 
     return processedCount;
-  }, [appointments, artists, settings, googleToken, logNotification]);
+  }, [appointments, artists, settings, googleToken, logNotification, persist]);
 
   // Background Runner: verifica e dispara lembretes de 24h automaticamente a cada 20 segundos
   useEffect(() => {
@@ -861,6 +887,8 @@ export const StudioProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         clearAllNotifications,
         settings,
         updateSettings,
+        bookingRequests,
+        newBookingRequestCount,
         expiringItems,
         lowStockItems,
         upcoming24hAppointments,

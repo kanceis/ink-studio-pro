@@ -8,10 +8,12 @@ import {
   MessageSquareShare,
   TrendingUp,
   Building2,
+  Globe,
 } from 'lucide-react';
 
 export const Navigation: React.FC = () => {
-  const { activeTab, setActiveTab, expiringItems, lowStockItems, upcoming24hAppointments } = useStudio();
+  const { activeTab, setActiveTab, expiringItems, lowStockItems, upcoming24hAppointments, newBookingRequestCount } =
+    useStudio();
 
   const stockAlertCount = expiringItems.length + lowStockItems.length;
   const pendingReminderCount = upcoming24hAppointments.filter((a) => !a.reminder24hSent).length;
@@ -53,6 +55,14 @@ export const Navigation: React.FC = () => {
       icon: MessageSquareShare,
       badge: pendingReminderCount,
       badgeColor: 'bg-emerald-500',
+    },
+    {
+      id: 'site' as const,
+      label: 'Site & Portfólio',
+      shortLabel: 'Site',
+      icon: Globe,
+      badge: newBookingRequestCount,
+      badgeColor: 'bg-rose-500',
     },
     {
       id: 'analytics' as const,
@@ -109,7 +119,7 @@ export const Navigation: React.FC = () => {
 
       {/* Mobile Bottom Navigation Bar (iPad portrait & Phones) */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md border-t border-zinc-200 dark:border-zinc-800 pb-safe">
-        <div className="grid grid-cols-7 h-14">
+        <div className="grid grid-cols-8 h-14">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;

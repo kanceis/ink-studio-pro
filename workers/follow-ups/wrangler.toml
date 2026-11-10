@@ -1,0 +1,29 @@
+# Daily task that emails the messages after a session (1 week, 2 weeks, 2–3 months).
+# The same rules as the "Depois da sessão" list in the app: src/services/followUps.ts.
+#
+# It does nothing until all three are true:
+#   1. the secrets below are set:  npx wrangler secret put RESEND_API_KEY  (and GOOGLE_SERVICE_ACCOUNT)
+#   2. inkcompativel.pt is verified in Resend (DNS records added in Cloudflare)
+#   3. "Enviar os emails sozinho" is ticked in the app (Mensagens › Depois da sessão › Definições)
+#
+# Secrets (never in this file):
+#   RESEND_API_KEY          re_...  (Resend, sending only, domain inkcompativel.pt)
+#   GOOGLE_SERVICE_ACCOUNT  the same service account JSON key the shop functions use
+#
+# Deploy: npx wrangler deploy -c workers/follow-ups/wrangler.toml
+name = "ink-follow-ups"
+main = "index.ts"
+compatibility_date = "2026-10-01"
+
+[triggers]
+# 09:00 UTC = 09:00 in Lisbon in winter, 10:00 in summer.
+crons = ["0 9 * * *"]
+
+[vars]
+FIREBASE_PROJECT_ID = "gen-lang-client-0172609399"
+FIRESTORE_DATABASE_ID = "(default)"
+STUDIO_ID = "main"
+MAIL_FROM = "Ink Compatível <geral@inkcompativel.pt>"
+MAIL_REPLY_TO = "geral@inkcompativel.pt"
+# At most this many emails per day, as a safety net.
+MAX_PER_DAY = "40"

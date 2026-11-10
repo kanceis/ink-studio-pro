@@ -1,0 +1,91 @@
+rules_version = '2';
+
+// Only members of a studio can read or write its data.
+// Members are the Google account emails (lowercase) listed in studios/{studioId}.members.
+// That list is edited by hand in the Firebase console, never from the app.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isMember(studioId) {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email.lower()
+             in get(/databases/$(database)/documents/studios/$(studioId)).data.members;
+    }
+
+    function optionalString(d, field, max) {
+      return !(field in d) || (d[field] is string && d[field].size() <= max);
+    }
+
+    function requiredString(d, field, max) {
+      return field in d && d[field] is string && d[field].size() > 0 && d[field].size() <= max;
+    }
+
+    function validBookingRequest(d) {
+      return d.keys().hasOnly(['name', 'email', 'phone', 'instagram', 'artistId', 'artistName',
+                               'tattooType', 'flashNumber', 'firstTattoo', 'idea',
+                               'placement', 'size', 'style', 'preferredDates', 'referenceUrl', 'language',
+                               'status', 'createdAt', 'adultConfirmedAt', 'privacyAcceptedAt', 'marketingConsentAt'])
+        && requiredString(d, 'name', 120)
+        && requiredString(d, 'email', 200)
+        && d.email.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$')
+        && requiredString(d, 'phone', 40)
+        && requiredString(d, 'idea', 4000)
+        && requiredString(d, 'createdAt', 40)
+        // GDPR: both confirmations are required and stored with their timestamp
+        && requiredString(d, 'adultConfirmedAt', 40)
+        && requiredString(d, 'privacyAcceptedAt', 40)
+        // Optional: agreed to hear from the studio later (follow-up after 2–3 months)
+        && optionalString(d, 'marketingConsentAt', 40)
+        && optionalString(d, 'tattooType', 40)
+        && optionalString(d, 'flashNumber', 20)
+        && (!('firstTattoo' in d) || d.firstTattoo is bool)
+        && d.status == 'new'
+        && optionalString(d, 'instagram', 100)
+        && optionalString(d, 'artistId', 80)
+        && optionalString(d, 'artistName', 120)
+        && optionalString(d, 'placement', 200)
+        && optionalString(d, 'size', 100)
+        && optionalString(d, 'style', 100)
+        && optionalString(d, 'preferredDates', 300)
+        // Up to 5 links, one per line
+        && optionalString(d, 'referenceUrl', 2600)
+        // Sent from the English site
+        && (!('language' in d) || d.language == 'en');
+    }
+
+    match /studios/{studioId} {
+      allow read: if isMember(studioId);
+      allow write: if false;
+
+      // {sub}/{rest=**} needs at least one segment, so it never matches the studio doc itself
+      // (a bare {document=**} would, and would let members edit the member list).
+      match /{sub}/{rest=**} {
+        allow read, write: if isMember(studioId);
+      }
+
+      // ---- Public website (read by anyone, written only by members above) ----
+
+      // Studio info shown on the site.
+      match /meta/public {
+        allow read: if true;
+      }
+
+      // Portfolio and shop: only published entries are public.
+      // The site must query with where('published', '==', true).
+      // Orders (studios/{id}/orders) are only readable by members, via the rule above.
+      match /portfolio/{id} {
+        allow read: if resource.data.published == true;
+      }
+      match /shop/{id} {
+        allow read: if resource.data.published == true;
+      }
+
+      // Booking form: anyone can create a well-formed request, nobody outside
+      // the studio can read, change or delete requests.
+      match /bookingRequests/{id} {
+        allow create: if validBookingRequest(request.resource.data);
+      }
+    }
+  }
+}

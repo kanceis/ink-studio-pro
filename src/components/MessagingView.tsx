@@ -25,10 +25,13 @@ import {
   isAppointmentIn24hWindow,
 } from '../services/messaging';
 import { sendGmailMessage } from '../services/gmail';
+import { FollowUpsPanel } from './FollowUpsPanel';
+import { dueFollowUps, todayInStudio } from '../services/followUps';
 
 export const MessagingView: React.FC = () => {
   const {
     appointments,
+    clients,
     notificationLogs,
     logNotification,
     updateAppointment,
@@ -39,7 +42,8 @@ export const MessagingView: React.FC = () => {
     showToast,
   } = useStudio();
 
-  const [selectedTab, setSelectedTab] = useState<'reminders' | 'logs' | 'templates'>('reminders');
+  const [selectedTab, setSelectedTab] = useState<'reminders' | 'followups' | 'logs' | 'templates'>('reminders');
+  const followUpsDue = dueFollowUps(appointments, clients, todayInStudio(), settings).length;
   const [selectedAppointmentId, setSelectedAppointmentId] = useState<string>(appointments[0]?.id || '');
   const [activeMessageType, setActiveMessageType] = useState<'confirmation' | 'reminder_24h' | 'artist'>('reminder_24h');
   const [sendingState, setSendingState] = useState<string | null>(null);
@@ -209,6 +213,16 @@ export const MessagingView: React.FC = () => {
             }`}
           >
             Disparar Mensagens
+          </button>
+          <button
+            onClick={() => setSelectedTab('followups')}
+            className={`px-3 py-1.5 rounded-md font-medium transition-colors cursor-pointer ${
+              selectedTab === 'followups'
+                ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-xs'
+                : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'
+            }`}
+          >
+            Depois da sessão{followUpsDue ? ` (${followUpsDue})` : ''}
           </button>
           <button
             onClick={() => setSelectedTab('logs')}
@@ -440,6 +454,8 @@ export const MessagingView: React.FC = () => {
           )}
         </div>
       )}
+
+      {selectedTab === 'followups' && <FollowUpsPanel />}
 
       {/* Logs View */}
       {selectedTab === 'logs' && (
