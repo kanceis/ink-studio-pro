@@ -85,14 +85,19 @@
     segunda: 'Monday', 'terça': 'Tuesday', terca: 'Tuesday', quarta: 'Wednesday', quinta: 'Thursday',
     sexta: 'Friday', 'sábado': 'Saturday', sabado: 'Saturday', domingo: 'Sunday',
   };
-  // Opening hours typed in the app, e.g. "Terça a sábado, 10h–19h" → "Tuesday to Saturday, 10:00–19:00".
+  // Opening hours typed in the app, e.g. "Terça a sábado, 10h–19h" → "Tuesday to Saturday, 10am–7pm".
+  const clock = (s) => s.replace(/(\d{1,2})\s*h\s*(\d{2})?/g, (_, h, m) => {
+    const n = Number(h) % 24;
+    return `${n % 12 || 12}${m && m !== '00' ? `:${m}` : ''}${n < 12 ? 'am' : 'pm'}`;
+  });
+  const range = (s) => s.replace(/(\dh(?:\d{2})?)\s*(?:-|–|às|a)\s*(?=\d)/gi, '$1–').replace(/(\d)\s+h/g, '$1h');
+  const TIMES = /^\d{1,2}\s*h(\s*\d{2})?\s*(?:-|–|às|a)\s*\d{1,2}\s*h(\s*\d{2})?$/i;
   const hours = (s) => {
+    if (TIMES.test(s)) return clock(range(s));
     const day = '(segunda|terça|terca|quarta|quinta|sexta|sábado|sabado|domingo)(?:-feira)?';
     const re = new RegExp(`^${day}\\s*(?:a|-|–)\\s*${day}`, 'i');
     if (!re.test(s)) return null;
-    return s
-      .replace(re, (_, a, b) => `${DAYS[a.toLowerCase()]} to ${DAYS[b.toLowerCase()]}`)
-      .replace(/(\d{1,2})\s*h\s*(\d{2})?/g, (_, h, m) => `${h.padStart(2, '0')}:${m || '00'}`)
+    return clock(range(s).replace(re, (_, a, b) => `${DAYS[a.toLowerCase()]} to ${DAYS[b.toLowerCase()]}`))
       .replace(/,? com marcação/i, ', by appointment');
   };
 
