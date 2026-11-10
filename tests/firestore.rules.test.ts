@@ -130,6 +130,8 @@ test('a visitor can send a well-formed booking request', async () => {
   await assertSucceeds(setDoc(doc(db, 'studios/main/bookingRequests/b-new'), validBooking()));
   // From the English site
   await assertSucceeds(setDoc(doc(db, 'studios/main/bookingRequests/b-en'), { ...validBooking(), language: 'en' }));
+  // Agreed to hear from the studio later on
+  await assertSucceeds(setDoc(doc(db, 'studios/main/bookingRequests/b-news'), { ...validBooking(), marketingConsentAt: new Date().toISOString() }));
 });
 
 test('malformed or tampered booking requests are refused', async () => {
@@ -148,6 +150,7 @@ test('malformed or tampered booking requests are refused', async () => {
   await assertFails(setDoc(ref, noPrivacy));
   await assertFails(setDoc(ref, { ...validBooking(), firstTattoo: 'sim' }));
   await assertFails(setDoc(ref, { ...validBooking(), language: 'fr' }));
+  await assertFails(setDoc(ref, { ...validBooking(), marketingConsentAt: true }));
 });
 
 test('visitors cannot read, edit or delete booking requests', async () => {

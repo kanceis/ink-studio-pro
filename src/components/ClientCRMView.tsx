@@ -365,6 +365,34 @@ export const ClientCRMView: React.FC = () => {
                   {activeClient.notes}
                 </div>
               )}
+
+              {/* Messages after a session (services/followUps.ts) */}
+              <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs text-zinc-600 dark:text-zinc-300">
+                <label className="inline-flex items-center gap-1.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={!!activeClient.marketingConsentAt}
+                    onChange={(e) => updateClient(activeClient.id, { marketingConsentAt: e.target.checked ? new Date().toISOString() : '' })}
+                  />
+                  Aceita que voltemos a falar daqui a uns meses
+                </label>
+                <label className="inline-flex items-center gap-1.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={!!activeClient.followUpOptOutAt}
+                    onChange={(e) => updateClient(activeClient.id, { followUpOptOutAt: e.target.checked ? new Date().toISOString() : '' })}
+                  />
+                  Pediu para não receber mensagens
+                </label>
+                <label className="inline-flex items-center gap-1.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={activeClient.language === 'en'}
+                    onChange={(e) => updateClient(activeClient.id, { language: e.target.checked ? 'en' : '' })}
+                  />
+                  Escrever em inglês
+                </label>
+              </div>
             </div>
 
             {/* Ficha Clínica & Anamnese */}

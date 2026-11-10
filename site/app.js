@@ -1467,6 +1467,8 @@
       el('p', { text: `Responsável pelo tratamento: Ink Compatível${p.address ? `, ${p.address}` : ''}${p.city ? `, ${p.city}` : ''}. Contacto: ${contact}.` }),
       el('h2', { text: 'Pedidos de marcação' }),
       el('p', { text: 'Guardamos o nome, telemóvel, email, Instagram (se o deres) e o que escreves sobre a tatuagem, para te responder com preço e datas. Guardamos também a data em que confirmaste ter 18 anos ou mais e em que aceitaste esta política.' }),
+      el('h2', { text: 'Mensagens depois da sessão' }),
+      el('p', { text: 'Depois de uma sessão mandamos-te uma mensagem ao fim de uma semana e outra ao fim de duas, para saber como está a cicatrizar. Só voltamos a falar contigo mais tarde (por exemplo, com flashes novos) se marcaste essa opção no pedido ou no estúdio. Para deixar de receber, basta responder “parar”.' }),
       el('h2', { text: 'Compras na loja' }),
       el('p', { text: 'Para enviar a encomenda guardamos o nome, morada, email e telemóvel. O pagamento é feito no Stripe: nunca vemos nem guardamos os dados do cartão. O merch é vendido pela loja externa, com a política dela.' }),
       el('h2', { text: 'Onde ficam os dados' }),
@@ -1685,6 +1687,8 @@
             el('label', { class: 'check' }, [el('input', { type: 'checkbox', name: 'privacy', id: 'privacy', checked: v.privacy || null }),
               el('span', {}, ['Aceito que a Ink Compatível guarde estes dados para responder ao pedido. ', el('a', { href: '/privacidade', target: '_blank', text: 'Política de privacidade' })])]),
             el('p', { class: 'err', id: 'privacy-err', hidden: true }),
+            el('label', { class: 'check' }, [el('input', { type: 'checkbox', name: 'news', id: 'news', checked: v.news || null }),
+              'Podem voltar a falar comigo daqui a uns meses (flashes novos, datas livres). Opcional: basta responder “parar” para deixar de receber.']),
           ]),
           status,
           actions({ form }, 'Enviar pedido'),
@@ -1716,6 +1720,7 @@
               idea: v.idea, placement: v.placement, size: v.size, style: v.style,
               preferredDates: v.preferredDates, referenceUrl: refLinks(v.referenceUrl).join('\n'),
               status: 'new', createdAt: now, adultConfirmedAt: now, privacyAcceptedAt: now,
+              ...(v.news ? { marketingConsentAt: now } : {}),
               // Sent from the English site: the studio answers in English.
               ...(I.en ? { language: 'en' } : {}),
             });

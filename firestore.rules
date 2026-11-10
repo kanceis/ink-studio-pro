@@ -25,7 +25,7 @@ service cloud.firestore {
       return d.keys().hasOnly(['name', 'email', 'phone', 'instagram', 'artistId', 'artistName',
                                'tattooType', 'flashNumber', 'firstTattoo', 'idea',
                                'placement', 'size', 'style', 'preferredDates', 'referenceUrl', 'language',
-                               'status', 'createdAt', 'adultConfirmedAt', 'privacyAcceptedAt'])
+                               'status', 'createdAt', 'adultConfirmedAt', 'privacyAcceptedAt', 'marketingConsentAt'])
         && requiredString(d, 'name', 120)
         && requiredString(d, 'email', 200)
         && d.email.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$')
@@ -35,6 +35,8 @@ service cloud.firestore {
         // GDPR: both confirmations are required and stored with their timestamp
         && requiredString(d, 'adultConfirmedAt', 40)
         && requiredString(d, 'privacyAcceptedAt', 40)
+        // Optional: agreed to hear from the studio later (follow-up after 2–3 months)
+        && optionalString(d, 'marketingConsentAt', 40)
         && optionalString(d, 'tattooType', 40)
         && optionalString(d, 'flashNumber', 20)
         && (!('firstTattoo' in d) || d.firstTattoo is bool)

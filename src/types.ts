@@ -35,6 +35,11 @@ export interface Client {
   birthDate: string;
   instagram?: string;
   notes?: string;
+  /** Agreed to hear from the studio later on (the 2–3 month follow-up). ISO time it was given; unset = no. */
+  marketingConsentAt?: string;
+  /** Asked us to stop the follow-up messages (replied "parar"). Overrides everything else. */
+  followUpOptOutAt?: string;
+  language?: 'en' | ''; // came from the English site: write in English
   clinicalHistory: ClinicalHistory;
   references: TattooReference[];
   createdAt: string;
@@ -79,6 +84,16 @@ export interface Appointment {
   reminder24hSent: boolean;
   confirmationSentAt?: string;
   reminder24hSentAt?: string;
+  /** Messages after the session (see services/followUps.ts): when each one went out, or was skipped. */
+  followUps?: Partial<Record<FollowUpKind, FollowUpMark>>;
+}
+
+/** d7 = one week after, d14 = two weeks after, m3 = about 2–3 months after (only with consent). */
+export type FollowUpKind = 'd7' | 'd14' | 'm3';
+
+export interface FollowUpMark {
+  at: string; // ISO
+  via: 'whatsapp' | 'email' | 'auto_email' | 'skipped';
 }
 
 export type InventoryCategory = 'needles' | 'inks' | 'hygiene' | 'aftercare' | 'disposables' | 'equipment';
@@ -100,7 +115,7 @@ export interface InventoryItem {
 }
 
 export type NotificationChannel = 'whatsapp' | 'sms' | 'email' | 'system';
-export type NotificationType = 'confirmation' | 'reminder_24h' | 'aftercare' | 'custom' | 'stock_alert';
+export type NotificationType = 'confirmation' | 'reminder_24h' | 'aftercare' | 'follow_up' | 'custom' | 'stock_alert';
 
 export interface NotificationLog {
   id: string;
@@ -148,6 +163,13 @@ export interface StudioSettings {
   autoSendConfirmationOnBooking: boolean;
   autoSendReminder24h: boolean;
   preferredChannels: NotificationChannel[];
+
+  /** Messages after a session (1 week, 2 weeks, 2–3 months). Off = the app doesn't list them. Default on. */
+  followUpsEnabled?: boolean;
+  /** The daily task on Cloudflare emails the due follow-ups by itself (needs RESEND_API_KEY there). Default off. */
+  followUpAutoEmail?: boolean;
+  /** Link for "leave us a Google review" in the two-week message. */
+  googleReviewUrl?: string;
 }
 
 export interface ToastNotification {
@@ -270,6 +292,7 @@ export interface BookingRequest {
   preferredDates?: string;
   referenceUrl?: string;
   language?: 'en'; // sent from the English site (/en/…): reply in English
+  marketingConsentAt?: string; // ticked "you can get in touch again in a few months" (ISO)
   status: BookingRequestStatus;
   createdAt: string; // ISO timestamp
   adultConfirmedAt: string; // "I am 18+" ticked at (ISO), GDPR proof

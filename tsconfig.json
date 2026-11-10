@@ -28,6 +28,7 @@
   },
   "exclude": [
     "functions",
+    "workers",
     "node_modules",
     "dist"
   ]

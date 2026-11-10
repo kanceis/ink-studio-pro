@@ -40,6 +40,8 @@ export const BookingRequestsPanel: React.FC<{ content: SiteContent }> = ({ conte
       birthDate: '',
       instagram: req.instagram,
       notes,
+      marketingConsentAt: req.marketingConsentAt,
+      language: req.language,
       references: [],
       clinicalHistory: {
         allergies: [],
@@ -129,6 +131,7 @@ export const BookingRequestsPanel: React.FC<{ content: SiteContent }> = ({ conte
             )}
             {req.firstTattoo !== undefined && <Detail label="1.ª tatuagem" value={req.firstTattoo ? 'Sim' : 'Não'} />}
             {req.language === 'en' && <Detail label="Língua" value="Inglês (responder em inglês)" />}
+            {req.marketingConsentAt && <Detail label="Novidades" value="Aceita que voltemos a falar daqui a uns meses" />}
             {req.placement && <Detail label="Zona" value={req.placement} />}
             {req.size && <Detail label="Tamanho" value={req.size} />}
             {req.style && <Detail label="Estilo" value={req.style} />}

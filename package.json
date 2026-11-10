@@ -8,8 +8,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
-    "lint": "tsc --noEmit && tsc --noEmit -p functions",
-    "test:rules": "npx --yes firebase-tools@15 emulators:exec --only firestore --project demo-ink-studio \"tsx --test tests/firestore.rules.test.ts\"",
+    "lint": "tsc --noEmit && tsc --noEmit -p functions && tsc --noEmit -p workers/follow-ups",
+    "test:unit": "tsx --test tests/followUps.test.ts",
+    "test:rules": "npx --yes firebase-tools@15 emulators:exec --only firestore --project demo-ink-studio \"tsx --test --test-concurrency=1 tests/firestore.rules.test.ts tests/followUpsWorker.test.ts\"",
     "emulators": "npx --yes firebase-tools@15 emulators:start --only auth,firestore --project demo-ink-studio",
     "pages:dev": "wrangler pages dev dist --port 8788"
   },

@@ -1,9 +1,12 @@
 /**
  * Minimal Firestore REST client for Pages Functions, acting as the studio's
- * service account (bypasses security rules). Used only by the shop checkout
- * and the Stripe webhook, which must change stock and write orders.
+ * service account (bypasses security rules). Used by the shop checkout and
+ * the Stripe webhook (stock and orders), and by the daily follow-up Worker.
  */
-import { Env } from './auth';
+import type { Env as PagesEnv } from './auth';
+
+/** What this client needs; the Pages Functions' Env and the follow-up Worker's env both fit. */
+type Env = Pick<PagesEnv, 'FIREBASE_PROJECT_ID' | 'FIRESTORE_DATABASE_ID' | 'STUDIO_ID' | 'FIRESTORE_EMULATOR_HOST' | 'GOOGLE_SERVICE_ACCOUNT'>;
 
 type Value =
   | { stringValue: string }
@@ -133,4 +136,19 @@ export const commit = async (env: Env, writes: Write[]): Promise<boolean> => {
   const text = await res.text();
   if (/FAILED_PRECONDITION|ABORTED|ALREADY_EXISTS|NOT_FOUND/.test(text)) return false;
   throw new Error(`Firestore commit ${res.status}: ${text}`);
+};
+
+/** Every document of a studio collection, e.g. listDocs(env, 'appointments'). */
+export const listDocs = async (env: Env, collectionId: string): Promise<FsDoc[]> => {
+  const out: FsDoc[] = [];
+  let pageToken = '';
+  do {
+    const qs = new URLSearchParams({ pageSize: '300', ...(pageToken ? { pageToken } : {}) });
+    const res = await call(env, `${studioDocName(env, collectionId)}?${qs}`);
+    if (!res.ok) throw new Error(`Firestore list ${res.status}: ${await res.text()}`);
+    const data = (await res.json()) as { documents?: FsDoc[]; nextPageToken?: string };
+    out.push(...(data.documents || []));
+    pageToken = data.nextPageToken || '';
+  } while (pageToken);
+  return out;
 };

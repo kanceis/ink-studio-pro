@@ -159,6 +159,25 @@ guardar o *place ID*. O nome de cada autor liga ao perfil dele no Google e a sec
 
 A Google escolhe as (até 5) críticas que a API devolve. A secção pode ser desligada em "Estúdio & artistas".
 
+### Mensagens depois da sessão (Mensagens › "Depois da sessão")
+
+Quando uma sessão fica **feita**, a app põe na lista "A enviar hoje" uma mensagem ao fim de 1 semana (cicatrização),
+outra ao fim de 2 semanas (retoque, avaliação no Google, Instagram) e, só para quem aceitou receber novidades, outra aos
+2–3 meses. Cada uma sai com um toque por WhatsApp ou Gmail, ou sai da lista com "Não enviar". As regras estão em
+`src/services/followUps.ts` (testes: `npm run test:unit`). A autorização vem da caixa opcional no pedido de marcação do
+site ou da ficha do cliente; "Pediu para não receber mensagens" pára tudo.
+
+**Email automático (opcional)**: `workers/follow-ups` é um Worker com Cron Trigger que todas as manhãs envia esses
+emails pelo Resend, a partir de geral@inkcompativel.pt, e marca-os na app. Para o ligar:
+
+1. Na conta Resend, adiciona o domínio `inkcompativel.pt` e cria os registos DNS que ela pede no Cloudflare.
+2. Cria uma chave Resend só de envio e guarda-a como segredo: `npx wrangler secret put RESEND_API_KEY -c workers/follow-ups/wrangler.toml`
+   (e o mesmo para `GOOGLE_SERVICE_ACCOUNT`, a chave da conta de serviço que a loja já usa).
+3. `npx wrangler deploy -c workers/follow-ups/wrangler.toml`
+4. Na app, em Definições do separador "Depois da sessão", marca "Enviar os emails sozinho".
+
+Sem a chave ou sem a caixa marcada, o Worker não faz nada. Clientes sem email ficam na lista para WhatsApp.
+
 ### Publicar no Cloudflare Pages
 
 Build command `npm run build`, output directory `dist`. Lembra-te de adicionar o domínio `*.pages.dev` aos *Authorized domains* do Firebase (passo 3).

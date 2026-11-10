@@ -497,6 +497,8 @@ window.INK_EN = {
   'Pedidos de marcação': 'Booking requests',
   'Guardamos o nome, telemóvel, email, Instagram (se o deres) e o que escreves sobre a tatuagem, para te responder com preço e datas. Guardamos também a data em que confirmaste ter 18 anos ou mais e em que aceitaste esta política.':
     'We keep your name, mobile number, email, Instagram (if you give it) and what you write about the tattoo, so we can reply with a price and dates. We also keep the date you confirmed you are 18 or over and accepted this policy.',
+  'Mensagens depois da sessão': 'Messages after your session',
+  'Depois de uma sessão mandamos-te uma mensagem ao fim de uma semana e outra ao fim de duas, para saber como está a cicatrizar. Só voltamos a falar contigo mais tarde (por exemplo, com flashes novos) se marcaste essa opção no pedido ou no estúdio. Para deixar de receber, basta responder “parar”.': 'After a session we message you once after a week and again after two weeks, to see how it’s healing. We only get in touch later on (for example, with new flash) if you ticked that option in your request or at the studio. To stop these messages, just reply “stop”.',
   'Compras na loja': 'Shop purchases',
   'Para enviar a encomenda guardamos o nome, morada, email e telemóvel. O pagamento é feito no Stripe: nunca vemos nem guardamos os dados do cartão. O merch é vendido pela loja externa, com a política dela.':
     'To ship your order we keep your name, address, email and mobile number. Payment happens on Stripe: we never see or store your card details. Merch is sold by the external shop, under its own policy.',
@@ -591,6 +593,7 @@ window.INK_EN = {
   'Tenho 18 anos ou mais.': 'I’m 18 or over.',
   'Aceito que a Ink Compatível guarde estes dados para responder ao pedido.': 'I agree that Ink Compatível keeps this data to reply to my request.',
   'Política de privacidade': 'Privacy policy',
+  'Podem voltar a falar comigo daqui a uns meses (flashes novos, datas livres). Opcional: basta responder “parar” para deixar de receber.': 'You can get in touch again in a few months (new flash, free dates). Optional: just reply “stop” to opt out.',
   'Enviar pedido': 'Send request',
   'Diz-nos o teu nome.': 'Tell us your name.',
   'Indica um telemóvel válido.': 'Enter a valid mobile number.',
