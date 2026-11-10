@@ -119,7 +119,7 @@ const TEXTS = {
       body: [
         `Olá ${s.name}! Passou uma semana desde a tua sessão${s.artist ? ` com ${s.artist}` : ''}. Como está a sarar?`,
         'Se alguma coisa te parecer estranha (vermelhidão que não passa, inchaço, crosta grossa), manda-nos uma foto e vemos contigo.',
-        'Até sarar: lava com água morna e sabão neutro, uma camada fina de creme, não coces as crostas, e nada de praia, piscina, sauna nem sol direto durante 3 semanas.',
+        'Até sarar: nada de película, lava com água morna e sabão neutro, uma camada fina de creme 2 a 3 vezes por dia, não coces as crostas, e durante 15 dias nada de sol, solário, banho turco, sauna, piscina nem praia.',
         `🖤 ${s.studio}`,
       ],
     }),
@@ -147,7 +147,7 @@ const TEXTS = {
       body: [
         `Hi ${s.name}! It’s been a week since your session${s.artist ? ` with ${s.artist}` : ''}. How is it healing?`,
         'If anything looks off (redness that won’t go, swelling, thick scabs), send us a photo and we’ll take a look with you.',
-        'Until it’s healed: wash with lukewarm water and mild soap, a thin layer of cream, don’t pick at scabs, and no beach, pool, sauna or direct sun for 3 weeks.',
+        'Until it’s healed: no cling film, wash with lukewarm water and mild soap, a thin layer of cream 2 to 3 times a day, don’t pick at scabs, and for 15 days no sun, sunbeds, steam rooms, saunas, pools or beach.',
         `🖤 ${s.studio}`,
       ],
     }),

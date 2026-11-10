@@ -551,7 +551,7 @@
     const wa = whatsappUrl();
     const mapUrl = p.address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${p.address} ${p.city || ''}`)}` : null;
     const [days, hours] = String(p.openingHours || '').split(/,\s*/);
-    const tile = (name, alt, cls, lab, pos) => el('button', { type: 'button', class: `v-tile ${cls}`, 'aria-label': `Ver maior: ${alt}`, onclick: () => openViewer({ image: { url: new URL(`assets/v3/${name}-1600.webp`, document.baseURI).href }, title: alt }, alt) }, [
+    const tile = (name, alt, cls, lab, pos, caption = alt) => el('button', { type: 'button', class: `v-tile ${cls}`, 'aria-label': `Ver maior: ${alt}`, onclick: () => openViewer({ image: { url: new URL(`assets/v3/${name}-1600.webp`, document.baseURI).href }, title: alt }, I.t(caption)) }, [
       v3img(name, '', { pos, big: true, sizes: '(max-width: 760px) 100vw, 40vw' }), lab ? el('span', { class: 'lab mono', text: lab }) : null,
     ]);
     const estudio = (name, alt, cls, lab) => el('button', { type: 'button', class: `v-tile ${cls}`, 'aria-label': `Ver maior: ${alt}`, onclick: () => openViewer({ image: { url: new URL(`assets/estudio/${name}-1600.webp`, document.baseURI).href }, title: alt }, alt) }, [
@@ -580,7 +580,7 @@
           mapUrl ? el('div', { class: 'v-btns' }, btn3('Como chegar', mapUrl, 'w', '↗', ext)) : null,
         ]),
         estudio('garrafas', 'Garrafas decoradas em caixas de madeira na parede', 's-bottles'),
-        tile('trofeus', 'Troféus de convenções de tatuagem', 's-trophy', 'Prémios', '40% 50%'),
+        tile('trofeus', 'Troféus de convenções de tatuagem', 's-trophy', 'Prémios', '40% 50%', 'Prémios do Miguel na Convenção de Tatuagem do Porto: 1.º lugar em aguarela (2022), 3.º em aguarela (2019), 3.º em aguarela e 3.º em retrato (2018), 2.º em aguarela (2015).'),
         el('div', { class: 'v-tile s-note' }, [
           el('span', { class: 'hand', text: 'antes de vir →' }),
           el('span', { text: p.depositInfo ? `18+, traz documento, dorme bem e come antes. ${p.depositInfo}` : '18+, traz documento, dorme bem e come antes. O sinal desconta no preço final.' }),
@@ -1587,7 +1587,7 @@
 
   // Reviewed copy, 10 Nov 2026 (textos-site.csv N10–N1I). The language question only shows in English.
   const FAQ = [
-    ['Quanto custa uma tatuagem?', 'Depende do tamanho, da zona, do detalhe e do artista. Dizemos-te o preço certo depois de vermos a ideia, sempre antes de pagares o que quer que seja.'],
+    ['Quanto custa uma tatuagem?', 'Depende do tamanho, da zona, do detalhe e do artista. As peças pequenas começam nos 50 €. Dizemos-te o preço certo depois de vermos a ideia, sempre antes de pagares o que quer que seja.'],
     ['Como funciona o sinal?', 'Para guardar a data pagas um sinal, normalmente 20% do orçamento, por um link seguro. Desconta no preço final e não é reembolsável. Se precisares de mudar a data, avisa com pelo menos 48 h de antecedência e o sinal passa para o novo dia.'],
     ['Dói?', 'Dói, sim. Na maior parte das zonas menos do que imaginas; nas costelas, mãos e pés um pouco mais. Paramos sempre que precisares.'],
     ['É a minha primeira. O que devo saber?', 'Escolhe uma zona onde a queiras ver daqui a dez anos, come antes e vem com tempo. Explicamos tudo antes de começar e aqui não há perguntas parvas.'],
@@ -1598,13 +1598,13 @@
     I.en ? ['Falam inglês?', 'Sim, e francês também. Escreve-nos em inglês ou francês pelo pedido de marcação ou pelo WhatsApp.'] : null,
   ].filter(Boolean);
 
-  // The method is still to be confirmed by Miguel (wrap, hours, cream): N32 and N34 stay general until then.
+  // Miguel's method (10 Nov): no cling film, cream 2 to 3 times a day, 15 days away from sun and water.
   const AFTERCARE = [
-    'Tira o penso quando o teu artista te disser.',
-    'Lava com água morna e sabão neutro, 2 a 3 vezes por dia, com as mãos limpas. Seca com papel, sem esfregar.',
-    'Aplica uma camada fina do creme que o teu artista te recomendar. Pouco é melhor do que muito.',
+    'Nada de película: deixa a pele respirar.',
+    'Lava com água morna e sabão neutro, com as mãos limpas. Seca com papel, sem esfregar.',
+    'Aplica uma camada fina de creme 2 a 3 vezes por dia, sempre com a pele limpa e seca. Pouco é melhor do que muito.',
     'Não coces nem arranques as crostas. A comichão é normal e passa.',
-    'Durante 3 semanas: nada de praia, piscina, sauna nem sol direto na tatuagem.',
+    'Durante 15 dias: nada de sol, solário, banho turco, sauna, piscina nem praia.',
     'Depois de sarada, protetor solar alto mantém o preto e o vermelho vivos durante anos.',
     'Vermelhidão que aumenta, calor ou febre? Fala connosco e procura um médico.',
   ];
@@ -2007,7 +2007,7 @@
             el('h2', { class: 'disp', text: 'Como funciona' }),
             el('ol', {}, [
               ['Envias o pedido', 'Não pagas nada. Vai direto para a agenda do artista.'],
-              ['Respondemos em 48 h', 'Com preço, datas e perguntas sobre o desenho.'],
+              ['Respondemos em 48 h', 'Com preço, datas e perguntas sobre o desenho. Tatuagens a partir de 50 €.'],
               ['O sinal', p.depositInfo || 'Guarda a data e desconta no preço final. Não é reembolsável.'],
               ['Afinamos o esboço', 'Aprovas o desenho final antes da sessão.'],
             ].map(([t, d], i) => el('li', {}, [el('i', { class: 'disp', 'aria-hidden': 'true', text: String(i + 1) }), el('span', {}, [el('b', { text: t }), el('br'), el('span', { text: d })])]))),
