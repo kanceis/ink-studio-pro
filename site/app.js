@@ -264,7 +264,7 @@
     });
     const pill = (a, i) => el('a', { class: `v-float v-apill ap-${i}`, href: artistHref(a) }, [
       el('span', { class: 'av' }, safeUrl(a.photo?.url) ? el('img', { src: a.photo.url, alt: '' }) : initials(a.displayName)),
-      el('span', {}, [el('b', { text: a.displayName }), a.styles ? el('small', { text: styleTags(a).slice(0, 2).join(' · ') }) : null]),
+      el('span', {}, [el('b', { text: a.displayName }), a.styles ? el('small', {}, styleTags(a).slice(0, 2).map((t, i) => (i ? el('span', { class: 'more', text: ` · ${t}` }) : t))) : null]),
     ]);
     return el('section', { class: 'v-hero v-grid', 'aria-labelledby': 'hero-title' }, [
       el('div', { class: 'v-stage' }, [
@@ -2242,7 +2242,7 @@
   };
 
   const routes = [
-    [/^\/?$/, 'home', 'Ink Compatível · Estúdio de tatuagem em Vila Nova de Gaia', ''],
+    [/^\/?$/, 'home', 'Ink Compatível · Estúdio de tatuagem em Vila Nova de Gaia', 'inicio'],
     [/^\/artistas\/?$/, 'artists', 'Artistas · Ink Compatível', 'artistas'],
     [/^\/artistas\/([^/]+)$/, 'artist', null, 'artistas'],
     [/^\/portfolio\/?$/, 'portfolio', 'Portfólio · Ink Compatível', 'portfolio'],

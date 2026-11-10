@@ -45,6 +45,7 @@ window.INK_EN = {
   'Carrinho, {1} artigo': 'Cart, {1} item',
   'Abrir menu': 'Open menu',
   'Principal': 'Main',
+  'Início': 'Home',
   'Artistas': 'Artists',
   'Portfólio': 'Portfolio',
   'Loja': 'Shop',

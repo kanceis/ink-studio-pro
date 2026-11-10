@@ -118,6 +118,7 @@ button { font: inherit; color: inherit; }
   .menu-btn[aria-expanded="true"]::before { height: 0; border-bottom: 0; }
   .main-nav { display: none; }
   .main-nav.open { display: flex; position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 30; flex-direction: column; align-items: stretch; gap: 4px; padding: 10px; border-radius: 24px; background: var(--tinta); box-shadow: 0 24px 50px rgba(20, 18, 19, .4); }
+  .main-nav.open .nav-home { display: flex !important; }
   .main-nav.open a:not(.btn) { color: #fff !important; font-size: 18px; font-weight: 600; min-height: 52px !important; padding: 0 18px; border-radius: 999px; }
   .main-nav.open a:not(.btn):hover { background: rgba(255, 255, 255, .08); }
   .main-nav.open a[aria-current="page"]:not(.btn) { background: #fff; color: var(--vermelho-escuro) !important; }
@@ -325,6 +326,7 @@ fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
 .site-header { border-bottom: 0; background: color-mix(in srgb, var(--papel) 88%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
 .main-nav { gap: 12px; }
 .nav-pill { display: flex; align-items: center; gap: 2px; padding: 4px; border-radius: 999px; background: var(--papel-2); border: 1px solid var(--nevoa); }
+.nav-home { display: none !important; }
 .nav-pill a { padding: 0 16px; border-radius: 999px; min-height: 40px !important; text-decoration: none !important; }
 .nav-pill a[aria-current="page"] { background: var(--tinta); color: var(--papel) !important; }
 .nav-pill a:not([aria-current="page"]):hover { background: var(--papel); color: var(--tinta) !important; }
@@ -758,17 +760,18 @@ html[lang="en"] .v-stage { --hl-half: calc(clamp(68px, min(9.6vw, 17vh), 160px) 
   .v-hl { font-size: 23vw; }
   html[lang="en"] .v-hl { font-size: 17vw; }
   .v-hero .v-polaroid, .v-doodle, .v-hero .v-badge { display: none; }
-  /* All the artists, in a row above the title. */
-  /* The artists stay as tilted cream pills, spread over the top: Arants above the title, Rock Ink under it
-     on the right, Carolina under the buttons (Início v4). */
+  /* The artists stay as tilted cream pills: Arants above the title on the left, Rock Ink and Carolina
+     side by side under it on the right, mirroring him (Início v4). */
+  .v-stage { padding-top: 78px; }
+  .v-apills { display: flex; order: 1; align-self: stretch; justify-content: flex-end; flex-wrap: wrap; gap: 12px 8px; margin: -4px 2px 6px 0; }
   .v-apills .v-apill { position: relative; left: auto; right: auto; top: auto; bottom: auto; padding: 5px 14px 5px 5px; }
   .v-apills .v-apill .av { width: 34px; height: 34px; font-size: 13px; }
   .v-apills .v-apill b { font-size: 14px; }
   .v-apills .v-apill small { font-size: 9px; max-width: 180px; }
-  .v-apills .ap-0 { order: -1; align-self: flex-start; margin: 8px 0 6px 2px; }
-  .v-apills .ap-1 { order: 1; align-self: flex-end; margin: 0 2px; }
+  /* One style each on phones, so Rock Ink and Carolina fit side by side. */
+  .v-apills .v-apill small .more { display: none; }
+  .v-apills .ap-0 { position: absolute; top: 16px; left: 18px; }
   .v-stage > .v-hlead { order: 2; }
-  .v-apills .ap-2 { order: 3; align-self: flex-start; margin: 6px 0 0 10px; }
   .v-hero-foot { padding: 0 20px 48px; margin-top: 0; justify-content: center; }
   .v-ahead { flex-direction: column; align-items: flex-start; }
   .v-qcard { transform: none; }
@@ -807,6 +810,10 @@ html[lang="en"] .v-stage { --hl-half: calc(clamp(68px, min(9.6vw, 17vh), 160px) 
   .footer-nav { grid-template-columns: repeat(2, auto); gap: 6px 32px; }
   .v-tape { padding: 12px 0; }
   .v-mq span { font-size: 28px; gap: 30px; }
+}
+@media (max-width: 359px) {
+  .v-apills { gap: 12px 6px; }
+  .v-apills .v-apill { padding-right: 10px; }
 }
 @media (max-width: 560px) {
   .v-opts, .v-opts.three { grid-template-columns: 1fr 1fr; }
