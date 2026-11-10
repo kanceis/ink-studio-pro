@@ -117,16 +117,16 @@ const TEXTS = {
     d7: (s: Ctx) => ({
       subject: `Como está a tua tatuagem? · ${s.studio}`,
       body: [
-        `Olá ${s.name}! Passou uma semana desde a tua sessão${s.artist ? ` com ${s.artist}` : ''}. Como está a cicatrizar?`,
+        `Olá ${s.name}! Passou uma semana desde a tua sessão${s.artist ? ` com ${s.artist}` : ''}. Como está a sarar?`,
         'Se alguma coisa te parecer estranha (vermelhidão que não passa, inchaço, crosta grossa), manda-nos uma foto e vemos contigo.',
-        'Até estar cicatrizada: lava com sabão neutro, creme fino 2 a 3 vezes por dia, e nada de sol, piscina ou mar.',
+        'Até sarar: lava com água morna e sabão neutro, uma camada fina de creme, não coces as crostas, e nada de praia, piscina, sauna nem sol direto durante 3 semanas.',
         `🖤 ${s.studio}`,
       ],
     }),
     d14: (s: Ctx) => ({
       subject: `Duas semanas depois · ${s.studio}`,
       body: [
-        `Olá ${s.name}! Duas semanas depois, a tua tatuagem já deve estar quase cicatrizada.`,
+        `Olá ${s.name}! Duas semanas depois, a tua tatuagem já deve estar quase sarada.`,
         'Se vires alguma falha na cor ou nas linhas, diz-nos e combinamos um retoque.',
         s.review ? `Se gostaste da experiência, uma avaliação no Google ajuda-nos muito: ${s.review}` : '',
         s.ig ? `E se a partilhares no Instagram, identifica ${s.ig} 🖤` : `🖤 ${s.studio}`,
@@ -137,7 +137,7 @@ const TEXTS = {
       body: [
         `Olá ${s.name}! Já passaram uns meses desde a tua sessão no ${s.studio}. Como está a tatuagem?`,
         `Se tens uma ideia nova, ou queres ver os flashes disponíveis, estamos por aqui: ${s.site}/marcar`,
-        'Se preferires não receber estas mensagens, responde “parar”.',
+        'Se preferires não receber estas mensagens, responde «parar».',
       ],
     }),
   },
@@ -147,7 +147,7 @@ const TEXTS = {
       body: [
         `Hi ${s.name}! It’s been a week since your session${s.artist ? ` with ${s.artist}` : ''}. How is it healing?`,
         'If anything looks off (redness that won’t go, swelling, thick scabs), send us a photo and we’ll take a look with you.',
-        'Until it’s healed: wash with mild soap, a thin layer of cream 2 to 3 times a day, and no sun, pool or sea.',
+        'Until it’s healed: wash with lukewarm water and mild soap, a thin layer of cream, don’t pick at scabs, and no beach, pool, sauna or direct sun for 3 weeks.',
         `🖤 ${s.studio}`,
       ],
     }),

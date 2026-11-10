@@ -267,8 +267,8 @@
       ]),
       el('div', { class: 'v-hero-foot' }, [
         el('div', { class: 'v-hero-copy' }, [
-          el('p', { text: p.tagline || `${n === 3 ? 'Três artistas' : 'Artistas'}, um estúdio em Vila Nova de Gaia. Cada tatuagem começa num desenho feito à mão, para ti.` }),
-          el('div', { class: 'v-btns' }, [btn3('Marcar sessão', '/marcar', 'w'), n ? btn3('Fazer o teste', '/#teste', 'o', null) : null]),
+          el('p', { text: p.tagline || `${n === 3 ? 'Três artistas' : 'Artistas'}, um estúdio em Gaia. Desenhamos à mão, para ti, e só depois tatuamos.` }),
+          el('div', { class: 'v-btns' }, [btn3('Marcar sessão', '/marcar', 'w'), n ? btn3('Descobre o teu artista', '/#teste', 'o', null) : null]),
         ]),
         stamp,
       ]),
@@ -282,7 +282,7 @@
       return el('div', { class: 'v-mq' }, [span(), span()]);
     };
     return el('div', { class: 'v-tapes', 'aria-hidden': 'true' }, [
-      el('div', { class: 'v-tape light' }, line(['Do papel à pele', 'Desenho à medida', 'Resposta em 48 h', 'Vila Nova de Gaia'])),
+      el('div', { class: 'v-tape light' }, line(['Do papel à pele', 'Desenho à medida', 'Flash da casa', 'Vila Nova de Gaia'])),
       el('div', { class: 'v-tape' }, line([...(styles.length ? styles : ['Sketch', 'Black & grey', 'Black & red']), 'Flash', 'Cover-up'])),
     ]);
   };
@@ -299,7 +299,7 @@
     return el('section', { class: 'v-manifesto', 'aria-label': 'O estúdio' }, el('div', { class: 'wrap' }, [
       kicker(['O estúdio', street, 'Gaia'].filter(Boolean).join(' · ')),
       el('p', { class: 'big' }, [
-        'Aqui não há catálogo. Cada peça começa ',
+        'Aqui nada se copia. Cada peça começa ',
         el('span', { class: 'v-ipill', 'aria-hidden': 'true' }, v3img('caveira-sketch', '', { pos: '50% 40%' })),
         ' num desenho à mão, ganha forma ',
         el('span', { class: 'v-ipill r', 'aria-hidden': 'true' }, v3img('miguel-bw', '', { pos: '50% 35%' })),
@@ -355,9 +355,9 @@
   const artistsV3 = () => {
     const n = data.artists.length;
     if (!n) return null;
-    const words = ['Uma', 'Duas', 'Três', 'Quatro', 'Cinco'][n - 1];
+    const words = ['Um', 'Dois', 'Três', 'Quatro', 'Cinco'][n - 1];
     return el('section', { class: 'v-sec', id: 'artistas', 'aria-labelledby': 'artists-title' }, el('div', { class: 'wrap' }, [
-      vHead(words ? `${words} ${n === 1 ? 'mão' : 'mãos'}.\n${n === 1 ? 'Um traço' : `${words === 'Duas' ? 'Dois' : words} traços`}.` : 'Os artistas.', 'Escolhe pelo traço. Cada artista tem portfólio, flash e agenda próprios.', null, 'artists-title'),
+      vHead(words ? `${words} ${n === 1 ? 'artista' : 'artistas'}.\n${words} ${n === 1 ? 'traço' : 'traços'}.` : 'Os artistas.', 'Escolhe pelo traço. Cada artista tem portfólio, flash e agenda próprios.', null, 'artists-title'),
       el('div', { class: `v-acards n${Math.min(n, 3)}` }, data.artists.map(artistCardV3)),
     ]));
   };
@@ -441,7 +441,7 @@
         more,
         ...pick.slice(1).map((p) => tileFor(p, 't-b')),
       );
-      if (!pick.length) grid.append(el('p', { class: 'empty', text: 'Ainda não há trabalhos publicados aqui.' }));
+      if (!pick.length) grid.append(el('p', { class: 'empty', text: 'Os trabalhos estão a caminho. Entretanto, espreita o Instagram.' }));
     };
     draw();
     const chips = data.artists.length > 1
@@ -508,9 +508,9 @@
           el('h2', { class: 'visually-hidden', id: 'reviews-title', text: 'Críticas no Google' }),
           rv.rating ? el('p', { class: 'disp v-score', 'aria-hidden': 'true', text: decimal(rv.rating) }) : null,
           rv.rating ? stars(rv.rating, 'big') : null,
-          el('p', { class: 'v-lead', text: `${rv.rating ? `${decimal(rv.rating)} em 5, ` : ''}${rv.count} ${rv.count === 1 ? 'crítica' : 'críticas'}. Mostramos as mais recentes, tal como foram escritas.` }),
+          el('p', { class: 'v-lead', text: `${rv.rating ? `${decimal(rv.rating)} em 5, em ` : ''}${rv.count} ${rv.count === 1 ? 'crítica' : 'críticas'}. Aqui ficam algumas das mais recentes, sem edição.` }),
           el('div', { class: 'v-btns' }, [
-            safeUrl(rv.reviewsUrl) ? btn3('Ver no Google', rv.reviewsUrl, 'k', '↗', ext) : null,
+            safeUrl(rv.reviewsUrl) ? btn3('Ler todas no Google', rv.reviewsUrl, 'k', '↗', ext) : null,
             safeUrl(rv.writeReviewUrl) ? btn3('Deixar uma crítica', rv.writeReviewUrl, 'o', null, ext) : null,
           ]),
           el('p', { class: 'mono muted', text: rv.demo ? 'Exemplo · os textos reais vêm do Google Maps' : 'Fonte: Google Maps' }),
@@ -538,7 +538,7 @@
       vHead('Vem\nconhecer.', p.bio || 'Um estúdio pequeno, com tempo para cada desenho. Material descartável e esterilizado, sempre.', null, 'studio-title'),
       el('div', { class: 'v-sgrid' }, [
         tile('bandeira', 'Bandeira do estúdio com o olho e o nome ink compatível', 's-flag'),
-        estudio('carrinho-autocolantes', 'Carrinho vermelho de trabalho, coberto de autocolantes', 's-cart', 'O carrinho'),
+        estudio('carrinho-autocolantes', 'Carrinho vermelho de trabalho, coberto de autocolantes', 's-cart', 'A banca'),
         el('div', { class: 'v-info' }, [
           el('div', {}, [
             mono(`${p.name || 'Ink Compatível'} · Gaia`),
@@ -559,7 +559,7 @@
         tile('trofeus', 'Troféus de convenções de tatuagem', 's-trophy', 'Prémios', '40% 50%'),
         el('div', { class: 'v-tile s-note' }, [
           el('span', { class: 'hand', text: 'antes de vir →' }),
-          el('span', { text: p.depositInfo ? `18+, dorme bem, come antes. ${p.depositInfo}` : '18+, dorme bem, come antes. O sinal desconta no preço.' }),
+          el('span', { text: p.depositInfo ? `18+, traz documento, dorme bem e come antes. ${p.depositInfo}` : '18+, traz documento, dorme bem e come antes. O sinal desconta no preço final.' }),
         ]),
       ]),
     ]));
@@ -618,7 +618,7 @@
         ]),
         '?',
       ]),
-      el('p', { class: 'v-cta-text', text: 'Conta-nos o que imaginas. Respondemos em 48 h com preço e datas.' }),
+      el('p', { class: 'v-cta-text', text: 'Conta-nos o que imaginas. O resto desenhamos juntos.' }),
       el('div', { class: 'v-btns center' }, [btn3('Marcar sessão', '/marcar', 'w'), wa ? btn3('WhatsApp', wa, 'o', null, ext) : null]),
       polaroid('vespa-lapis', '', 'a tua ideia', 'cta-a'),
       polaroid('tatuagem-081', '', 'na tua pele', 'cta-b'),
@@ -779,7 +779,7 @@
         el(qTag, { class: 'quiz-q', tabindex: '-1', 'data-quiz-focus': '', text: `És ${best.pct}% compatível com ${a.displayName}` }),
         el('ul', { class: 'quiz-match' }, [
           ...best.yes.map((t) => el('li', { class: 'yes' }, [el('span', { 'aria-hidden': 'true', text: '✓' }), `Combina: ${t}`])),
-          ...best.talk.map((t) => el('li', { class: 'talk' }, [el('span', { 'aria-hidden': 'true', text: '…' }), `A conversar: ${t}`])),
+          ...best.talk.map((t) => el('li', { class: 'talk' }, [el('span', { 'aria-hidden': 'true', text: '…' }), `A combinar: ${t}`])),
           zone.zone ? el('li', {}, [el('span', { 'aria-hidden': 'true', text: '·' }), `Zona: ${zone.zone.toLowerCase()}`]) : null,
         ]),
         also ? el('p', { class: 'small' }, ['Também combina contigo: ', el('a', { href: artistHref(also.a), text: `${also.a.displayName} (${also.pct}%)` }), '.']) : null,
@@ -814,7 +814,7 @@
         el('div', {}, [
           kicker('Teste de compatibilidade · 1 minuto', 'light'),
           el(titleTag, { class: 'disp v-h2', id: 'quiz-title' }, ['Com quem', el('br'), 'és ', el('span', { class: 'red', text: 'compatível?' })]),
-          el('p', { class: 'v-lead', text: 'Quatro perguntas sobre traço, cor, tamanho e zona. No fim dizemos-te qual dos artistas combina contigo, e a marcação abre já preenchida.' }),
+          el('p', { class: 'v-lead', text: 'Quatro perguntas: traço, cor, tamanho e zona. No fim dizemos-te que artista combina contigo e a marcação abre já preenchida.' }),
           el('button', { type: 'button', class: 'v-btn w', onclick: () => { qcard.scrollIntoView({ block: 'center', behavior: 'smooth' }); qcard.querySelector('.v-opt')?.focus({ preventScroll: true }); } }, ['Começar o teste', el('i', { 'aria-hidden': 'true', text: '→' })]),
         ]),
         el('div', { class: 'v-qstage' }, [qcard, rcard]),
@@ -832,7 +832,7 @@
             el('figcaption', { class: 'mono muted', text: [p.title, p.style].filter(Boolean).join(' · ') }),
           ])
         ))
-      : el('p', { class: 'empty', text: 'Ainda não há trabalhos publicados aqui.' });
+      : el('p', { class: 'empty', text: 'Os trabalhos estão a caminho. Entretanto, espreita o Instagram.' });
 
   const flashCard = (p) => {
     const specs = [p.flashSize, p.flashSessions ? `${p.flashSessions} ${p.flashSessions === 1 ? 'sessão' : 'sessões'}` : '', p.priceFrom ? `desde ${eur(p.priceFrom)}` : '']
@@ -868,7 +868,7 @@
       if (host.includes('printful')) return 'Printful';
       return host;
     } catch {
-      return 'Loja externa';
+      return 'site da loja';
     }
   };
 
@@ -906,9 +906,9 @@
   const steps = () =>
     el('ol', { class: 'steps' }, [
       ['01', 'Conta a ideia', 'Zona, tamanho, referências. Respondemos em 48 h com preço e datas.'],
-      ['02', 'Afinamos o esboço', 'O desenho é feito para ti. Só marcamos quando estiver certo.'],
+      ['02', 'Afinamos o esboço', 'O desenho é feito para ti. Vês a versão final antes da sessão e mudamos o que for preciso.'],
       ['03', 'Sessão', 'Material descartável, espaço esterilizado, tempo sem pressa.'],
-      ['04', 'Cuidados', 'Levas as instruções por escrito e falamos contigo na primeira semana.'],
+      ['04', 'Cuidados', 'Levas as instruções por escrito e falamos contigo ao fim da primeira e da segunda semana para ver como está a sarar.'],
     ].map(([n, t, d]) => el('li', {}, [mono(n, 'muted'), el('span', { class: 'disp', text: t }), el('span', { class: 'muted', text: d })])));
 
   const notice = (text, error = false) => el('div', { class: `notice${error ? ' error' : ''}`, role: error ? 'alert' : 'status' }, el('p', { text }));
@@ -965,7 +965,8 @@
         el('ul', { style: 'margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px' }, [
           'Só tatuamos maiores de 18 anos, com documento de identificação.',
           'Dorme bem, come antes da sessão e evita álcool nas 24 h anteriores.',
-          p.depositInfo || 'A data fica marcada com um sinal, que desconta no preço final.',
+          p.depositInfo || 'A data fica marcada com um sinal (normalmente 20% do orçamento), que desconta no preço final e não é reembolsável.',
+          'Traz roupa que deixe a zona à vista e algo para comer.',
         ].map((t) => el('li', { text: t }))),
       ]),
     ]));
@@ -980,7 +981,7 @@
   pages.artists = () => [
     el('section', { class: 'section' }, el('div', { class: 'wrap' }, [
       sectionHead('Os artistas', 'Escolhe pelo traço. Cada um tem o seu portfólio, o seu flash e a sua agenda.', null, 'h1'),
-      data.artists.length ? el('div', { class: 'scroller' }, data.artists.map(artistCard)) : el('p', { class: 'empty', text: 'Em breve.' }),
+      data.artists.length ? el('div', { class: 'scroller' }, data.artists.map(artistCard)) : el('p', { class: 'empty', text: 'Estamos a preparar a apresentação da equipa. Entretanto, vê o nosso Instagram.' }),
     ])),
   ];
 
@@ -1114,10 +1115,10 @@
     const cta = el('section', { class: 'v-cta v-grid', 'aria-labelledby': 'cta-title' }, [
       el('p', { class: 'hand v-cta-hand', 'aria-hidden': 'true', text: 'gostas do traço?' }),
       el('h2', { class: 'disp', id: 'cta-title' }, ['Marca com', el('br'), `${a.displayName}.`]),
-      el('p', { class: 'v-cta-text', text: 'Conta a ideia, a zona e o tamanho. Respondemos em 48 h com preço e datas.' }),
+      el('p', { class: 'v-cta-text', text: `Conta a ideia, a zona e o tamanho. ${a.displayName} responde com preço e datas.` }),
       el('div', { class: 'v-btns center' }, [
         bookable ? btn3('Marcar sessão', book, 'w') : null,
-        btn3('Não sei se é o meu traço: fazer o teste', '/teste', 'o', null),
+        btn3('Faz o teste primeiro', '/teste', 'o', null),
       ]),
     ]);
 
@@ -1141,7 +1142,7 @@
         (cat === 'all' ? !isFlash(p) || p.available !== false : p.category === cat && (!isFlash(p) || p.available !== false)) &&
         (artist === 'all' || p.artistId === artist));
       box.replaceChildren(cat === 'flash'
-        ? (items.length ? el('div', { class: 'grid two-up', style: '--min:240px' }, items.map(flashCard)) : el('p', { class: 'empty', text: 'Sem flash disponível.' }))
+        ? (items.length ? el('div', { class: 'grid two-up', style: '--min:240px' }, items.map(flashCard)) : el('p', { class: 'empty', text: 'Todo o flash já foi tatuado. Há mais a caminho: segue-nos no Instagram.' }))
         : workGrid(items));
     };
     const chipRow = (label, opts, get, set) =>
@@ -1229,14 +1230,14 @@
       let shown = sort === 'livres' ? pieces.filter(sellable) : [...pieces];
       if (sort === 'preco') shown.sort((a, b) => a.price - b.price);
       else shown.sort((a, b) => Number(!sellable(a)) - Number(!sellable(b))); // sold at the end
-      grid.replaceChildren(...(shown.length ? shown.map(piece) : [el('p', { class: 'empty', text: 'Nada por aqui de momento. Volta em breve.' })]));
+      grid.replaceChildren(...(shown.length ? shown.map(piece) : [el('p', { class: 'empty', text: 'Esta prateleira está vazia por agora. Segue-nos no Instagram para saberes quando há peças novas.' })]));
       listing.hidden = kind === 'merch' || !pieces.length;
       const merch = data.shop.filter((i) => i.kind === 'merch');
       // With only one or two products, a card to the whole store keeps the row from looking empty.
       const storeCard = merchUrl && merch.length < 3
         ? el('a', { class: 'v-merch more', href: merchUrl, ...ext }, [
             el('span', { class: 'mono', text: 'Loja online' }),
-            el('span', { class: 'disp big' }, ['Ver tudo na', el('br'), `${merchStoreName(merchUrl)} ↗`]),
+            el('span', { class: 'disp big' }, ['Ver tudo no', el('br'), `${merchStoreName(merchUrl)} ↗`]),
             el('span', { class: 'mono', text: 'T-shirts, autocolantes e mais' }),
           ])
         : null;
@@ -1290,8 +1291,8 @@
     listing.append(el('div', { class: 'wrap' }, [vHead('Originais e\nedições.', null, sortRow, 'pecas-title'), grid]));
     merchSec.append(el('div', { class: 'wrap' }, [
       el('div', { class: 'v-ahead' }, [
-        el('div', {}, [kicker(merchUrl ? `Feito e enviado pela ${merchStoreName(merchUrl)}` : 'Feito e enviado pela loja online'), el('h2', { class: 'disp v-h2', id: 'merch-title', text: 'Merch.' })]),
-        merchUrl ? btn3(`Ver tudo na ${merchStoreName(merchUrl)}`, merchUrl, 'o', '↗', ext) : null,
+        el('div', {}, [kicker(merchUrl ? `Feito e enviado pelo ${merchStoreName(merchUrl)}` : 'Feito e enviado pela loja online'), el('h2', { class: 'disp v-h2', id: 'merch-title', text: 'Merch.' })]),
+        merchUrl ? btn3(`Ver tudo no ${merchStoreName(merchUrl)}`, merchUrl, 'o', '↗', ext) : null,
       ]),
       merchBox,
     ]));
@@ -1303,7 +1304,7 @@
           el('div', {}, [
             kicker('Arte dos nossos artistas', 'light'),
             el('h1', { class: 'disp', id: 'shop-title', text: 'Loja' }),
-            el('p', { class: 'lead', text: 'Originais únicos, edições numeradas que só existem aqui e merch com o olho da casa.' }),
+            el('p', { class: 'lead', text: 'Desenhos e pinturas originais, edições numeradas que só existem aqui e merch com o olho da casa.' }),
           ]),
           el('div', { class: 'feat', 'aria-hidden': 'true' }, pols),
         ]),
@@ -1313,9 +1314,9 @@
       listing,
       merchSec,
       el('section', { class: 'v-sec' }, el('div', { class: 'wrap' }, el('div', { class: 'v-shopinfo' }, [
-        ['Pagamento', 'Originais e edições pagam-se aqui, num só checkout seguro pelo Stripe.'],
+        ['Pagamento', 'Originais e edições pagam-se aqui, num só pagamento seguro com o Stripe.'],
         ['Envio', 'Enviados do estúdio, bem embalados. Os portes aparecem antes de pagares.'],
-        ['Merch', 'Vendido e enviado pela loja online. Pagas lá, com a conta deles.'],
+        ['Merch', 'Vendido e enviado pela loja online. Pagas lá, com as regras dela.'],
       ].map(([t, d]) => el('div', {}, [mono(t), el('p', { text: d })])).concat(
         el('div', {}, [mono('Devoluções'), el('p', {}, el('a', { href: '/envios', text: 'Ler a política de envios e devoluções' }))])
       )))),
@@ -1394,7 +1395,7 @@
         : null,
       specs.length ? el('dl', { class: 'v-specs' }, specs.map(([k, t]) => el('div', {}, [el('dt', { class: 'mono', text: k }), el('dd', { text: t })]))) : null,
       item.kind === 'merch'
-        ? (ext ? btn3(`Comprar na ${merchStoreName(ext)}`, ext, 'k', '↗', { ...ext3, class: 'v-btn k add' }) : null)
+        ? (ext ? btn3(`Comprar no ${merchStoreName(ext)}`, ext, 'k', '↗', { ...ext3, class: 'v-btn k add' }) : null)
         : el('div', {}, [
             el('div', { class: 'buy' }, [qtyBox, addBtn]),
             canBuy ? mono('Ao finalizar fica reservado 30 min para ti · Pagamento seguro pelo Stripe', 'note') : null,
@@ -1413,7 +1414,7 @@
               el('a', { href: '/envios', text: 'Ler a política' }),
             ])]),
             el('details', {}, [el('summary', { text: 'Cuidados' }), el('p', { text: 'Guarda longe do sol direto e da humidade. Para emoldurar, um vidro com proteção UV ajuda a manter as cores.' })]),
-            el('details', {}, [el('summary', { text: 'Pagamento' }), el('p', { text: 'Pagas aqui no site, num checkout seguro do Stripe. Os meios de pagamento disponíveis aparecem lá.' })]),
+            el('details', {}, [el('summary', { text: 'Pagamento' }), el('p', { text: 'Pagas aqui no site, num pagamento seguro do Stripe. Os meios disponíveis aparecem lá.' })]),
           ])
         : null,
     ]);
@@ -1441,10 +1442,49 @@
     ];
   };
 
+  // Reviewed copy, 10 Nov 2026 (textos-site.csv N10–N1I). The language question only shows in English.
+  const FAQ = [
+    ['Quanto custa uma tatuagem?', 'Depende do tamanho, da zona, do detalhe e do artista. Dizemos-te o preço certo depois de vermos a ideia, sempre antes de pagares o que quer que seja.'],
+    ['Como funciona o sinal?', 'Para guardar a data pagas um sinal, normalmente 20% do orçamento, por um link seguro. Desconta no preço final e não é reembolsável. Se precisares de mudar a data, avisa com pelo menos 48 h de antecedência e o sinal passa para o novo dia.'],
+    ['Dói?', 'Dói, sim. Na maior parte das zonas menos do que imaginas; nas costelas, mãos e pés um pouco mais. Paramos sempre que precisares.'],
+    ['É a minha primeira. O que devo saber?', 'Escolhe uma zona onde a queiras ver daqui a dez anos, come antes e vem com tempo. Explicamos tudo antes de começar e aqui não há perguntas parvas.'],
+    ['Posso trazer uma imagem do Pinterest?', 'Como referência, sim. Não copiamos tatuagens nem desenhos de outros artistas: usamos a imagem para perceber o que gostas e desenhamos uma versão tua.'],
+    ['Fazem cover-ups?', 'Fazemos, depois de vermos a tatuagem antiga. Manda uma foto com boa luz no pedido. Nem tudo se tapa bem, e se for o caso dizemos-te com franqueza.'],
+    ['Com que idade posso tatuar-me?', 'A partir dos 18 anos, com documento de identificação. Mesmo com autorização dos pais, não tatuamos menores.'],
+    ['Posso aparecer sem marcação?', 'Trabalhamos sempre com marcação, para cada artista ter tempo para o teu desenho. Para saber se há vaga em breve, manda-nos WhatsApp.'],
+    I.en ? ['Falam inglês?', 'Sim, e francês também. Escreve-nos em inglês ou francês pelo pedido de marcação ou pelo WhatsApp.'] : null,
+  ].filter(Boolean);
+
+  // The method is still to be confirmed by Miguel (wrap, hours, cream): N32 and N34 stay general until then.
+  const AFTERCARE = [
+    'Tira o penso quando o teu artista te disser.',
+    'Lava com água morna e sabão neutro, 2 a 3 vezes por dia, com as mãos limpas. Seca com papel, sem esfregar.',
+    'Aplica uma camada fina do creme que o teu artista te recomendar. Pouco é melhor do que muito.',
+    'Não coces nem arranques as crostas. A comichão é normal e passa.',
+    'Durante 3 semanas: nada de praia, piscina, sauna nem sol direto na tatuagem.',
+    'Depois de sarada, protetor solar alto mantém o preto e o vermelho vivos durante anos.',
+    'Vermelhidão que aumenta, calor ou febre? Fala connosco e procura um médico.',
+  ];
+
+  const faqSection = () =>
+    el('section', { class: 'section rule', id: 'faq', 'aria-labelledby': 'faq-title' }, el('div', { class: 'wrap', style: 'max-width:820px' }, [
+      el('h2', { class: 'disp h2', id: 'faq-title', style: 'margin-bottom:32px', text: 'Perguntas frequentes' }),
+      el('div', { class: 'v-acc' }, FAQ.map(([q, a]) => el('details', {}, [el('summary', { text: q }), el('p', { text: a })]))),
+    ]));
+
+  const aftercareSection = () =>
+    el('section', { class: 'section rule', id: 'cuidados', 'aria-labelledby': 'aftercare-title' }, el('div', { class: 'wrap', style: 'max-width:820px' }, [
+      el('h2', { class: 'disp h2', id: 'aftercare-title', text: 'Cuidados depois da sessão' }),
+      el('p', { class: 'muted', style: 'margin:16px 0 32px', text: 'Uma tatuagem sara em 2 a 4 semanas. O que fazes nesse tempo conta tanto como a sessão.' }),
+      el('ol', { class: 'steps care' }, AFTERCARE.map((t, i) => el('li', {}, [mono(String(i + 1).padStart(2, '0'), 'muted'), el('span', { text: t })]))),
+    ]));
+
   pages.studio = () => [
     studioSection({ full: true }),
     studioGallery(),
     el('section', { class: 'section rule' }, el('div', { class: 'wrap' }, [el('h2', { class: 'disp h2', style: 'margin-bottom:40px', text: 'Como funciona' }), steps()])),
+    faqSection(),
+    aftercareSection(),
   ];
 
   pages.thanks = () => {
@@ -1453,7 +1493,7 @@
       el('section', { class: 'section' }, el('div', { class: 'wrap stack prose' }, [
         mono('Pagamento recebido', 'muted'),
         el('h1', { class: 'disp h2', text: 'Obrigado!' }),
-        el('p', { text: 'A tua encomenda está confirmada. Recebes o recibo do Stripe por email e avisamos-te quando sair do estúdio.' }),
+        el('p', { text: 'A tua encomenda está confirmada. Recebes o recibo por email e, quando a encomenda sair do estúdio, mandamos-te o número de seguimento.' }),
         el('div', { class: 'hero-actions' }, [el('a', { class: 'btn-out', href: '/loja', text: 'Voltar à loja' }), el('a', { class: 'btn', href: '/marcar', text: 'Marcar sessão' })]),
       ])),
     ];
@@ -1468,7 +1508,7 @@
       el('h2', { text: 'Pedidos de marcação' }),
       el('p', { text: 'Guardamos o nome, telemóvel, email, Instagram (se o deres) e o que escreves sobre a tatuagem, para te responder com preço e datas. Guardamos também a data em que confirmaste ter 18 anos ou mais e em que aceitaste esta política.' }),
       el('h2', { text: 'Mensagens depois da sessão' }),
-      el('p', { text: 'Depois de uma sessão mandamos-te uma mensagem ao fim de uma semana e outra ao fim de duas, para saber como está a cicatrizar. Só voltamos a falar contigo mais tarde (por exemplo, com flashes novos) se marcaste essa opção no pedido ou no estúdio. Para deixar de receber, basta responder “parar”.' }),
+      el('p', { text: 'Depois de uma sessão mandamos-te uma mensagem ao fim de uma semana e outra ao fim de duas, para saber como está a cicatrizar. Só voltamos a falar contigo mais tarde (por exemplo, com flashes novos) se marcaste essa opção no pedido ou no estúdio. Para deixar de receber, basta responder «parar».' }),
       el('h2', { text: 'Compras na loja' }),
       el('p', { text: 'Para enviar a encomenda guardamos o nome, morada, email e telemóvel. O pagamento é feito no Stripe: nunca vemos nem guardamos os dados do cartão. O merch é vendido pela loja externa, com a política dela.' }),
       el('h2', { text: 'Onde ficam os dados' }),
@@ -1493,7 +1533,8 @@
   ]))];
 
   pages.notFound = () => [el('section', { class: 'section' }, el('div', { class: 'wrap stack' }, [
-    el('h1', { class: 'disp h2', text: 'Não encontrámos esta página' }),
+    el('h1', { class: 'disp h2', text: 'Esta página ficou no papel.' }),
+    el('p', { class: 'muted', text: 'Não encontrámos o que procuravas.' }),
     el('p', {}, el('a', { class: 'lnk', href: '/', text: 'Voltar ao início' })),
   ]))];
 
@@ -1616,7 +1657,7 @@
           el('fieldset', {}, [
             el('legend', {}, el('h2', { class: 'v-q', text: 'O que procuras?' })),
             el('div', { class: 'v-kinds', onchange: (e) => { if (e.target.name === 'tattooType') flashBox.hidden = e.target.value !== 'Flash'; } }, [
-              ['Desenho novo', 'Feito para ti'], ['Flash', 'Diz-nos o nº'], ['Cover-up', 'Tapar uma antiga'], ['Retoque', 'Feita cá'],
+              ['Desenho novo', 'Feito para ti'], ['Flash', 'Diz-nos o nº'], ['Cover-up', 'Tapar uma antiga'], ['Retoque', 'De uma tatuagem feita cá'],
             ].map(([t, n]) => el('label', { class: 'v-kind' }, [
               el('input', { type: 'radio', name: 'tattooType', value: t, checked: (v.tattooType || 'Desenho novo') === t || null }),
               el('b', { text: t }), el('small', { class: 'mono', text: n }),
@@ -1648,7 +1689,7 @@
             el('legend', { text: 'Estilo' }),
             el('div', { class: 'options' }, ['Sketch', 'Black & grey', 'Black & red', 'Aguarela', 'Não sei'].map((s) => option('style', s, s, null, (v.style || 'Não sei') === s))),
           ]),
-          field('referenceUrl', 'Links para referências (opcional)', el('textarea', { id: 'referenceUrl', name: 'referenceUrl', rows: '3', maxlength: '2600', inputmode: 'url', autocapitalize: 'off', spellcheck: 'false', placeholder: 'https://instagram.com/p/…\nhttps://pinterest.com/pin/…' }, v.referenceUrl || ''), 'Um por linha, até 5 (Instagram, Pinterest, Google Drive…). Também podes mandar fotos pelo WhatsApp depois de enviar o pedido.'),
+          field('referenceUrl', 'Links para referências (opcional)', el('textarea', { id: 'referenceUrl', name: 'referenceUrl', rows: '3', maxlength: '2600', inputmode: 'url', autocapitalize: 'off', spellcheck: 'false', placeholder: 'https://instagram.com/p/…\nhttps://pinterest.com/pin/…' }, v.referenceUrl || ''), 'Um por linha, até 5 (Instagram, Pinterest, Google Drive…). São ponto de partida: não copiamos, desenhamos a partir delas. Também podes mandar fotos pelo WhatsApp depois de enviar o pedido.'),
           el('label', { class: 'check' }, [el('input', { type: 'checkbox', name: 'firstTattoo', checked: v.firstTattoo || null }), 'É a minha primeira tatuagem']),
           actions({ form }, 'Continuar'),
         );
@@ -1688,7 +1729,7 @@
               el('span', {}, ['Aceito que a Ink Compatível guarde estes dados para responder ao pedido. ', el('a', { href: '/privacidade', target: '_blank', text: 'Política de privacidade' })])]),
             el('p', { class: 'err', id: 'privacy-err', hidden: true }),
             el('label', { class: 'check' }, [el('input', { type: 'checkbox', name: 'news', id: 'news', checked: v.news || null }),
-              'Podem voltar a falar comigo daqui a uns meses (flashes novos, datas livres). Opcional: basta responder “parar” para deixar de receber.']),
+              'Podem voltar a falar comigo daqui a uns meses, com flash novo ou datas livres. Para deixar de receber, basta responder «parar».']),
           ]),
           status,
           actions({ form }, 'Enviar pedido'),
@@ -1743,7 +1784,7 @@
           el('ol', { class: 'steps', style: 'margin-top:16px' }, [
             'Recebes o preço e as datas livres por WhatsApp.',
             'Pagas o sinal por um link seguro e a data fica tua.',
-            'Antes da sessão vês o esboço final.',
+            'Antes da sessão aprovas o esboço final.',
           ].map((t, i) => el('li', {}, [mono(`0${i + 1}`, 'muted'), el('span', { text: t })]))),
           el('div', { class: 'v-btns' }, [
             btn3('Ver mais trabalho', '/portfolio', 'k'),
@@ -1755,8 +1796,8 @@
 
     if (p.bookingOpen === false) {
       return [el('section', { class: 'section' }, el('div', { class: 'wrap stack prose' }, [
-        el('h1', { class: 'disp h2', text: 'Agenda fechada' }),
-        el('p', { text: 'De momento não estamos a aceitar novos pedidos pelo site.' }),
+        el('h1', { class: 'disp h2', text: 'Agenda fechada, por agora' }),
+        el('p', { text: 'Neste momento não estamos a aceitar pedidos novos. Segue-nos no Instagram: avisamos lá quando reabrir.' }),
         wa ? el('a', { class: 'btn', href: wa, target: '_blank', rel: 'noopener noreferrer', text: 'Falar no WhatsApp' }) : null,
       ]))];
     }
@@ -1782,8 +1823,8 @@
             el('ol', {}, [
               ['Envias o pedido', 'Não pagas nada. Vai direto para a agenda do artista.'],
               ['Respondemos em 48 h', 'Com preço, datas e perguntas sobre o desenho.'],
-              ['O sinal', p.depositInfo || 'Guarda a data e desconta no preço final.'],
-              ['Afinamos o esboço', 'Vês o desenho final antes da sessão.'],
+              ['O sinal', p.depositInfo || 'Guarda a data e desconta no preço final. Não é reembolsável.'],
+              ['Afinamos o esboço', 'Aprovas o desenho final antes da sessão.'],
             ].map(([t, d], i) => el('li', {}, [el('i', { class: 'disp', 'aria-hidden': 'true', text: String(i + 1) }), el('span', {}, [el('b', { text: t }), el('br'), el('span', { text: d })])]))),
           ]),
           el('div', { class: 'sum' }, [mono('O teu pedido'), summary]),
@@ -1908,7 +1949,7 @@
         cart.set(out.itemId, 0);
         await load().catch(() => {});
       }
-      renderCart((ERRORS[out.error] || (() => 'Não foi possível abrir o pagamento. Tenta outra vez.'))(item?.title));
+      renderCart((ERRORS[out.error] || (() => 'O pagamento não abriu. Tenta outra vez.'))(item?.title));
     } catch (err) {
       console.error(err);
       renderCart('Sem ligação ao pagamento. Verifica a internet e tenta outra vez.');
@@ -1928,7 +1969,7 @@
     artists: 'Os artistas da Ink Compatível, em Vila Nova de Gaia. Cada um com o seu traço, portfólio, flash e agenda.',
     portfolio: 'Tatuagens, flash e desenhos feitos na Ink Compatível, estúdio de tatuagem em Vila Nova de Gaia.',
     shop: 'Originais, edições limitadas numeradas e merch dos artistas da Ink Compatível. Envio para todo o país.',
-    studio: 'O estúdio Ink Compatível em Vila Nova de Gaia: morada, horário, como funciona uma sessão e cuidados.',
+    studio: 'O estúdio Ink Compatível em Vila Nova de Gaia: morada, horário, como funciona uma sessão, perguntas frequentes e cuidados depois da tatuagem.',
     booking: 'Marca uma sessão na Ink Compatível. Conta a ideia, a zona e o tamanho: respondemos em 48 h com preço e datas.',
     quiz: 'Quatro perguntas sobre traço, cor, tamanho e zona para descobrir com qual dos artistas da Ink Compatível combinas.',
     shipping: 'Envios, prazos e devoluções das compras na loja Ink Compatível.',
@@ -2016,13 +2057,13 @@
   };
 
   const routes = [
-    [/^\/?$/, 'home', 'Ink Compatível · Tattoo studio em Vila Nova de Gaia', ''],
+    [/^\/?$/, 'home', 'Ink Compatível · Estúdio de tatuagem em Vila Nova de Gaia', ''],
     [/^\/artistas\/?$/, 'artists', 'Artistas · Ink Compatível', 'artistas'],
     [/^\/artistas\/([^/]+)$/, 'artist', null, 'artistas'],
     [/^\/portfolio\/?$/, 'portfolio', 'Portfólio · Ink Compatível', 'portfolio'],
     [/^\/loja\/?$/, 'shop', 'Loja · Ink Compatível', 'loja'],
     [/^\/loja\/([^/]+)$/, 'product', null, 'loja'],
-    [/^\/estudio\/?$/, 'studio', 'Estúdio · Ink Compatível', 'estudio'],
+    [/^\/estudio\/?$/, 'studio', 'Estúdio, perguntas e cuidados · Ink Compatível', 'estudio'],
     [/^\/marcar\/?$/, 'booking', 'Marcar sessão · Ink Compatível', 'marcar'],
     [/^\/teste\/?$/, 'quiz', 'Teste de compatibilidade · Ink Compatível', ''],
     [/^\/obrigado\/?$/, 'thanks', 'Obrigado · Ink Compatível', 'loja'],
@@ -2047,7 +2088,7 @@
 
     if (!data.ready) return;
     if (data.failed) {
-      main.replaceChildren(el('div', { class: 'wrap loading', role: 'alert', text: I.t('Não foi possível carregar o site. Tenta recarregar a página.') }));
+      main.replaceChildren(el('div', { class: 'wrap loading', role: 'alert', text: I.t('O site não carregou. Recarrega a página e, se continuar, fala connosco pelo WhatsApp.') }));
       return;
     }
     const match = routes.map(([re, name, title, nav]) => ({ m: path.match(re), name, title, nav })).find((r) => r.m) || { name: 'notFound', m: [], nav: '' };

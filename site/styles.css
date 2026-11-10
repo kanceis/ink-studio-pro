@@ -157,6 +157,9 @@ button { font: inherit; color: inherit; }
 .steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 32px; }
 .steps li { display: flex; flex-direction: column; gap: 10px; border-top: var(--traco) solid var(--tinta); padding-top: 20px; }
 .steps .disp { font-size: 30px; font-weight: 800; line-height: 1; }
+.steps.care { grid-template-columns: 1fr; gap: 0; }
+.steps.care li { flex-direction: row; align-items: baseline; gap: 20px; padding: 16px 0; border-top-width: 1px; }
+.steps.care li > span:last-child { font-size: 17px; }
 
 /* Definition lists */
 .facts { margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 10px 24px; }
