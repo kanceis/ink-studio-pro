@@ -2269,7 +2269,7 @@
     if (key === lastKey && data.ready) { if (anchor) document.getElementById(anchor)?.scrollIntoView(); return; }
     const main = $('#main');
     $('#main-nav').classList.remove('open');
-    $('.menu-btn').setAttribute('aria-expanded', 'false');
+    menuButton(false);
 
     if (!data.ready) return;
     if (data.failed) {
@@ -2339,6 +2339,12 @@
     go(url.pathname + url.search + url.hash);
   };
 
+  // The phone menu button reads "Menu" or "Fechar".
+  const menuButton = (open) => {
+    $('.menu-btn').setAttribute('aria-expanded', String(open));
+    $('[data-menu-label]').textContent = I.t(open ? 'Fechar' : 'Menu');
+  };
+
   // On the home page the header sits transparent over the red hero until the page scrolls.
   const onScroll = () => {
     const header = $('.site-header');
@@ -2353,7 +2359,7 @@
     // Phone menu: the button toggles it; Escape, a tap outside the header or growing to desktop width close it.
     const setMenu = (open, restoreFocus) => {
       $('#main-nav').classList.toggle('open', open);
-      $('.menu-btn').setAttribute('aria-expanded', String(open));
+      menuButton(open);
       if (restoreFocus) $('.menu-btn').focus();
       onScroll();
     };
