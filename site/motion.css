@@ -19,7 +19,9 @@ html.mo [data-r] { opacity: 0; translate: 0 32px; filter: blur(6px); transition:
 html.mo [data-r].in { opacity: 1; translate: 0 0; filter: none; }
 
 /* 2 · títulos h2 linha a linha, por baixo de uma máscara */
-.ln { display: block; overflow: hidden; padding: .08em 0 .04em; margin: -.08em 0 -.04em; }
+/* Room above each line for accents on capitals (Ê, Ã, Í) and below for the cedilla (Ç); the negative
+   margins keep the line spacing as it was. */
+.ln { display: block; overflow: hidden; padding: .3em 0 .14em; margin: -.3em 0 -.14em; }
 .ln > span { display: block; }
 html.mo [data-lines] .ln > span { translate: 0 105%; transition: translate .9s var(--ease-ink); transition-delay: calc(var(--l, 0) * 90ms); }
 html.mo [data-lines].in .ln > span { translate: 0 0; }
@@ -119,6 +121,8 @@ html.mo .rot svg.draw path { animation: ink-draw .6s var(--ease-ink) .12s both; 
 .footer-wordmark.wm span { display: inline-block; transition: translate .5s var(--ease-ink), color .3s ease; transition-delay: calc(var(--i, 0) * 25ms); }
 html.mo .footer-wordmark.wm:not(.in) span { translate: 0 100%; }
 .footer-wordmark.wm.live span { transition-delay: 0s; }
+/* After the letters have risen, nothing clips them: letters lifted by the mouse stay whole. */
+.footer-wordmark.wm.live { clip-path: none; }
 
 /* 14 · hover nas fotos: 1,05 em 0,7 s */
 .v-tile img, .v-acard .ph, .v-prod .img img, .v-igrow img { transition: transform .7s var(--ease-ink); }
