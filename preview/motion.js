@@ -71,30 +71,33 @@
       $('.v-apill', hero).forEach((a, i) => a.style.setProperty('--i', i));
       $('.v-doodle path', hero).forEach((p) => p.setAttribute('pathLength', '1'));
       fontsReady.then(() => setTimeout(() => requestAnimationFrame(() => hero.classList.add('go')), 120));
-      const pic = hero.querySelector('.v-inpic');
-      if (pic) {
-        const srcs = [['painel', '40% 45%'], ['caveira-sketch', '50% 40%'], ['tatuagem-081', '50% 45%'], ['vespa-lapis', '50% 50%'], ['vespa-aguarela', '50% 50%'], ['ig-caveira-flores', '50% 40%']];
-        const first = pic.querySelector('img');
+      // Polaroids: drawing → skin, the photos keep changing (the right one starts 500 ms later).
+      $('.v-pcyc[data-imgs]', hero).forEach((pc) => {
+        const first = pc.querySelector('img');
         if (first) first.classList.add('on');
-        srcs.slice(1).forEach(([name, pos]) => {
+        pc.dataset.imgs.split('!').forEach((x) => {
+          const [name, pos] = x.split('|');
           const im = new Image();
           im.alt = '';
           im.decoding = 'async';
+          im.loading = 'lazy';
           im.src = `assets/v3/${name}-800.webp`;
-          im.style.objectPosition = pos;
-          pic.append(im);
+          if (pos) im.style.objectPosition = pos;
+          pc.append(im);
         });
-        if (!RM) {
-          let k = 0;
+        if (RM) return;
+        let k = 0;
+        setTimeout(() => {
           const t = setInterval(() => {
-            if (!pic.isConnected) return clearInterval(t);
-            const im = pic.children;
+            if (!pc.isConnected) return clearInterval(t);
+            if (document.hidden) return;
+            const im = pc.children;
             im[k].classList.remove('on');
             k = (k + 1) % im.length;
             im[k].classList.add('on');
-          }, 1800);
-        }
-      }
+          }, 2400);
+        }, +(pc.dataset.delay || 0));
+      });
     });
 
     // 8 · números que contam (4,8 · 38 · 48 h · 3 …)
