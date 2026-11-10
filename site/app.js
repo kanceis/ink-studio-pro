@@ -219,7 +219,17 @@
   const ext = { target: '_blank', rel: 'noopener noreferrer' };
   const kicker = (text, cls = '') => el('div', { class: `v-kicker mono ${cls}`.trim() }, [el('b', { 'aria-hidden': 'true' }), text]);
   const initials = (name) => String(name || '?').split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase();
-  const styleTags = (a) => String(a.styles || '').split(/[·,/|]/).map((s) => s.trim()).filter(Boolean);
+  // Style names as typed in the app, written one way ("FINELINE" → "Linha fina") and translated under /en/.
+  const STYLE_ALIASES = { fineline: 'Linha fina', 'fine line': 'Linha fina', 'linha fina': 'Linha fina', aguarela: 'Aguarela', watercolor: 'Aguarela', watercolour: 'Aguarela', realismo: 'Realismo', retrato: 'Retrato', 'black & grey': 'Black & grey', 'black and grey': 'Black & grey', 'black & red': 'Black & red', 'black and red': 'Black & red', 'cover-up': 'Cover-up', 'cover up': 'Cover-up' };
+  const styleName = (s) => {
+    const k = String(s).trim().toLowerCase().replace(/\s+/g, ' ');
+    return I.t(STYLE_ALIASES[k] || k.charAt(0).toUpperCase() + k.slice(1));
+  };
+  const styleTags = (a) => [...new Set(String(a.styles || '').split(/[·,/|]/).map((s) => s.trim()).filter(Boolean).map(styleName))];
+  const stylesText = (a) => styleTags(a).join(' · ');
+  // "Miguel Alves · fundador": the name stays, the role after "·" is translated.
+  const fullNameText = (a) => String(a.fullName || '').split(/\s+·\s+/).map((x, i) => (i ? I.t(x) : x)).join(' · ');
+  const flashNo = (n) => `${I.en ? 'No.' : 'Nº'} ${n}`;
   const artistHref = (a) => `/artistas/${encodeURIComponent(a.id)}`;
   const polaroid = (name, alt, cap, cls, pos) => el('figure', { class: `v-polaroid ${cls}` }, [v3img(name, alt, { pos }), el('figcaption', { class: 'hand', text: cap })]);
   // A polaroid whose photo keeps changing (motion.js adds the rest of `more` and cycles them).
@@ -254,7 +264,7 @@
     });
     const pill = (a, i) => el('a', { class: `v-float v-apill ap-${i}`, href: artistHref(a) }, [
       el('span', { class: 'av' }, safeUrl(a.photo?.url) ? el('img', { src: a.photo.url, alt: '' }) : initials(a.displayName)),
-      el('span', {}, [el('b', { text: a.displayName }), a.styles ? el('small', { text: a.styles }) : null]),
+      el('span', {}, [el('b', { text: a.displayName }), a.styles ? el('small', { text: stylesText(a) }) : null]),
     ]);
     return el('section', { class: 'v-hero v-grid', 'aria-labelledby': 'hero-title' }, [
       el('div', { class: 'v-stage' }, [
@@ -279,7 +289,7 @@
   };
 
   const tapes = () => {
-    const styles = [...new Set(data.artists.flatMap(styleTags).map((s) => s.replace(/\b\w/g, (c) => c.toUpperCase())))];
+    const styles = [...new Set(data.artists.flatMap(styleTags))];
     const line = (words) => {
       const span = () => el('span', {}, words.flatMap((w) => [w, el('em', { text: '✶' })]));
       return el('div', { class: 'v-mq' }, [span(), span()]);
@@ -335,21 +345,21 @@
     const nameWords = a.displayName.split(/\s+/);
     const name = el('div', { class: 'name', style: `--len:${Math.max(...nameWords.map((w) => w.length))}` }, nameWords.flatMap((w, j) => (j ? [el('br'), w] : [w])));
     if (hasPhoto) {
-      return el('a', { class: 'v-acard', href: artistHref(a), 'aria-label': `${a.displayName}${a.styles ? `, ${a.styles}` : ''}` }, [
+      return el('a', { class: 'v-acard', href: artistHref(a), 'aria-label': `${a.displayName}${a.styles ? `, ${stylesText(a)}` : ''}` }, [
         el('img', { class: 'ph', src: a.photo.url, alt: '', loading: 'lazy', decoding: 'async' }),
         el('div', { class: 'over' }, [
           el('div', { class: 'tags' }, tags.map((t) => el('span', { text: t }))),
-          el('div', {}, [a.fullName ? mono(a.fullName) : null, name]),
+          el('div', {}, [a.fullName ? mono(fullNameText(a)) : null, name]),
         ]),
         go,
       ]);
     }
-    return el('a', { class: `v-acard typo ${i % 2 ? 'ink' : 'red'}`, href: artistHref(a), 'aria-label': `${a.displayName}${a.styles ? `, ${a.styles}` : ''}` }, [
+    return el('a', { class: `v-acard typo ${i % 2 ? 'ink' : 'red'}`, href: artistHref(a), 'aria-label': `${a.displayName}${a.styles ? `, ${stylesText(a)}` : ''}` }, [
       el('div', { class: 'bgword', 'aria-hidden': 'true', 'data-w': `${words} ${words}` }),
       el('span', { class: 'soon hand', 'aria-hidden': 'true', text: 'retrato em breve' }),
       el('div', { class: 'over' }, [
         el('div', { class: 'tags' }, tags.map((t) => el('span', { text: t }))),
-        el('div', {}, [a.fullName ? mono(a.fullName) : null, name]),
+        el('div', {}, [a.fullName ? mono(fullNameText(a)) : null, name]),
       ]),
       go,
     ]);
@@ -392,8 +402,9 @@
     const items = work().filter((w) => safeUrl(w.image?.url));
     const groups = new Map();
     items.filter((w) => w.style).forEach((w) => {
-      const k = w.style.trim().toLowerCase();
-      if (!groups.has(k)) groups.set(k, { label: w.style.trim(), items: [] });
+      const label = styleName(w.style);
+      const k = label.toLowerCase();
+      if (!groups.has(k)) groups.set(k, { label, items: [] });
       groups.get(k).items.push(w);
     });
     const styles = [...groups.values()].sort((a, b) => b.items.length - a.items.length).slice(0, 5);
@@ -404,9 +415,9 @@
     const words = ['um', 'dois', 'três', 'quatro', 'cinco'][n - 1];
 
     const grid = el('div', { class: 'v-wgrid' });
-    const tile = (p) => el('button', { type: 'button', class: 'v-wt', 'aria-label': `Ver maior: ${p.title || p.style || 'tatuagem'}`, onclick: () => openViewer(p, workCaption(p)) }, [
+    const tile = (p) => el('button', { type: 'button', class: 'v-wt', 'aria-label': `Ver maior: ${p.title || (p.style && styleName(p.style)) || 'tatuagem'}`, onclick: () => openViewer(p, workCaption(p)) }, [
       el('img', { src: p.image.url, alt: '', loading: 'lazy', decoding: 'async' }),
-      el('span', { class: 'lab mono', text: p.style || artistName(p.artistId) || '' }),
+      el('span', { class: 'lab mono', text: (p.style && styleName(p.style)) || artistName(p.artistId) || '' }),
     ]);
     const bigPiece = (p, label) => el('button', { type: 'button', class: 'v-wbig', 'aria-label': `Ver maior: ${p.title || label}`, onclick: () => openViewer(p, workCaption(p)) }, [
       el('img', { src: p.image.url, alt: '', decoding: 'async' }),
@@ -489,7 +500,7 @@
               el('button', { type: 'button', class: 'img', 'aria-label': `Ver maior: flash ${p.flashNumber || p.title}`, onclick: () => openViewer(p, `Flash nº ${p.flashNumber || ''} · ${artistName(p.artistId)}`) },
                 el('img', { src: p.image?.url, alt: p.title || 'Flash', loading: 'lazy', decoding: 'async' })),
               el('div', { class: 'meta' }, [
-                el('span', {}, [el('span', { class: 'num', text: p.flashNumber ? `Nº ${p.flashNumber}` : p.title }), specs ? mono(specs) : null, price ? el('span', { class: 'mono price', text: price }) : null]),
+                el('span', {}, [el('span', { class: 'num', text: p.flashNumber ? flashNo(p.flashNumber) : p.title }), specs ? mono(specs) : null, price ? el('span', { class: 'mono price', text: price }) : null]),
                 el('a', { class: 'gb', href: `/marcar?${params}`, 'aria-label': `Marcar o flash ${p.flashNumber || p.title}`, text: '↗' }),
               ]),
             ]);
@@ -788,7 +799,7 @@
               el('div', { class: 'quiz-flash-row' }, artistFlash.map((f) =>
                 el('a', { href: `/marcar?${new URLSearchParams({ artista: a.id, tipo: 'flash', ...(f.flashNumber ? { flash: f.flashNumber } : {}) })}`, 'aria-label': `Marcar o flash ${f.flashNumber || f.title}` }, [
                   el('img', { src: f.image?.url, alt: '', loading: 'lazy' }),
-                  f.flashNumber ? mono(`Nº ${f.flashNumber}`) : null,
+                  f.flashNumber ? mono(flashNo(f.flashNumber)) : null,
                 ]))),
             ])
           : null,
@@ -820,14 +831,14 @@
     ]);
   };
 
-  const workCaption = (p) => [artistName(p.artistId), p.style, p.title].filter(Boolean).join(' · ');
+  const workCaption = (p) => [artistName(p.artistId), p.style && styleName(p.style), p.title].filter(Boolean).join(' · ');
 
   const workGrid = (items, { min = '260px' } = {}) =>
     items.length
       ? el('div', { class: 'grid tight two-up', style: `--min:${min}` }, items.map((p) =>
           el('figure', { class: 'stack', style: 'margin:0;gap:8px' }, [
             zoomable(p, 'r11', workCaption(p)),
-            el('figcaption', { class: 'mono muted', text: [p.title, p.style].filter(Boolean).join(' · ') }),
+            el('figcaption', { class: 'mono muted', text: [p.title, p.style && styleName(p.style)].filter(Boolean).join(' · ') }),
           ])
         ))
       : el('p', { class: 'empty', text: 'Os trabalhos estão a caminho. Entretanto, espreita o Instagram.' });
@@ -897,7 +908,7 @@
     el('a', { class: 'card', href: `/artistas/${encodeURIComponent(a.id)}` }, [
       photo(a.photo, `Retrato de ${a.displayName}`, 'r34'),
       el('span', { class: 'disp artist-name', text: a.displayName }),
-      a.styles ? mono(a.styles, 'muted') : null,
+      a.styles ? mono(stylesText(a), 'muted') : null,
       el('span', { class: 'lnk', text: 'Ver trabalho' }),
     ]);
 
@@ -1022,7 +1033,7 @@
     const firstName = String(a.fullName || a.displayName).split(/\s+/)[0];
     const bio = String(a.bio || '').trim();
     const [lead, ...restBio] = bio.split(/\n\s*\n/);
-    const caption = (p) => [p.title, p.style].filter(Boolean).join(' · ');
+    const caption = (p) => [p.title, p.style && styleName(p.style)].filter(Boolean).join(' · ');
 
     // Hero photos: the portrait (or a typographic card) and one piece of work.
     const showcase = tattoos[0] || art[0];
@@ -1035,7 +1046,7 @@
           el('span', { class: 'disp', 'aria-hidden': 'true', text: initials(a.displayName) }),
           el('span', { class: 'hand', 'aria-hidden': 'true', text: 'retrato em breve' }),
         ]);
-    const piece = showcase && safeUrl(showcase.image?.url) ? pol(showcase.image, showcase.title || 'Tatuagem', (showcase.style || 'o trabalho').toLowerCase(), 'ah-p2') : null;
+    const piece = showcase && safeUrl(showcase.image?.url) ? pol(showcase.image, showcase.title || 'Tatuagem', (showcase.style ? styleName(showcase.style) : 'o trabalho').toLowerCase(), 'ah-p2') : null;
 
     const days = String(data.profile.openingHours || '').split(/,\s*/)[0];
     const facts = [
@@ -1051,7 +1062,7 @@
           el('nav', { class: 'mono ah-crumb', 'aria-label': 'Artistas' }, [
             el('a', { href: '/artistas', text: 'Artistas' }),
             el('span', { 'aria-hidden': 'true', text: '/' }),
-            ...data.artists.map((x) => el('a', { href: artistHref(x), 'aria-current': x.id === a.id ? 'page' : null, text: x.id === a.id && a.fullName ? `${x.displayName} · ${a.fullName}` : x.displayName })),
+            ...data.artists.map((x) => el('a', { href: artistHref(x), 'aria-current': x.id === a.id ? 'page' : null, text: x.id === a.id && a.fullName ? `${x.displayName} · ${fullNameText(a)}` : x.displayName })),
           ]),
           el('h1', { class: 'disp ah-name', id: 'artist-title' }, a.displayName.split(/\s+/).flatMap((w, j) => (j ? [el('br'), w] : [w]))),
           styleTags(a).length ? el('ul', { class: 'ah-tags mono', 'aria-label': 'Estilos' }, styleTags(a).map((t) => el('li', { text: t }))) : null,
@@ -1074,7 +1085,7 @@
     // Portfolio tabs
     const tabs = [
       ['tat', 'Tatuagens', tattoos.length, () => masonry(tattoos, caption)],
-      ['flash', 'Flash', fl.length, () => masonry(fl, (p) => [p.flashNumber ? `Nº ${p.flashNumber}` : p.title, p.flashSize].filter(Boolean).join(' · '))],
+      ['flash', 'Flash', fl.length, () => masonry(fl, (p) => [p.flashNumber ? flashNo(p.flashNumber) : p.title, p.flashSize].filter(Boolean).join(' · '))],
       ['arte', 'Desenho e arte', art.length, () => masonry(art, caption)],
       ['orig', 'Originais à venda', originals.length, () => el('div', { class: 'v-pgrid' }, originals.map(prodCard))],
     ].filter((t) => t[2] > 0);
@@ -1563,7 +1574,7 @@
       const rows = [
         ['Artista', artist ? artist.displayName : 'Sugerido por nós'],
         ['Tipo', v.tattooType || 'Desenho novo'],
-        v.tattooType === 'Flash' && v.flashNumber ? ['Flash', `Nº ${v.flashNumber}`] : null,
+        v.tattooType === 'Flash' && v.flashNumber ? ['Flash', flashNo(v.flashNumber)] : null,
         v.style && v.style !== 'Não sei' ? ['Estilo', v.style] : null,
         v.size ? ['Tamanho', v.size] : null,
         v.placement ? ['Zona', v.placement] : null,
@@ -1632,7 +1643,7 @@
             pic ? el('img', { src: a.photo.url, alt: '' }) : null,
             el('span', { class: 'ok', 'aria-hidden': 'true', text: '✓' }),
             el('b', { class: 'disp' }, a.displayName.split(/\s+/).flatMap((w, j) => (j ? [el('br'), w] : [w]))),
-            a.styles ? el('small', { class: 'mono', text: a.styles }) : null,
+            a.styles ? el('small', { class: 'mono', text: stylesText(a) }) : null,
           ]);
         };
         form.append(
@@ -1979,7 +1990,7 @@
     if (name === 'artist') {
       const a = artistById(id);
       const line = I.en ? 'Portfolio, flash and bookings at Ink Compatível, Vila Nova de Gaia.' : 'Portfólio, flash e marcação na Ink Compatível, Vila Nova de Gaia.';
-      if (a) desc = clip(`${a.displayName}${a.styles ? ` · ${a.styles}` : ''}. ${line} ${a.bio || ''}`);
+      if (a) desc = clip(`${a.displayName}${a.styles ? ` · ${stylesText(a)}` : ''}. ${line} ${a.bio || ''}`);
     }
     if (name === 'product') {
       const item = data.shop.find((i) => i.id === id);

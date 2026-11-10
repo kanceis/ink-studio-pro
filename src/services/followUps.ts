@@ -128,15 +128,15 @@ const TEXTS = {
       body: [
         `Olá ${s.name}! Duas semanas depois, a tua tatuagem já deve estar quase sarada.`,
         'Se vires alguma falha na cor ou nas linhas, diz-nos e combinamos um retoque.',
-        s.review ? `Se gostaste da experiência, uma avaliação no Google ajuda-nos muito: ${s.review}` : '',
+        s.review ? `Se gostaste da experiência, uma crítica no Google ajuda-nos muito: ${s.review}` : '',
         s.ig ? `E se a partilhares no Instagram, identifica ${s.ig} 🖤` : `🖤 ${s.studio}`,
       ],
     }),
     m3: (s: Ctx) => ({
-      subject: `Novidades do ${s.studio}`,
+      subject: `Novidades da ${s.studio}`,
       body: [
-        `Olá ${s.name}! Já passaram uns meses desde a tua sessão no ${s.studio}. Como está a tatuagem?`,
-        `Se tens uma ideia nova, ou queres ver os flashes disponíveis, estamos por aqui: ${s.site}/marcar`,
+        `Olá ${s.name}! Já passaram uns meses desde a tua sessão na ${s.studio}. Como está a tatuagem?`,
+        `Se tens uma ideia nova, ou queres ver o flash disponível, estamos por aqui: ${s.site}/marcar`,
         'Se preferires não receber estas mensagens, responde «parar».',
       ],
     }),
