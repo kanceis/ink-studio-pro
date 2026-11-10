@@ -80,6 +80,7 @@ test('a paid voucher-only order creates one code per voucher and needs no shippi
   const { status, body } = await lookup(sid);
   assert.equal(status, 200);
   assert.deepEqual(body.vouchers.map((v: any) => v.code).sort(), [...codes].sort());
+  assert.equal(body.physical, false);
   assert.equal(body.vouchers[0].recipientName, 'Ana Silva');
   assert.equal(body.vouchers[0].amount, 100);
 });
@@ -93,6 +94,7 @@ test('a voucher bought with a print keeps the order to ship and takes the print 
   const order = (await get(`orders/${sid}`))!.fields;
   assert.equal(order.status.stringValue, 'paid');
   assert.equal(order.voucherCodes.arrayValue.values.length, 1);
+  assert.equal((await lookup(sid)).body.physical, true);
 });
 
 test('the lookup refuses anything that is not a Checkout session id', async () => {

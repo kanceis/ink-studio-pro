@@ -1215,7 +1215,7 @@
     el('div', { class: 'bot' }, [
       el('div', {}, [mono('Código'), el('b', { class: 'code mono', translate: 'no', text: code || 'INK-····-····' })]),
       el('div', { class: 'meta' }, [
-        mono(expiresAt ? `Válido até ${longDate(expiresAt)}` : `Válido ${VOUCHER.months} meses`),
+        mono(expiresAt ? `Válido até ${longDate(expiresAt)}` : `Válido por ${VOUCHER.months} meses`),
         mono('inkcompativel.pt'),
       ]),
     ]),
@@ -1317,7 +1317,7 @@
     return el('section', { class: 'v-sec', id: 'vales', 'aria-labelledby': 'vales-title' }, el('div', { class: 'wrap' }, [
       el('div', { class: 'v-ahead' }, [
         el('div', {}, [kicker('Para oferecer'), el('h2', { class: 'disp v-h2', id: 'vales-title' }, ['Vales de', el('br'), 'oferta.'])]),
-        el('p', { class: 'v-lead', text: `Uma tatuagem não se embrulha, mas oferece-se. O vale serve para uma tatuagem, um flash ou uma peça da loja no estúdio, e é válido durante ${VOUCHER.months} meses.` }),
+        el('p', { class: 'v-lead', text: `Uma tatuagem não se embrulha, mas oferece-se. O valor do vale desconta numa tatuagem, num flash ou numa peça da loja, aqui no estúdio, e é válido durante ${VOUCHER.months} meses.` }),
       ]),
       el('div', { class: 'v-valebox' }, [el('div', { class: 'pic' }, card), form]),
     ]));
@@ -1635,15 +1635,16 @@
     const lead = el('p', { text: 'A tua encomenda está confirmada. Recebes o recibo por email e, quando a encomenda sair do estúdio, mandamos-te o número de seguimento.' });
     const vouchers = el('div', { class: 'v-thanksvales', 'aria-live': 'polite' });
     const actions = el('div', { class: 'hero-actions' }, [el('a', { class: 'btn-out', href: '/loja', text: 'Voltar à loja' }), el('a', { class: 'btn', href: '/marcar', text: 'Marcar sessão' })]);
-    const show = (list) => {
+    // physical: the order also has a piece to ship, so the shipping sentence stays above the vouchers.
+    const show = (list, physical = false) => {
       if (!list.length) return;
       const many = list.length > 1;
-      lead.textContent = many
-        ? 'Os vales estão prontos. Imprime-os ou guarda esta página: os códigos também ficam registados no estúdio, com o email da compra.'
-        : 'O vale está pronto. Imprime-o ou guarda esta página: o código também fica registado no estúdio, com o email da compra.';
+      const ready = many ? 'Os vales estão prontos. Imprime-os ou guarda esta página.' : 'O vale está pronto. Imprime-o ou guarda esta página.';
+      if (physical) lead.after(el('p', { text: ready }));
+      else lead.textContent = ready;
       vouchers.replaceChildren(
         ...list.map(voucherCard),
-        el('p', { class: 'muted small', text: 'Para usar, marca a sessão e diz o código. Se o perderes, fala connosco com o email da compra.' }),
+        el('p', { class: 'muted small', text: 'Para usar, diz-nos o código quando marcares a sessão ou passares pelo estúdio. Se o perderes, não faz mal: fica registado no estúdio, junto ao email com que pagaste.' }),
       );
       actions.prepend(el('button', { type: 'button', class: 'btn', onclick: () => window.print(), text: many ? 'Imprimir os vales' : 'Imprimir o vale' }));
     };
@@ -1662,7 +1663,7 @@
         try {
           const res = await fetch(`${APP_API}/api/voucher?session_id=${encodeURIComponent(sid)}`);
           const out = await res.json().catch(() => ({}));
-          if (res.status === 200 && Array.isArray(out.vouchers)) return show(out.vouchers);
+          if (res.status === 200 && Array.isArray(out.vouchers)) return show(out.vouchers, out.physical === true);
           if (res.status !== 202) return;
         } catch { /* try again */ }
         if (++tries < 10) setTimeout(ask, 1500 + tries * 500);
@@ -1694,7 +1695,7 @@
       el('p', { text: 'Depois de uma sessão mandamos-te uma mensagem ao fim de uma semana e outra ao fim de duas, para saber como está a cicatrizar. Só voltamos a falar contigo mais tarde (por exemplo, com flashes novos) se marcaste essa opção no pedido ou no estúdio. Para deixar de receber, basta responder «parar».' }),
       el('h2', { text: 'Compras na loja' }),
       el('p', { text: 'Para enviar a encomenda guardamos o nome, morada, email e telemóvel. O pagamento é feito no Stripe: nunca vemos nem guardamos os dados do cartão. O merch é vendido pela loja externa, com a política dela.' }),
-      el('p', { text: 'Nos vales de oferta guardamos também o nome de quem o recebe e a mensagem, se os escreveres, para os mostrar no vale.' }),
+      el('p', { text: 'Se comprares um vale de oferta, guardamos também o nome de quem o vai receber e a mensagem, se os escreveres, para aparecerem no vale.' }),
       el('h2', { text: 'Onde ficam os dados' }),
       el('p', { text: 'Num sistema de gestão do estúdio (Google Firebase, na UE ou com garantias equivalentes), só acessível à equipa do estúdio. Não vendemos nem partilhamos os teus dados para publicidade.' }),
       el('h2', { text: 'Quanto tempo' }),

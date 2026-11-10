@@ -19,7 +19,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   try {
     const order = await getDoc(env, studioDocName(env, 'orders', sid));
     if (!order) return json({ pending: true }, 202, cors);
-    const { voucherCodes = [] } = fromFields(order.fields) as { voucherCodes?: string[] };
+    const { voucherCodes = [], lines = [] } = fromFields(order.fields) as { voucherCodes?: string[]; lines?: { kind?: string }[] };
     const vouchers = [];
     for (const code of voucherCodes.slice(0, 20)) {
       const doc = await getDoc(env, studioDocName(env, 'vouchers', code));
@@ -27,7 +27,8 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
       const v = fromFields(doc.fields) as unknown as VoucherDoc;
       vouchers.push({ code: v.code, amount: v.amount, recipientName: v.recipientName || null, message: v.message || null, expiresAt: v.expiresAt });
     }
-    return json({ vouchers }, 200, cors);
+    // physical: the order also has something to ship (the thank-you page then keeps its shipping note).
+    return json({ vouchers, physical: lines.some((l) => l.kind !== 'voucher') }, 200, cors);
   } catch (err) {
     console.error('voucher: lookup failed', err);
     return json({ error: 'server_error' }, 500, cors);
