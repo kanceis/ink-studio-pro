@@ -264,7 +264,7 @@
     });
     const pill = (a, i) => el('a', { class: `v-float v-apill ap-${i}`, href: artistHref(a) }, [
       el('span', { class: 'av' }, safeUrl(a.photo?.url) ? el('img', { src: a.photo.url, alt: '' }) : initials(a.displayName)),
-      el('span', {}, [el('b', { text: a.displayName }), a.styles ? el('small', { text: stylesText(a) }) : null]),
+      el('span', {}, [el('b', { text: a.displayName }), a.styles ? el('small', { text: styleTags(a).slice(0, 2).join(' · ') }) : null]),
     ]);
     return el('section', { class: 'v-hero v-grid', 'aria-labelledby': 'hero-title' }, [
       el('div', { class: 'v-stage' }, [
