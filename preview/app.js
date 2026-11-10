@@ -1187,6 +1187,142 @@
     return true;
   };
 
+  // ------------------------------------------------------------------ gift vouchers
+  // Bought on its own (not through the cart): the buyer picks the value, who it's for and a short message,
+  // pays in Stripe and gets the code on the thank-you page, ready to print. The studio redeems it in the app.
+  const VOUCHER = { id: 'vale-de-oferta', min: 20, max: 500, amounts: [50, 100, 150], months: 12 };
+  const DEMO_VOUCHER_KEY = 'ink-demo-voucher';
+  // "Para Ana": the name is the buyer's text, so it is kept out of translation.
+  const forWhom = (node, name) => {
+    node.replaceChildren(...(name ? ['Para ', el('span', { translate: 'no', text: name })] : ['Para alguém especial']));
+    return node;
+  };
+  const longDate = (iso) => new Date(iso).toLocaleDateString(I.locale, { day: 'numeric', month: 'long', year: 'numeric' });
+
+  /** The voucher itself: shown as a preview in the shop and, with its code, on the thank-you page. */
+  const voucherCard = ({ amount, recipientName, message, code, expiresAt }) => el('div', { class: `v-vale${code ? ' real' : ''}` }, [
+    el('div', { class: 'top' }, [
+      el('img', { class: 'logo', src: 'assets/ink-compativel-logo-linha-escuro.svg', alt: 'Ink Compatível' }),
+      mono('Vale de oferta'),
+    ]),
+    el('div', { class: 'mid' }, [
+      el('span', { class: 'disp amt', 'data-vale-amount': '', text: eur(amount) }),
+      el('div', { class: 'for' }, [
+        forWhom(el('span', { class: 'hand to', 'data-vale-to': '' }), recipientName),
+        el('p', { class: 'msg', 'data-vale-msg': '', translate: 'no', hidden: !message || null, text: message || '' }),
+      ]),
+    ]),
+    el('div', { class: 'bot' }, [
+      el('div', {}, [mono('Código'), el('b', { class: 'code mono', translate: 'no', text: code || 'INK-····-····' })]),
+      el('div', { class: 'meta' }, [
+        mono(expiresAt ? `Válido até ${longDate(expiresAt)}` : `Válido ${VOUCHER.months} meses`),
+        mono('inkcompativel.pt'),
+      ]),
+    ]),
+    el('img', { class: 'eye', src: 'assets/ink-compativel-olho-escuro.svg', alt: '', 'aria-hidden': 'true' }),
+  ]);
+
+  const VOUCHER_ERRORS = {
+    bad_amount: () => `Escolhe um valor entre ${eur(VOUCHER.min)} e ${eur(VOUCHER.max)}.`,
+    busy: () => 'Há muita gente a comprar agora. Tenta outra vez daqui a nada.',
+    shop_closed: () => 'Os vales ainda não estão à venda online. Fala connosco pelo WhatsApp.',
+  };
+
+  const buyVoucher = async (v, button, status) => {
+    const say = (text) => status.replaceChildren(notice(text, true));
+    if (DEMO) {
+      try { sessionStorage.setItem(DEMO_VOUCHER_KEY, JSON.stringify(v)); } catch { /* private mode */ }
+      return go(I.L('/obrigado?session_id=cs_demo'));
+    }
+    if (!APP_API) return say(VOUCHER_ERRORS.shop_closed());
+    const label = button.firstChild.textContent;
+    button.disabled = true;
+    button.firstChild.textContent = 'A preparar o pagamento…';
+    const here = location.origin;
+    try {
+      const res = await fetch(`${APP_API}/api/checkout`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          items: [{ id: VOUCHER.id, qty: 1, amount: v.amount, to: v.to || undefined, message: v.message || undefined }],
+          successUrl: `${here}${I.L('/obrigado')}`,
+          cancelUrl: `${here}${I.L('/loja')}#vales`,
+        }),
+      });
+      const out = await res.json().catch(() => ({}));
+      if (res.ok && out.url) { location.href = out.url; return; }
+      say((VOUCHER_ERRORS[out.error] || (() => 'O pagamento não abriu. Tenta outra vez.'))());
+    } catch (err) {
+      console.error(err);
+      say('Sem ligação ao pagamento. Verifica a internet e tenta outra vez.');
+    }
+    button.disabled = false;
+    button.firstChild.textContent = label;
+  };
+
+  /** "Vales de oferta" on /loja: pick 50/100/150 € or another value, who it's for and a message. */
+  const voucherSection = () => {
+    const v = { amount: 100, to: '', message: '' };
+    const card = voucherCard({ amount: v.amount });
+    const status = el('div', { 'aria-live': 'polite' });
+    const other = el('input', {
+      id: 'vale-outro', type: 'number', inputmode: 'numeric', min: String(VOUCHER.min), max: String(VOUCHER.max), step: '1',
+      placeholder: `${VOUCHER.min}–${VOUCHER.max}`, 'aria-describedby': 'vale-outro-hint', hidden: true,
+    });
+    const buy = el('button', { type: 'submit', class: 'v-btn k' }, ['', el('i', { 'aria-hidden': 'true', text: '↗' })]);
+    const valid = () => Number.isInteger(v.amount) && v.amount >= VOUCHER.min && v.amount <= VOUCHER.max;
+    const sync = () => {
+      card.querySelector('[data-vale-amount]').textContent = valid() ? eur(v.amount) : '— €';
+      forWhom(card.querySelector('[data-vale-to]'), v.to);
+      const msg = card.querySelector('[data-vale-msg]');
+      msg.textContent = v.message;
+      msg.hidden = !v.message;
+      buy.firstChild.textContent = valid() ? `Comprar vale de ${eur(v.amount)}` : 'Comprar vale';
+    };
+    const chips = [...VOUCHER.amounts.map((n) => ({ n, text: eur(n) })), { n: null, text: 'Outro valor' }].map((c) =>
+      el('button', {
+        type: 'button', class: 'v-chip', 'aria-pressed': String(c.n === v.amount), text: c.text,
+        onclick: (e) => {
+          $$('.v-chip', e.currentTarget.parentNode).forEach((b) => b.setAttribute('aria-pressed', String(b === e.currentTarget)));
+          other.hidden = c.n !== null;
+          other.nextElementSibling.hidden = c.n !== null;
+          if (c.n === null) { v.amount = Math.round(Number(other.value)) || NaN; other.focus(); } else v.amount = c.n;
+          status.replaceChildren();
+          sync();
+        },
+      }));
+    other.addEventListener('input', () => { v.amount = Number(other.value) ? Math.round(Number(other.value)) : NaN; sync(); });
+    const to = el('input', { id: 'vale-para', maxlength: '80', autocomplete: 'off', placeholder: 'Ex.: Ana', oninput: (e) => { v.to = e.target.value.trim(); sync(); } });
+    const message = el('textarea', { id: 'vale-msg', maxlength: '240', rows: '3', placeholder: 'Ex.: Para a tatuagem que andas a adiar há anos.', oninput: (e) => { v.message = e.target.value.trim(); sync(); } });
+    const form = el('form', {
+      class: 'v-valeform', novalidate: true,
+      onsubmit: (e) => {
+        e.preventDefault();
+        if (!valid()) { status.replaceChildren(notice(VOUCHER_ERRORS.bad_amount(), true)); other.hidden || other.focus(); return; }
+        buyVoucher({ ...v }, buy, status);
+      },
+    }, [
+      el('fieldset', {}, [
+        el('legend', { text: 'Valor' }),
+        el('div', { class: 'v-chips' }, chips),
+        el('div', { class: 'fld other' }, [other, el('p', { class: 'hint', id: 'vale-outro-hint', hidden: true, text: `Entre ${eur(VOUCHER.min)} e ${eur(VOUCHER.max)}.` })]),
+      ]),
+      el('div', { class: 'fld' }, [el('label', { for: 'vale-para', text: 'Para quem (opcional)' }), to]),
+      el('div', { class: 'fld' }, [el('label', { for: 'vale-msg', text: 'Mensagem (opcional)' }), message]),
+      el('div', { class: 'v-btns' }, [buy]),
+      mono('Pagamento seguro pelo Stripe · O código aparece logo a seguir, pronto a imprimir', 'note'),
+      status,
+    ]);
+    sync();
+    return el('section', { class: 'v-sec', id: 'vales', 'aria-labelledby': 'vales-title' }, el('div', { class: 'wrap' }, [
+      el('div', { class: 'v-ahead' }, [
+        el('div', {}, [kicker('Para oferecer'), el('h2', { class: 'disp v-h2', id: 'vales-title' }, ['Vales de', el('br'), 'oferta.'])]),
+        el('p', { class: 'v-lead', text: `Uma tatuagem não se embrulha, mas oferece-se. O vale serve para uma tatuagem, um flash ou uma peça da loja no estúdio, e é válido durante ${VOUCHER.months} meses.` }),
+      ]),
+      el('div', { class: 'v-valebox' }, [el('div', { class: 'pic' }, card), form]),
+    ]));
+  };
+
   pages.shop = (_, params) => {
     const KINDS = [['all', 'Tudo'], ['original', 'Originais'], ['edition', 'Edições limitadas'], ['merch', 'Merch']];
     const count = (k) => (k === 'all' ? data.shop.length : data.shop.filter((i) => i.kind === k).length);
@@ -1314,9 +1450,10 @@
           ]),
           el('div', { class: 'feat', 'aria-hidden': 'true' }, pols),
         ]),
-        kinds.length > 2 ? el('div', { class: 'v-cats', role: 'group', 'aria-label': 'Tipo de peça' }, tabs) : null,
+        kinds.length > 2 ? el('div', { class: 'v-cats', role: 'group', 'aria-label': 'Tipo de peça' }, [...tabs, el('a', { class: 'v-cat vale', href: '#vales' }, ['Vales de oferta', el('small', { class: 'mono', 'aria-hidden': 'true', text: '↓' })])]) : null,
       ]),
       featured,
+      voucherSection(),
       listing,
       merchSec,
       el('section', { class: 'v-sec' }, el('div', { class: 'wrap' }, el('div', { class: 'v-shopinfo' }, [
@@ -1493,14 +1630,54 @@
     aftercareSection(),
   ];
 
-  pages.thanks = () => {
+  pages.thanks = (_, params) => {
+    const sid = params.get('session_id') || '';
+    const lead = el('p', { text: 'A tua encomenda está confirmada. Recebes o recibo por email e, quando a encomenda sair do estúdio, mandamos-te o número de seguimento.' });
+    const vouchers = el('div', { class: 'v-thanksvales', 'aria-live': 'polite' });
+    const actions = el('div', { class: 'hero-actions' }, [el('a', { class: 'btn-out', href: '/loja', text: 'Voltar à loja' }), el('a', { class: 'btn', href: '/marcar', text: 'Marcar sessão' })]);
+    const show = (list) => {
+      if (!list.length) return;
+      const many = list.length > 1;
+      lead.textContent = many
+        ? 'Os vales estão prontos. Imprime-os ou guarda esta página: os códigos também ficam registados no estúdio, com o email da compra.'
+        : 'O vale está pronto. Imprime-o ou guarda esta página: o código também fica registado no estúdio, com o email da compra.';
+      vouchers.replaceChildren(
+        ...list.map(voucherCard),
+        el('p', { class: 'muted small', text: 'Para usar, marca a sessão e diz o código. Se o perderes, fala connosco com o email da compra.' }),
+      );
+      actions.prepend(el('button', { type: 'button', class: 'btn', onclick: () => window.print(), text: many ? 'Imprimir os vales' : 'Imprimir o vale' }));
+    };
+    if (sid === 'cs_demo' && DEMO) {
+      let v = null;
+      try { v = JSON.parse(sessionStorage.getItem(DEMO_VOUCHER_KEY) || 'null'); } catch { /* private mode */ }
+      if (v) {
+        const exp = new Date();
+        exp.setMonth(exp.getMonth() + VOUCHER.months);
+        show([{ code: 'INK-DEMO-0000', amount: v.amount, recipientName: v.to, message: v.message, expiresAt: exp.toISOString() }]);
+      }
+    } else if (/^cs_(test_|live_)?[A-Za-z0-9]{10,200}$/.test(sid) && APP_API) {
+      // The order is written by Stripe's webhook, a few seconds after the payment: ask a few times.
+      let tries = 0;
+      const ask = async () => {
+        try {
+          const res = await fetch(`${APP_API}/api/voucher?session_id=${encodeURIComponent(sid)}`);
+          const out = await res.json().catch(() => ({}));
+          if (res.status === 200 && Array.isArray(out.vouchers)) return show(out.vouchers);
+          if (res.status !== 202) return;
+        } catch { /* try again */ }
+        if (++tries < 10) setTimeout(ask, 1500 + tries * 500);
+        else if (!vouchers.childElementCount) vouchers.replaceChildren(notice('O pagamento foi recebido, mas o código ainda não chegou. Recarrega a página daqui a um minuto ou fala connosco pelo WhatsApp.'));
+      };
+      ask();
+    }
     cart.clear();
     return [
       el('section', { class: 'section' }, el('div', { class: 'wrap stack prose' }, [
         mono('Pagamento recebido', 'muted'),
         el('h1', { class: 'disp h2', text: 'Obrigado!' }),
-        el('p', { text: 'A tua encomenda está confirmada. Recebes o recibo por email e, quando a encomenda sair do estúdio, mandamos-te o número de seguimento.' }),
-        el('div', { class: 'hero-actions' }, [el('a', { class: 'btn-out', href: '/loja', text: 'Voltar à loja' }), el('a', { class: 'btn', href: '/marcar', text: 'Marcar sessão' })]),
+        lead,
+        vouchers,
+        actions,
       ])),
     ];
   };
@@ -1517,6 +1694,7 @@
       el('p', { text: 'Depois de uma sessão mandamos-te uma mensagem ao fim de uma semana e outra ao fim de duas, para saber como está a cicatrizar. Só voltamos a falar contigo mais tarde (por exemplo, com flashes novos) se marcaste essa opção no pedido ou no estúdio. Para deixar de receber, basta responder «parar».' }),
       el('h2', { text: 'Compras na loja' }),
       el('p', { text: 'Para enviar a encomenda guardamos o nome, morada, email e telemóvel. O pagamento é feito no Stripe: nunca vemos nem guardamos os dados do cartão. O merch é vendido pela loja externa, com a política dela.' }),
+      el('p', { text: 'Nos vales de oferta guardamos também o nome de quem o recebe e a mensagem, se os escreveres, para os mostrar no vale.' }),
       el('h2', { text: 'Onde ficam os dados' }),
       el('p', { text: 'Num sistema de gestão do estúdio (Google Firebase, na UE ou com garantias equivalentes), só acessível à equipa do estúdio. Não vendemos nem partilhamos os teus dados para publicidade.' }),
       el('h2', { text: 'Quanto tempo' }),
