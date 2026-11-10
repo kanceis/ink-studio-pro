@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
-import { Globe, Inbox, Image as ImageIcon, Palette, Store, Package } from 'lucide-react';
+import { Globe, Inbox, Image as ImageIcon, Palette, Store, Package, Gift } from 'lucide-react';
 import { useStudio } from '../context/StudioContext';
 import { useSiteContent } from './site/useSiteContent';
 import { BookingRequestsPanel } from './site/BookingRequestsPanel';
 import { PortfolioPanel } from './site/PortfolioPanel';
 import { ShopPanel } from './site/ShopPanel';
 import { OrdersPanel } from './site/OrdersPanel';
+import { VouchersPanel } from './site/VouchersPanel';
 import { PublicProfilePanel } from './site/PublicProfilePanel';
 import { chip } from './site/ui';
 
-type SubTab = 'requests' | 'portfolio' | 'shop' | 'orders' | 'profile';
+type SubTab = 'requests' | 'portfolio' | 'shop' | 'orders' | 'vouchers' | 'profile';
 
 /** Backoffice for the public ARANT website. */
 export const SiteView: React.FC = () => {
@@ -23,6 +24,7 @@ export const SiteView: React.FC = () => {
     { id: 'portfolio', label: 'Portfólio', icon: ImageIcon },
     { id: 'shop', label: 'Loja', icon: Store },
     { id: 'orders', label: 'Encomendas', icon: Package, badge: openOrders },
+    { id: 'vouchers', label: 'Vales', icon: Gift },
     { id: 'profile', label: 'Estúdio & artistas', icon: Globe },
   ];
 
@@ -54,6 +56,7 @@ export const SiteView: React.FC = () => {
       {tab === 'portfolio' && <PortfolioPanel content={content} />}
       {tab === 'shop' && <ShopPanel content={content} />}
       {tab === 'orders' && <OrdersPanel content={content} />}
+      {tab === 'vouchers' && <VouchersPanel content={content} />}
       {tab === 'profile' && <PublicProfilePanel content={content} />}
     </div>
   );

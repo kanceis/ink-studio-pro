@@ -74,7 +74,9 @@ export const OrdersPanel: React.FC<{ content: SiteContent }> = ({ content }) => 
               </p>
             </div>
             <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${STATUS[order.status].cls}`}>
-              {STATUS[order.status].label}
+              {order.status === 'shipped' && order.lines?.length && order.lines.every((l) => l.kind === 'voucher')
+                ? 'Vale entregue'
+                : STATUS[order.status].label}
             </span>
           </div>
 
@@ -98,6 +100,12 @@ export const OrdersPanel: React.FC<{ content: SiteContent }> = ({ content }) => 
               </p>
             )}
             {order.trackingNumber && <p>Tracking: {order.trackingNumber}</p>}
+            {!!order.voucherCodes?.length && (
+              <p>
+                {order.voucherCodes.length > 1 ? 'Códigos dos vales' : 'Código do vale'}:{' '}
+                <span className="font-mono font-semibold">{order.voucherCodes.join(', ')}</span> (no separador Vales)
+              </p>
+            )}
             {order.notes && (
               <p className="whitespace-pre-line rounded-md bg-amber-50 px-2 py-1 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
                 {order.notes}

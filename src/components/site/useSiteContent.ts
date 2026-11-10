@@ -1,19 +1,20 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useStudio } from '../../context/StudioContext';
 import { subscribeCollection, subscribePublicProfile } from '../../services/studioStore';
-import { PortfolioItem, PublicArtist, PublicProfile, ShopItem, ShopOrder } from '../../types';
+import { PortfolioItem, PublicArtist, PublicProfile, ShopItem, ShopOrder, Voucher } from '../../types';
 
 export interface ArtistOption {
   id: string;
   label: string; // public display name if set, otherwise the internal name
 }
 
-/** Live portfolio, shop, orders and public profile from Firestore, plus the artist list. */
+/** Live portfolio, shop, orders, gift vouchers and public profile from Firestore, plus the artist list. */
 export const useSiteContent = () => {
   const { showToast, artists } = useStudio();
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
   const [shop, setShop] = useState<ShopItem[]>([]);
   const [orders, setOrders] = useState<ShopOrder[]>([]);
+  const [vouchers, setVouchers] = useState<Voucher[]>([]);
   const [profile, setProfile] = useState<Partial<PublicProfile> | null>(null);
   const [loaded, setLoaded] = useState(false);
 
@@ -30,6 +31,11 @@ export const useSiteContent = () => {
       subscribeCollection(
         'orders',
         (items) => setOrders([...items].sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))),
+        onError
+      ),
+      subscribeCollection(
+        'vouchers',
+        (items) => setVouchers([...items].sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))),
         onError
       ),
       subscribePublicProfile((p) => {
@@ -55,7 +61,7 @@ export const useSiteContent = () => {
 
   const artistLabel = (id?: string) => (id ? artistOptions.find((a) => a.id === id)?.label ?? '—' : '');
 
-  return { portfolio, shop, orders, profile, loaded, artistOptions, artistLabel };
+  return { portfolio, shop, orders, vouchers, profile, loaded, artistOptions, artistLabel };
 };
 
 export type SiteContent = ReturnType<typeof useSiteContent>;

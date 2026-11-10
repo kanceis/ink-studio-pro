@@ -125,6 +125,18 @@ Se uma peça ficar "Reservada" sem ninguém a pagar (por exemplo, webhook mal co
 
 Sem `STRIPE_SECRET_KEY` o checkout responde `503 shop_closed` e o resto funciona normalmente.
 
+### Vales de oferta (Loja › "Vales de oferta" e separador "Vales")
+
+No site, em `/loja#vales`, a pessoa escolhe 50, 100 ou 150 € (ou outro valor, de 20 a 500 €), para quem é e uma
+mensagem curta, e paga no Stripe pelo mesmo `POST /api/checkout` (linha `{ id: 'vale-de-oferta', qty: 1, amount, to, message }`).
+Um vale sozinho não pede morada nem portes. Quando o Stripe confirma o pagamento, o webhook cria um documento em
+`vouchers` por vale, com um código como `INK-7KQ2-M9XD`, e a encomenda fica como entregue. A página de obrigado pede
+os códigos a `GET /api/voucher?session_id=…` e mostra o vale pronto a imprimir.
+
+Na app, o separador **Vales** procura pelo código ou nome, desconta parte ou todo o saldo (numa transação, para dois
+telemóveis não gastarem o mesmo saldo), cancela, e cria vales vendidos no estúdio. Validade: 12 meses, ou
+`VOUCHER_VALID_MONTHS` no Cloudflare.
+
 ### Site público (`site/`)
 
 O site da Ink Compatível é HTML, CSS e JavaScript simples, sem build: `site/index.html`, `styles.css`, `app.js`,

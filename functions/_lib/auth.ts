@@ -32,6 +32,8 @@ export interface Env {
   PLACES_API_BASE?: string;
   /** Only for local development: "1" serves placeholder reviews when the Places key is not set. */
   REVIEWS_DEMO?: string;
+  /** Months a gift voucher is valid for (default 12). */
+  VOUCHER_VALID_MONTHS?: string;
 }
 
 export const json = (body: unknown, status = 200, headers: HeadersInit = {}) =>

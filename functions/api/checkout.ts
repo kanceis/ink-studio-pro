@@ -31,6 +31,7 @@ const STATUS: Record<string, number> = {
   empty_cart: 400,
   bad_item: 400,
   bad_quantity: 400,
+  bad_amount: 400,
   not_found: 404,
   not_for_sale: 409,
   sold_out: 409,

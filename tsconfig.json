@@ -30,6 +30,7 @@
     "functions",
     "workers",
     "tests/followUpsWorker.test.ts",
+    "tests/vouchers.test.ts",
     "node_modules",
     "dist"
   ]

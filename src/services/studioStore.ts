@@ -12,6 +12,7 @@ import {
   getDocs,
   writeBatch,
   increment,
+  runTransaction,
   Firestore,
   Unsubscribe,
   connectFirestoreEmulator,
@@ -29,6 +30,7 @@ import {
   ShopOrder,
   BookingRequest,
   PublicProfile,
+  Voucher,
 } from '../types';
 
 /**
@@ -72,6 +74,7 @@ export type CollectionName =
   | 'portfolio'
   | 'shop'
   | 'orders'
+  | 'vouchers'
   | 'bookingRequests';
 
 type EntityMap = {
@@ -83,6 +86,7 @@ type EntityMap = {
   portfolio: PortfolioItem;
   shop: ShopItem;
   orders: ShopOrder;
+  vouchers: Voucher;
   bookingRequests: BookingRequest;
 };
 
@@ -155,6 +159,37 @@ export const patchItem = <K extends CollectionName>(
 ) => updateDoc(itemRef(name, id), updates as Record<string, unknown>);
 
 export const removeItem = (name: CollectionName, id: string) => deleteDoc(itemRef(name, id));
+
+/**
+ * Takes `amount` euros off a gift voucher in one transaction, so two devices can't spend the same balance.
+ * Resolves with the new balance; rejects with Error('not_found' | 'not_active' | 'too_much').
+ */
+export const redeemVoucher = (code: string, amount: number, note?: string) =>
+  runTransaction(db, async (tx) => {
+    const ref = itemRef('vouchers', code);
+    const snap = await tx.get(ref);
+    if (!snap.exists()) throw new Error('not_found');
+    const v = snap.data() as Voucher;
+    if (v.status !== 'active') throw new Error('not_active');
+    const cents = Math.round(amount * 100);
+    const left = Math.round((v.balance || 0) * 100);
+    if (cents <= 0 || cents > left) throw new Error('too_much');
+    const balance = (left - cents) / 100;
+    const redemption = { at: new Date().toISOString(), amount: cents / 100, ...(note ? { note } : {}) };
+    tx.update(ref, {
+      balance,
+      status: balance === 0 ? 'used' : 'active',
+      redemptions: [...(v.redemptions || []), redemption],
+    });
+    return balance;
+  });
+
+/** Codes like INK-7KQ2-M9XD (no 0/O/1/I), the same shape the site's checkout creates. */
+export const newVoucherCode = () => {
+  const abc = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const c = [...crypto.getRandomValues(new Uint8Array(8))].map((b) => abc[b % abc.length]).join('');
+  return `INK-${c.slice(0, 4)}-${c.slice(4)}`;
+};
 
 /** Atomic stock change, so two devices adjusting at once don't overwrite each other. */
 export const incrementStock = (id: string, delta: number) =>

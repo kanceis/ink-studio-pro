@@ -248,7 +248,7 @@ export type OrderStatus = 'paid' | 'shipped' | 'cancelled';
 export interface ShopOrderLine {
   itemId: string;
   title: string;
-  kind: ShopItemKind;
+  kind: ShopItemKind | 'voucher';
   quantity: number;
   unitPrice: number; // EUR
 }
@@ -269,6 +269,38 @@ export interface ShopOrder {
   createdAt: string;
   shippedAt?: string;
   trackingNumber?: string;
+  notes?: string;
+  /** Gift vouchers bought in this order (see Voucher). */
+  voucherCodes?: string[];
+}
+
+export type VoucherStatus = 'active' | 'used' | 'cancelled';
+
+export interface VoucherRedemption {
+  at: string;
+  amount: number; // EUR taken off the balance
+  note?: string;
+}
+
+/**
+ * Gift voucher. Bought on the site (written by the Stripe webhook, functions/_lib/shop.ts) or created
+ * in the app for one sold at the studio. Id = code, e.g. INK-7KQ2-M9XD.
+ */
+export interface Voucher {
+  id: string;
+  code: string;
+  amount: number; // EUR, value when bought
+  balance: number; // EUR still to use
+  status: VoucherStatus;
+  recipientName?: string;
+  message?: string;
+  buyerName?: string;
+  buyerEmail?: string;
+  buyerPhone?: string;
+  orderId?: string; // Stripe Checkout Session id, when bought on the site
+  createdAt: string;
+  expiresAt: string;
+  redemptions?: VoucherRedemption[];
   notes?: string;
 }
 
