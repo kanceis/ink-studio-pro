@@ -123,3 +123,11 @@ html.mo .footer-wordmark.wm:not(.in) span { translate: 0 100%; }
 .v-tile img, .v-acard .ph, .v-prod .img img, .v-igrow img { transition: transform .7s var(--ease-ink); }
 .v-tile:hover img, .v-acard:hover .ph, .v-prod:hover .img img, .v-igrow a:hover img { transform: scale(1.05); }
 html.mo .v-hero .v-hlead { transition-delay: .45s; }
+
+/* 15 · artistas no topo: flutuam devagar, cada um no seu tempo (o avatar acena); ao tocar, endireitam.
+   Só com html.mo, por isso param com prefers-reduced-motion. */
+@keyframes tagbob { 0%, 100% { translate: 0 0; } 50% { translate: 0 -7px; } }
+@keyframes avnod { 0%, 100% { rotate: 0deg; } 30% { rotate: -10deg; } 60% { rotate: 6deg; } }
+html.mo .v-hero.go .v-apill { animation: tagbob 4.6s ease-in-out infinite; animation-delay: calc(1.8s + var(--i, 0) * 1.1s); }
+html.mo .v-hero.go .v-apill .av { animation: avnod 4.6s ease-in-out infinite; animation-delay: calc(2.4s + var(--i, 0) * 1.1s); }
+html.mo .v-hero .v-apill:hover, html.mo .v-hero .v-apill:active { transform: rotate(0deg) scale(1.06); transition-delay: 0s; }

@@ -2058,7 +2058,10 @@
   const updateCartCount = () => {
     const n = cart.count();
     $$('[data-cart-count]').forEach((e) => (e.textContent = String(n)));
-    $$('[data-open-cart]').forEach((b) => b.setAttribute('aria-label', `Carrinho, ${n} ${n === 1 ? 'artigo' : 'artigos'}`));
+    $$('[data-open-cart]').forEach((b) => {
+      b.setAttribute('aria-label', `Carrinho, ${n} ${n === 1 ? 'artigo' : 'artigos'}`);
+      b.toggleAttribute('data-empty', !n);
+    });
   };
 
   const ERRORS = {
@@ -2339,9 +2342,11 @@
     go(url.pathname + url.search + url.hash);
   };
 
-  // The phone menu button reads "Menu" or "Fechar".
+  // The phone menu button is an icon (two strokes that turn into an X); screen readers hear "Abrir menu" or "Fechar menu".
   const menuButton = (open) => {
-    $('.menu-btn').setAttribute('aria-expanded', String(open));
+    const b = $('.menu-btn');
+    b.setAttribute('aria-expanded', String(open));
+    b.setAttribute('aria-label', I.t(open ? 'Fechar menu' : 'Abrir menu'));
     $('[data-menu-label]').textContent = I.t(open ? 'Fechar' : 'Menu');
   };
 

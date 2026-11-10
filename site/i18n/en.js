@@ -46,6 +46,8 @@ window.INK_EN = {
   'Abrir menu': 'Open menu',
   'Principal': 'Main',
   'Início': 'Home',
+  'Abrir menu': 'Open menu',
+  'Fechar menu': 'Close menu',
   'Artistas': 'Artists',
   'Portfólio': 'Portfolio',
   'Loja': 'Shop',

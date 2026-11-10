@@ -107,15 +107,23 @@ button { font: inherit; color: inherit; }
      Menu share one line, so everything is a little tighter. */
   .header-row { position: relative; flex-wrap: nowrap; gap: 8px; }
   .brand { flex: 0 1 auto; min-width: 0; }
-  .brand img { height: 24px !important; }
-  body.overhero .site-header:not(.solid) .brand { padding: 9px 14px; }
+  .brand img { height: 22px !important; }
   .header-actions { gap: 0; flex: none; }
-  .lang-btn { min-width: 36px; padding: 0 4px; }
-  .cart-btn { min-width: 40px; padding: 0 4px; }
-  .menu-btn { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; margin-left: 4px; padding: 0 16px; border: 0; border-radius: 999px; background: var(--tinta); color: #fff; font: 700 15px var(--font-body); cursor: pointer; }
-  .menu-btn::before { content: ""; width: 16px; height: 10px; border-top: 2px solid currentColor; border-bottom: 2px solid currentColor; }
+  .lang-btn { min-width: 36px; padding: 0 8px; font-size: 12px; }
+  /* The cart is a 40px ring; the count shows as a small badge once something is in it. */
+  .cart-btn { position: relative; width: 40px; height: 40px; min-width: 0; padding: 0; justify-content: center; border: 1px solid currentColor; border-radius: 50%; }
+  .cart-btn svg { width: 18px; height: 18px; }
+  .cart-btn .cart-count { position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 999px; background: var(--vermelho); color: #fff; font-size: 10px; line-height: 18px; text-align: center; }
+  .cart-btn .cart-count:empty, .cart-btn[data-empty] .cart-count { display: none; }
+  /* Round, icon only: two strokes that turn into an X. The word stays for screen readers. */
+  .menu-btn { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; margin-left: 6px; padding: 0; border: 0; border-radius: 50%; background: var(--tinta); color: #fff; cursor: pointer; }
+  .menu-btn i { position: relative; display: block; width: 18px; height: 12px; }
+  .menu-btn i::before, .menu-btn i::after { content: ""; position: absolute; left: 0; right: 0; height: 2px; border-radius: 2px; background: currentColor; transition: transform .3s var(--ease-ink, ease), top .3s var(--ease-ink, ease); }
+  .menu-btn i::before { top: 0; }
+  .menu-btn i::after { top: 10px; }
   .menu-btn[aria-expanded="true"] { background: #fff; color: var(--tinta); box-shadow: 0 0 0 1.5px var(--tinta); }
-  .menu-btn[aria-expanded="true"]::before { height: 0; border-bottom: 0; }
+  .menu-btn[aria-expanded="true"] i::before { top: 5px; transform: rotate(45deg); }
+  .menu-btn[aria-expanded="true"] i::after { top: 5px; transform: rotate(-45deg); }
   .main-nav { display: none; }
   .main-nav.open { display: flex; position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 30; flex-direction: column; align-items: stretch; gap: 4px; padding: 10px; border-radius: 24px; background: var(--tinta); box-shadow: 0 24px 50px rgba(20, 18, 19, .4); }
   .main-nav.open .nav-home { display: flex !important; }
@@ -410,6 +418,10 @@ body.overhero .site-header:not(.solid) .header-row { padding-top: calc(var(--v-g
 /* On red the eye and the accent get lost, so the logo sits on a paper sticker (UX v3). */
 body.overhero .site-header:not(.solid) .brand { padding: 9px 18px; background: var(--papel); box-shadow: 0 8px 20px rgba(20, 18, 19, .18); }
 body.overhero .site-header:not(.solid) .brand img { height: 28px; }
+@media (max-width: 860px) {
+  body.overhero .site-header:not(.solid) .brand { padding: 9px 13px; box-shadow: none; }
+  body.overhero .site-header:not(.solid) .brand img { height: 19px !important; }
+}
 body.overhero .site-header:not(.solid) .nav-pill { background: rgba(20, 18, 19, .18); border-color: transparent; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
 body.overhero .site-header:not(.solid) .nav-pill a { color: #fff !important; }
 body.overhero .site-header:not(.solid) .nav-pill a:hover { background: rgba(255, 255, 255, .16); }
@@ -760,17 +772,16 @@ html[lang="en"] .v-stage { --hl-half: calc(clamp(68px, min(9.6vw, 17vh), 160px) 
   .v-hl { font-size: 23vw; }
   html[lang="en"] .v-hl { font-size: 17vw; }
   .v-hero .v-polaroid, .v-doodle, .v-hero .v-badge { display: none; }
-  /* The artists stay as tilted cream pills: Arants above the title on the left, Rock Ink and Carolina
-     side by side under it on the right, mirroring him (Início v4). */
-  .v-stage { padding-top: 78px; }
-  .v-apills { display: flex; order: 1; align-self: stretch; justify-content: flex-end; flex-wrap: wrap; gap: 12px 8px; margin: -4px 2px 6px 0; }
+  /* The artists catch the corners of the title without covering it (Início v4, Francisco's sketch): Arants on
+     the top corner of "DO", Rock Ink under "À" on the left, Carolina under "PELE" on the right. */
+  .v-stage { padding-top: 66px; }
+  .v-apills { display: flex; order: 1; align-self: stretch; justify-content: space-between; align-items: flex-start; gap: 8px; margin: -30px -6px 4px; }
   .v-apills .v-apill { position: relative; left: auto; right: auto; top: auto; bottom: auto; padding: 5px 14px 5px 5px; }
   .v-apills .v-apill .av { width: 34px; height: 34px; font-size: 13px; }
   .v-apills .v-apill b { font-size: 14px; }
   .v-apills .v-apill small { font-size: 9px; max-width: 180px; }
-  /* One style each on phones, so Rock Ink and Carolina fit side by side. */
-  .v-apills .v-apill small .more { display: none; }
-  .v-apills .ap-0 { position: absolute; top: 16px; left: 18px; }
+  .v-apills .ap-0 { position: absolute; top: 17px; left: 10px; }
+  .v-apills .ap-2 { margin-top: 2px; }
   .v-stage > .v-hlead { order: 2; }
   .v-hero-foot { padding: 0 20px 48px; margin-top: 0; justify-content: center; }
   .v-ahead { flex-direction: column; align-items: flex-start; }
@@ -811,9 +822,9 @@ html[lang="en"] .v-stage { --hl-half: calc(clamp(68px, min(9.6vw, 17vh), 160px) 
   .v-tape { padding: 12px 0; }
   .v-mq span { font-size: 28px; gap: 30px; }
 }
-@media (max-width: 359px) {
-  .v-apills { gap: 12px 6px; }
-  .v-apills .v-apill { padding-right: 10px; }
+/* Narrow phones: one style each, so Rock Ink and Carolina still fit side by side. */
+@media (max-width: 389px) {
+  .v-apills .v-apill small .more { display: none; }
 }
 @media (max-width: 560px) {
   .v-opts, .v-opts.three { grid-template-columns: 1fr 1fr; }
@@ -901,6 +912,7 @@ html[lang="en"] .v-stage { --hl-half: calc(clamp(68px, min(9.6vw, 17vh), 160px) 
 /* ------------------------------------------------------------------ Loja v3 (UX "loja.html") */
 body.overdark .site-header:not(.solid) .nav-pill { background: rgba(255, 255, 255, .1); }
 body.overdark .site-header:not(.solid) .main-nav .btn { background: var(--vermelho); }
+body.overdark .site-header:not(.solid) .menu-btn[aria-expanded="false"] { background: var(--vermelho); }
 .v-lhero { background-color: var(--tinta); background-image: repeating-linear-gradient(0deg, rgba(255, 255, 255, .06) 0 1px, transparent 1px 56px), repeating-linear-gradient(90deg, rgba(255, 255, 255, .06) 0 1px, transparent 1px 56px); }
 .lh { position: relative; max-width: 1300px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: end; padding: 40px 48px 56px; }
 .lh h1 { margin: 18px 0 0; font-size: clamp(120px, 17vw, 260px); line-height: .78; color: #fff; }
